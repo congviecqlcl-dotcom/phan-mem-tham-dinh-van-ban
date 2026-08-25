@@ -22,17 +22,39 @@ export default function App() {
       </main>
 
       {/* Footer */}
-      <footer className="bg-white border-t border-neutral-200 py-6 text-center text-xs text-neutral-500">
-        <div className="max-w-7xl mx-auto px-4 flex flex-col sm:flex-row items-center justify-between gap-3">
+      <footer className="bg-white border-t border-neutral-200 py-6 text-xs text-neutral-500">
+        <div className="max-w-7xl mx-auto px-4 flex flex-col md:flex-row items-center justify-between gap-4">
           <div>
-            DocuGuard AI — Hệ thống chuyên gia kiểm tra & thẩm định văn bản ATTP và Thể thức hành chính
+            <div className="font-semibold text-neutral-800 text-sm">DocuGuard AI</div>
+            <div>Hệ thống chuyên gia kiểm tra & thẩm định văn bản ATTP và Thể thức hành chính</div>
           </div>
-          <div className="flex items-center gap-4 text-neutral-400">
+
+          <div className="flex flex-wrap items-center justify-center gap-3 text-neutral-600">
             <span>Cập nhật Thông tư 17/2024/TT-BNNPTNT</span>
             <span>•</span>
             <span>Nghị định 30/2020/NĐ-CP</span>
             <span>•</span>
             <span>NQ 202/2025 & NQ 1676/2025</span>
+          </div>
+
+          <div className="flex items-center gap-3">
+            <a
+              href="https://github.com/congviecqlcl-dotcom/Ph-nmm-th-m-nh-vnbn-tr-c-khi-ph-th-nh"
+              target="_blank"
+              rel="noreferrer noopener"
+              className="text-neutral-700 hover:text-neutral-900 font-medium underline underline-offset-2 flex items-center gap-1"
+            >
+              GitHub Repository
+            </a>
+            <span>•</span>
+            <a
+              href="https://vercel.com/new/clone?repository-url=https%3A%2F%2Fgithub.com%2Fcongviecqlcl-dotcom%2FPh-nmm-th-m-nh-vnbn-tr-c-khi-ph-th-nh"
+              target="_blank"
+              rel="noreferrer noopener"
+              className="text-neutral-900 font-semibold hover:text-emerald-700 underline underline-offset-2 flex items-center gap-1"
+            >
+              Deploy on Vercel
+            </a>
           </div>
         </div>
       </footer>
