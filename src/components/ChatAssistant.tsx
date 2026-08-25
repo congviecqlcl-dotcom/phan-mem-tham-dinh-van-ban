@@ -1,6 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Send, Bot, User, Sparkles, Scale, Copy, Check, CornerDownLeft } from 'lucide-react';
 import { ChatMessage } from '../types';
+import { getLocalChatResponse } from '../utils/chatEngine';
 
 const PRESET_QUESTIONS = [
   'Thông tư 17/2024/TT-BNNPTNT thay đổi cách xếp loại cơ sở và thẩm quyền thế nào?',
@@ -61,34 +62,44 @@ Bạn có thể đặt bất kỳ câu hỏi nào về thẩm quyền, biểu m�
     setIsLoading(true);
 
     try {
-      const response = await fetch('/api/chat', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          message: query,
-        }),
-      });
+      let replyText = '';
+      try {
+        const response = await fetch('/api/chat', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            message: query,
+          }),
+        });
 
-      if (!response.ok) {
-        throw new Error('Lỗi kết nối tới Trợ lý AI.');
+        if (response.ok) {
+          const data = await response.json();
+          replyText = data.reply;
+        }
+      } catch (netErr) {
+        console.warn('Network chat error, using local legal engine:', netErr);
       }
 
-      const data = await response.json();
+      if (!replyText) {
+        replyText = getLocalChatResponse(query);
+      }
+
       const botMessage: ChatMessage = {
         id: `bot-${Date.now()}`,
         sender: 'assistant',
-        text: data.reply || 'Đã ghi nhận yêu cầu của bạn.',
+        text: replyText,
         timestamp: new Date().toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' }),
       };
 
       setMessages((prev) => [...prev, botMessage]);
     } catch (err: any) {
+      const fallbackReply = getLocalChatResponse(query);
       setMessages((prev) => [
         ...prev,
         {
-          id: `err-${Date.now()}`,
+          id: `bot-${Date.now()}`,
           sender: 'assistant',
-          text: `Đã xảy ra lỗi khi trao đổi với trợ lý: ${err.message}. Vui lòng thử lại!`,
+          text: fallbackReply,
           timestamp: new Date().toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' }),
         },
       ]);

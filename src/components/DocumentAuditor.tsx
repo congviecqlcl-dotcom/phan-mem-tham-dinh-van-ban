@@ -37,6 +37,7 @@ import {
   downloadAllFixedAsZip,
   downloadConsolidatedBatchReport
 } from '../utils/docxExport';
+import { runClientAuditEngine } from '../utils/auditEngine';
 
 export const DocumentAuditor: React.FC = () => {
   // Initial list with preset
@@ -397,34 +398,46 @@ export const DocumentAuditor: React.FC = () => {
     );
 
     try {
-      const response = await fetch('/api/audit-document', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          content: target.content,
-          docType: target.docType,
-          fileName: target.name,
-        }),
-      });
+      let result: AuditResult | null = null;
+      try {
+        const response = await fetch('/api/audit-document', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            content: target.content,
+            docType: target.docType,
+            fileName: target.name,
+          }),
+        });
 
-      if (!response.ok) throw new Error('Không thể thẩm định văn bản.');
-      const result: AuditResult = await response.json();
+        if (response.ok) {
+          result = await response.json();
+        }
+      } catch (networkErr) {
+        console.warn('API audit error, using local engine fallback:', networkErr);
+      }
+
+      // If server route didn't return or failed (static host like Vercel), use client-side audit engine
+      if (!result || !result.issues) {
+        result = runClientAuditEngine(target.content, target.docType, target.name);
+      }
 
       setFiles((prev) =>
         prev.map((f) =>
-          f.id === target.id ? { ...f, status: 'completed', auditResult: result } : f
+          f.id === target.id ? { ...f, status: 'completed', auditResult: result! } : f
         )
       );
       setActiveResultTab('issues');
     } catch (err: any) {
       console.error('Lỗi thẩm định:', err);
+      // Fallback directly
+      const fallbackResult = runClientAuditEngine(target.content, target.docType, target.name);
       setFiles((prev) =>
         prev.map((f) =>
-          f.id === target.id
-            ? { ...f, status: 'error', errorMessage: err.message || 'Lỗi khi thẩm định' }
-            : f
+          f.id === target.id ? { ...f, status: 'completed', auditResult: fallbackResult } : f
         )
       );
+      setActiveResultTab('issues');
     } finally {
       setIsAuditingSingle(false);
     }
@@ -454,32 +467,39 @@ export const DocumentAuditor: React.FC = () => {
       await Promise.all(
         chunk.map(async (docItem) => {
           try {
-            const response = await fetch('/api/audit-document', {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({
-                content: docItem.content,
-                docType: docItem.docType,
-                fileName: docItem.name,
-              }),
-            });
+            let res: AuditResult | null = null;
+            try {
+              const response = await fetch('/api/audit-document', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                  content: docItem.content,
+                  docType: docItem.docType,
+                  fileName: docItem.name,
+                }),
+              });
 
-            if (response.ok) {
-              const res: AuditResult = await response.json();
-              setFiles((prev) =>
-                prev.map((f) =>
-                  f.id === docItem.id ? { ...f, status: 'completed', auditResult: res } : f
-                )
-              );
-            } else {
-              throw new Error('Máy chủ phản hồi lỗi.');
+              if (response.ok) {
+                res = await response.json();
+              }
+            } catch (netErr) {
+              // Net error fallback
             }
-          } catch (err: any) {
+
+            if (!res || !res.issues) {
+              res = runClientAuditEngine(docItem.content, docItem.docType, docItem.name);
+            }
+
             setFiles((prev) =>
               prev.map((f) =>
-                f.id === docItem.id
-                  ? { ...f, status: 'error', errorMessage: err.message || 'Lỗi thẩm định' }
-                  : f
+                f.id === docItem.id ? { ...f, status: 'completed', auditResult: res! } : f
+              )
+            );
+          } catch (err: any) {
+            const fallbackRes = runClientAuditEngine(docItem.content, docItem.docType, docItem.name);
+            setFiles((prev) =>
+              prev.map((f) =>
+                f.id === docItem.id ? { ...f, status: 'completed', auditResult: fallbackRes } : f
               )
             );
           } finally {
