@@ -1,0 +1,6 @@
+{
+  "name": "Trợ lý Thẩm định & Kiểm tra Văn bản ATTP",
+  "description": "Hệ thống chuyên gia thẩm định và kiểm tra văn bản hành chính, hồ sơ an toàn thực phẩm, nhãn hàng hóa và quy chuẩn pháp luật",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
