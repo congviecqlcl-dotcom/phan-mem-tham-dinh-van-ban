@@ -360,12 +360,12 @@ export function runClientAuditEngine(content: string, docType?: DocumentType | s
     documentTypeDetected,
     summary:
       issues.length === 0
-        ? 'Văn bản hoàn toàn chuẩn chỉnh, tuân thủ đúng 100% thể thức Nghị định 30/2020/NĐ-CP (không viết tắt tùy tiện, viết hoa đúng chuẩn Phụ lục II) và các quy định ATTP chuyên ngành.'
-        : `Phát hiện ${issues.length} điểm cần hoàn thiện (${issues.filter((i) => i.severity === 'error').length} lỗi nghiêm trọng, ${issues.filter((i) => i.severity === 'warning').length} cảnh báo). Cần loại bỏ các từ viết tắt tùy tiện (như PGĐ, CCT, TCCB, PTTT) và chuẩn hóa lại quy tắc viết hoa theo Phụ lục II NĐ 30.`,
+        ? 'Bộ quy tắc kiểm tra cục bộ chưa phát hiện dấu hiệu thuộc các mẫu kiểm tra đã lập trình. Điều này không chứng minh văn bản tuân thủ đầy đủ pháp luật hoặc không có sai sót.'
+        : `Bộ quy tắc kiểm tra cục bộ ghi nhận ${issues.length} dấu hiệu cần rà soát (${issues.filter((i) => i.severity === 'error').length} dấu hiệu mức cao, ${issues.filter((i) => i.severity === 'warning').length} cảnh báo). Mỗi dấu hiệu cần được đối chiếu với văn bản gốc và quy định hiện hành trước khi kết luận.`,
     positivePoints: [
-      'Đã cập nhật đúng Thông tư số 17/2024/TT-BNNPTNT mới nhất của Bộ Nông nghiệp & PTNT.',
-      'Địa giới hành chính tuân thủ chuẩn xác theo Nghị quyết 202/2025/QH15 và Nghị quyết 1676/NQ-UBTVQH15.',
-      'Bố cục nội dung và thẩm quyền ban hành rõ ràng, đúng chức năng nhiệm vụ.',
+      'Đây là kết quả rà soát tự động theo các mẫu quy tắc đã lập trình, không phải xác nhận tuân thủ pháp luật.',
+      'Hệ thống chưa tự xác minh hiệu lực, phạm vi áp dụng hoặc sửa đổi mới nhất của mọi căn cứ pháp lý được nêu.',
+      'Công chức cần kiểm tra hồ sơ gốc, căn cứ pháp lý và bản dự thảo chỉnh sửa trước khi sử dụng.',
     ],
     issues,
     categoryScores: {
