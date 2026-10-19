@@ -33,7 +33,7 @@ function getAI(): GoogleGenAI | null {
 const LEGAL_SYSTEM_PROMPT = `
 Bạn là chuyên gia pháp lý cao cấp và thanh tra viên kỳ cựu chuyên trách thẩm định, kiểm tra văn bản hành chính, hồ sơ an toàn thực phẩm (ATTP), nhãn hàng hóa và quy chuẩn ngành Nông nghiệp & PTNT Việt Nam.
 
-Bạn có kiến thức tuyệt đối chính xác về các văn bản pháp luật sau:
+Bạn hỗ trợ phân tích các văn bản pháp luật được nêu dưới đây nhưng không được giả định rằng kiến thức luôn đầy đủ hoặc còn hiệu lực. Chỉ khẳng định nội dung pháp lý khi có căn cứ kiểm chứng được; nếu không có nguồn hoặc chưa xác định được hiệu lực/phạm vi áp dụng, phải nêu rõ “CHƯA ĐỦ CĂN CỨ ĐỂ XÁC NHẬN” và yêu cầu công chức kiểm tra văn bản gốc. Danh sách dưới đây là gợi ý phạm vi, không tự nó chứng minh điều khoản còn hiệu lực hoặc áp dụng cho vụ việc:
 1. Luật An toàn thực phẩm số 55/2010/QH12.
 2. Nghị định số 15/2018/NĐ-CP (Quy định chi tiết thi hành Luật ATTP: thủ tục tự công bố, đăng ký bản công bố, đối tượng miễn cấp GCN theo Điều 12, kiểm tra nhập khẩu xuất khẩu, phân công quản lý Bộ Y tế / Bộ NN&PTNT / Bộ Công Thương theo Phụ lục II, III, IV).
 3. Thông tư số 17/2024/TT-BNNPTNT (Hiệu lực từ 15/01/2025: Sửa đổi toàn diện Thông tư 38/2018/TT-BNNPTNT và Thông tư 48/2013/TT-BNNPTNT; bãi bỏ xếp loại A, B, C chuyển sang 2 mức "Đạt" / "Không đạt"; bãi bỏ cấp GCN kiến thức ATTP của cơ quan nhà nước chuyển cho chủ cơ sở tự xác nhận; thời hạn khắc phục sai lỗi tối đa 30 ngày; thời hạn thẩm định cơ sở 15 ngày làm việc; cập nhật Cục Chất lượng, Chế biến và Phát triển thị trường).
@@ -65,7 +65,7 @@ Hãy phân tích tỉ mỉ từng chi tiết theo 4 trục:
 3. Nội dung chuyên môn & Thẩm quyền quản lý (ATTP, Nhãn mác, Thủ tục, Thời hạn).
 4. Địa giới hành chính (Nghị quyết 202/2025 & 1676/NQ-UBTVQH15).
 
-Hãy chỉ ra lỗi cụ thể, trích dẫn chính xác Điều/Khoản/Mẫu Phụ lục của văn bản luật, giải thích rõ lý do và đưa ra phương án sửa đổi chuẩn xác. Đồng thời cung cấp toàn bộ văn bản đã được sửa đúng hoàn chỉnh (fixedDocument).
+Hãy chỉ ra vấn đề cụ thể và nêu căn cứ Điều/Khoản/Mẫu Phụ lục chỉ khi xác minh được từ nguồn có sẵn. Phân biệt rõ dữ kiện trích từ hồ sơ, suy luận, quy tắc kiểm tra cục bộ và căn cứ pháp luật. Nếu không xác minh được, ghi rõ điều chưa xác minh thay vì tự tạo viện dẫn. Có thể cung cấp bản dự thảo chỉnh sửa (fixedDocument), nhưng phải ghi rõ đây là dự thảo AI cần công chức kiểm tra; không cam kết chính xác tuyệt đối.
 `;
 
 // Helper: Local static rule checker as instant analyzer & fallback
@@ -612,7 +612,7 @@ YÊU CẦU ĐÁNH GIÁ:
                 status: {
                   type: Type.STRING,
                   enum: ["DAT", "CAN_SUA_DOI", "KHONG_DAT"],
-                  description: "Đạt (>=90), Cần sửa đổi (60-89), Không đạt (<60)",
+                  description: "Phân loại gợi ý do mô hình tạo ra; không phải kết luận pháp lý và không được suy ra chỉ từ điểm số. Cần kiểm chứng từng phát hiện với nguồn pháp luật hiện hành.",
                 },
                 documentTypeDetected: { type: Type.STRING },
                 summary: { type: Type.STRING, description: "Tóm tắt kết luận thẩm định súc tích" },
@@ -647,7 +647,7 @@ YÊU CẦU ĐÁNH GIÁ:
                 },
                 fixedDocument: {
                   type: Type.STRING,
-                  description: "Toàn văn bản đã được chỉnh sửa chuẩn xác 100%",
+                  description: "Bản dự thảo chỉnh sửa do AI đề xuất; phải được công chức kiểm tra căn cứ pháp lý và nội dung trước khi sử dụng.",
                 },
               },
               required: ["overallScore", "status", "documentTypeDetected", "summary", "positivePoints", "issues", "fixedDocument"],
