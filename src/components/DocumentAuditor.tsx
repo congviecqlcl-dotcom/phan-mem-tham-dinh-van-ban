@@ -1269,6 +1269,11 @@ export const DocumentAuditor: React.FC = () => {
 
             {activeFile?.auditResult && !isAuditingSingle && (
               <div className="space-y-4">
+                {/* AI limitation notice: scores and labels are triage aids, not legal conclusions. */}
+                <div role="note" className="rounded-xl border border-amber-300 bg-amber-50 p-4 text-sm text-amber-950 space-y-1">
+                  <div className="font-semibold">Lưu ý về kết quả hỗ trợ bằng AI</div>
+                  <p>Điểm số và nhãn phân loại dưới đây chỉ là gợi ý sàng lọc của hệ thống, không phải kết luận pháp lý hoặc quyết định thẩm định. Công chức cần kiểm tra từng phát hiện với hồ sơ gốc và văn bản pháp luật còn hiệu lực; nội dung chưa có căn cứ phải được xác minh trước khi sử dụng.</p>
+                </div>
                 {/* Summary Header Card */}
                 <div className="bg-white rounded-2xl border border-neutral-200 p-5 shadow-sm space-y-4">
                   <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-neutral-100 pb-4">
@@ -1299,10 +1304,10 @@ export const DocumentAuditor: React.FC = () => {
                             }`}
                           >
                             {activeFile.auditResult.status === 'DAT'
-                              ? 'ĐẠT CHUẨN'
+                              ? 'GỢI Ý: ĐẠT'
                               : activeFile.auditResult.status === 'CAN_SUA_DOI'
-                              ? 'CẦN SỬA ĐỔI'
-                              : 'KHÔNG ĐẠT'}
+                              ? 'GỢI Ý: CẦN SỬA'
+                              : 'GỢI Ý: XEM XÉT'}
                           </span>
                         </div>
                         <p className="text-xs text-neutral-500">
