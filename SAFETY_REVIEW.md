@@ -87,3 +87,5 @@ Trên nhánh thử nghiệm, đã bổ sung các giới hạn kỹ thuật ở p
 - Đây là sửa đổi mã trên nhánh thử nghiệm. Chưa chạy build, lint hoặc test tự động; cần kiểm tra JSX/TypeScript và mọi luồng xuất Word trước khi coi là hoàn tất.
 
 - Cập nhật tiếp: đã bỏ các trường điểm và điểm tối đa khỏi nhóm `CategoryScore` trong bộ kiểm tra cục bộ và máy chủ; trường tổng hợp legacy `overallScore` vẫn tạm tồn tại bằng 0 để tương thích API.
+
+- Đã rà soát thêm đường xử lý Gemini và dự phòng phía máy chủ: bỏ điểm thành phần và các phép trừ điểm theo mức độ; schema không còn yêu cầu mô hình tạo điểm tổng hợp, máy chủ ghi đè trường legacy `overallScore` bằng 0. Cần kiểm thử thực tế cả đường Gemini và đường dự phòng trước khi phát hành.
