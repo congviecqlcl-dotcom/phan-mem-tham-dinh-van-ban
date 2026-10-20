@@ -748,7 +748,9 @@ app.post("/api/batch-audit-documents", async (req, res) => {
       results,
     });
   } catch (err: any) {
-    return res.status(500).json({ error: "Lỗi trong quá trình thẩm định hàng loạt: " + err.message });
+    // Do not expose internal exception details to API clients.
+    console.error("Lỗi API thẩm định hàng loạt.");
+    return res.status(503).json({ error: "Không thể hoàn tất lượt thẩm định hàng loạt do lỗi hệ thống. Vui lòng thử lại sau." });
   }
 });
 
