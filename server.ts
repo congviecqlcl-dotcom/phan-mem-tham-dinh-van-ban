@@ -648,6 +648,9 @@ YÊU CẦU ĐÁNH GIÁ:
 
           return {
             ...parsed,
+            // Safety: do not export model-rewritten legal text as if it were a reviewed correction.
+            // Until a human-reviewed diff workflow exists, preserve the exact submitted content.
+            fixedDocument: content || "",
             categoryScores,
             auditDate: new Date().toLocaleDateString("vi-VN"),
           };
