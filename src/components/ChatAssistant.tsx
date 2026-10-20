@@ -74,14 +74,22 @@ Bạn có thể đặt bất kỳ câu hỏi nào về thẩm quyền, biểu m�
 
         if (response.ok) {
           const data = await response.json();
-          replyText = data.reply;
+          const sourceNotice =
+            data.source === 'local_fallback'
+              ? '\n\n⚠️ LƯU Ý: Câu trả lời từ bộ quy tắc cục bộ, không phải tra cứu pháp luật trực tiếp. Hãy kiểm chứng với văn bản gốc hiện hành.'
+              : data.source === 'gemini'
+              ? '\n\n⚠️ LƯU Ý: Câu trả lời do AI tạo. Cần đối chiếu văn bản pháp luật gốc, hiệu lực và phạm vi áp dụng trước khi sử dụng.'
+              : '';
+          replyText = (data.reply || '') + (data.notice ? '\n\n⚠️ ' + data.notice : sourceNotice);
         }
       } catch (netErr) {
         console.warn('Network chat error, using local legal engine:', netErr);
       }
 
       if (!replyText) {
-        replyText = getLocalChatResponse(query);
+        replyText =
+          getLocalChatResponse(query) +
+          '\n\n⚠️ LƯU Ý: Đây là câu trả lời dự phòng cục bộ do kết nối hoặc máy chủ không trả về kết quả. Chưa được xác minh với văn bản pháp luật gốc hiện hành.';
       }
 
       const botMessage: ChatMessage = {
