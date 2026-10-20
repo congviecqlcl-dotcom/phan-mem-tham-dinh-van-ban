@@ -1240,8 +1240,10 @@ export const DocumentAuditor: React.FC = () => {
               <div className="space-y-4">
                 {/* Automated signals are not legal conclusions. */}
                 <div role="note" className="rounded-xl border border-amber-300 bg-amber-50 p-4 text-sm text-amber-950 space-y-1">
-                  <div className="font-semibold">Lưu ý về kết quả hỗ trợ bằng AI</div>
-                  <p>Các dấu hiệu do hệ thống phát hiện chỉ là gợi ý rà soát theo mẫu đã lập trình, không phải kết luận pháp lý hoặc quyết định thẩm định. Công chức cần kiểm tra từng phát hiện với hồ sơ gốc và văn bản pháp luật còn hiệu lực. Không có dấu hiệu được phát hiện không chứng minh văn bản tuân thủ đầy đủ pháp luật.</p>
+                  <div className="font-semibold">Nguồn và giới hạn kết quả</div>
+                  <p>{activeFile.auditResult.source === 'gemini' ? 'Nguồn xử lý: Gemini (mô hình AI).' : activeFile.auditResult.source === 'local_rule' ? 'Nguồn xử lý: bộ quy tắc cục bộ theo mẫu đã lập trình.' : 'Chưa xác định được nguồn xử lý từ dữ liệu kết quả.'}</p>
+                  {activeFile.auditResult.sourceNotice && <p>{activeFile.auditResult.sourceNotice}</p>}
+                  <p>Các dấu hiệu do hệ thống phát hiện chỉ là gợi ý rà soát, không phải kết luận pháp lý hoặc quyết định thẩm định. Công chức cần kiểm tra từng phát hiện với hồ sơ gốc và văn bản pháp luật còn hiệu lực. Không có dấu hiệu được phát hiện không chứng minh văn bản tuân thủ đầy đủ pháp luật.</p>
                 </div>
                 {/* Summary Header Card */}
                 <div className="bg-white rounded-2xl border border-neutral-200 p-5 shadow-sm space-y-4">
@@ -1275,7 +1277,7 @@ export const DocumentAuditor: React.FC = () => {
                         disabled={isExportingWord}
                         onClick={handleDownloadWordDoc}
                         className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-blue-700 hover:bg-blue-800 disabled:bg-neutral-400 text-white text-xs font-medium transition shadow-sm"
-                        title="Tải văn bản đã sửa thành file Word (.docx) chuẩn Nghị định 30/2020: Lề trái 3cm, lề phải/trên/dưới 2cm"
+                        title="Tải bản văn bản gốc được giữ nguyên dưới dạng Word; chưa được xác nhận là bản sửa đúng hoặc tuân thủ đầy đủ Nghị định 30/2020/NĐ-CP"
                       >
                         {isExportingWord ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <FileText className="w-3.5 h-3.5" />}
                         <span>{isExportingWord ? 'Đang tạo Word...' : 'Tải file Word (.docx)'}</span>
@@ -1286,7 +1288,7 @@ export const DocumentAuditor: React.FC = () => {
                         className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-neutral-900 text-white hover:bg-neutral-800 text-xs font-medium transition"
                       >
                         {copiedClean ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5" />}
-                        <span>{copiedClean ? 'Đã sao chép!' : 'Chép bản sửa chuẩn'}</span>
+                        <span>{copiedClean ? 'Đã sao chép!' : 'Chép văn bản gốc'}</span>
                       </button>
                     </div>
                   </div>
