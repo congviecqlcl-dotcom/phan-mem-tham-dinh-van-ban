@@ -344,15 +344,8 @@ function runLocalRuleAudit(content: string, docType?: string) {
     });
   }
 
-  // Calculate scores
-  const totalWeight = 100;
-  const deduction = issues.reduce((acc, curr) => {
-    if (curr.severity === "error") return acc + 18;
-    if (curr.severity === "warning") return acc + 9;
-    return acc + 4;
-  }, 0);
-
-  const overallScore = Math.max(20, Math.min(100, totalWeight - deduction));
+  // Legacy compatibility field only; this is not a legal or statistical score.
+  const overallScore = 0;
   // A heuristic score must never be converted into a legal pass/fail status.
   // Every automated result remains pending verification by a competent human.
   const status = "CAN_XAC_MINH";
@@ -385,14 +378,6 @@ function runLocalRuleAudit(content: string, docType?: string) {
     categoryScores: {
       the_thuc: {
         name: "Thể thức văn bản (Nghị định 30/2020)",
-        score: Math.max(
-          0,
-          25 -
-            issues
-              .filter((i: any) => i.category === "the_thuc")
-              .reduce((s: number, i: any) => s + (i.severity === "error" ? 10 : 5), 0)
-        ),
-        maxScore: 25,
         totalIssues: issues.filter((i: any) => i.category === "the_thuc").length,
         severityBreakdown: {
           error: issues.filter((i: any) => i.category === "the_thuc" && i.severity === "error").length,
@@ -402,14 +387,6 @@ function runLocalRuleAudit(content: string, docType?: string) {
       },
       can_cu_phap_ly: {
         name: "Căn cứ pháp lý & Hiệu lực",
-        score: Math.max(
-          0,
-          25 -
-            issues
-              .filter((i: any) => i.category === "can_cu_phap_ly")
-              .reduce((s: number, i: any) => s + (i.severity === "error" ? 10 : 5), 0)
-        ),
-        maxScore: 25,
         totalIssues: issues.filter((i: any) => i.category === "can_cu_phap_ly").length,
         severityBreakdown: {
           error: issues.filter((i: any) => i.category === "can_cu_phap_ly" && i.severity === "error").length,
@@ -419,14 +396,6 @@ function runLocalRuleAudit(content: string, docType?: string) {
       },
       chuyen_mon_attp: {
         name: "Chuyên môn ATTP & Quy trình",
-        score: Math.max(
-          0,
-          25 -
-            issues
-              .filter((i: any) => i.category === "chuyen_mon_attp")
-              .reduce((s: number, i: any) => s + (i.severity === "error" ? 10 : 5), 0)
-        ),
-        maxScore: 25,
         totalIssues: issues.filter((i: any) => i.category === "chuyen_mon_attp").length,
         severityBreakdown: {
           error: issues.filter((i: any) => i.category === "chuyen_mon_attp" && i.severity === "error").length,
@@ -436,14 +405,6 @@ function runLocalRuleAudit(content: string, docType?: string) {
       },
       nhan_quang_cao: {
         name: "Ghi nhãn & Quảng cáo",
-        score: Math.max(
-          0,
-          15 -
-            issues
-              .filter((i: any) => i.category === "nhan_quang_cao")
-              .reduce((s: number, i: any) => s + (i.severity === "error" ? 8 : 4), 0)
-        ),
-        maxScore: 15,
         totalIssues: issues.filter((i: any) => i.category === "nhan_quang_cao").length,
         severityBreakdown: {
           error: issues.filter((i: any) => i.category === "nhan_quang_cao" && i.severity === "error").length,
@@ -454,7 +415,6 @@ function runLocalRuleAudit(content: string, docType?: string) {
       dia_gioi_hanh_chinh: {
         name: "Địa giới hành chính 2025-2026",
         score: 10,
-        maxScore: 10,
         totalIssues: 0,
         severityBreakdown: { error: 0, warning: 0, suggestion: 0 },
       },
@@ -646,11 +606,11 @@ YÊU CẦU ĐÁNH GIÁ:
         if (response.text) {
           const parsed = JSON.parse(response.text);
           const categoryScores: Record<string, any> = {
-            the_thuc: { name: "Thể thức văn bản (Nghị định 30/2020)", score: 25, maxScore: 25, totalIssues: 0, severityBreakdown: { error: 0, warning: 0, suggestion: 0 } },
-            can_cu_phap_ly: { name: "Căn cứ pháp lý & Hiệu lực", score: 25, maxScore: 25, totalIssues: 0, severityBreakdown: { error: 0, warning: 0, suggestion: 0 } },
-            chuyen_mon_attp: { name: "Chuyên môn ATTP & Quy trình", score: 25, maxScore: 25, totalIssues: 0, severityBreakdown: { error: 0, warning: 0, suggestion: 0 } },
-            nhan_quang_cao: { name: "Ghi nhãn & Quảng cáo", score: 15, maxScore: 15, totalIssues: 0, severityBreakdown: { error: 0, warning: 0, suggestion: 0 } },
-            dia_gioi_hanh_chinh: { name: "Địa giới hành chính 2025-2026", score: 10, maxScore: 10, totalIssues: 0, severityBreakdown: { error: 0, warning: 0, suggestion: 0 } },
+            the_thuc: { name: "Thể thức văn bản (Nghị định 30/2020)", totalIssues: 0, severityBreakdown: { error: 0, warning: 0, suggestion: 0 } },
+            can_cu_phap_ly: { name: "Căn cứ pháp lý & Hiệu lực", totalIssues: 0, severityBreakdown: { error: 0, warning: 0, suggestion: 0 } },
+            chuyen_mon_attp: { name: "Chuyên môn ATTP & Quy trình", totalIssues: 0, severityBreakdown: { error: 0, warning: 0, suggestion: 0 } },
+            nhan_quang_cao: { name: "Ghi nhãn & Quảng cáo", totalIssues: 0, severityBreakdown: { error: 0, warning: 0, suggestion: 0 } },
+            dia_gioi_hanh_chinh: { name: "Địa giới hành chính 2025-2026", totalIssues: 0, severityBreakdown: { error: 0, warning: 0, suggestion: 0 } },
           };
 
           parsed.issues?.forEach((issue: any) => {
