@@ -362,6 +362,8 @@ function runLocalRuleAudit(content: string, docType?: string) {
 
   return {
     overallScore,
+    source: "local_rule",
+    sourceNotice: "Kết quả từ bộ quy tắc cục bộ theo mẫu đã lập trình; chưa phải tra cứu pháp luật trực tiếp và không chứng minh tuân thủ đầy đủ.",
     status,
     documentTypeDetected:
       docType ||
@@ -646,6 +648,8 @@ YÊU CẦU ĐÁNH GIÁ:
             // Until a human-reviewed diff workflow exists, preserve the exact submitted content.
             fixedDocument: content || "",
             categoryScores,
+            source: "gemini",
+            sourceNotice: "Kết quả do Gemini tạo; cần kiểm tra từng phát hiện với hồ sơ gốc và văn bản pháp luật hiện hành.",
             auditDate: new Date().toLocaleDateString("vi-VN"),
           };
         }
@@ -687,8 +691,8 @@ app.post("/api/audit-document", async (req, res) => {
     const result = await performSingleAudit({ content, docType, fileName, fileData, mimeType });
     return res.json(result);
   } catch (error: any) {
-    const fallbackResult = runLocalRuleAudit(req.body?.content || "", req.body?.docType);
-    return res.json(fallbackResult);
+    console.error("Lỗi API thẩm định văn bản.");
+    return res.status(503).json({ error: "Không thể hoàn tất lượt thẩm định do lỗi hệ thống. Vui lòng thử lại sau." });
   }
 });
 
