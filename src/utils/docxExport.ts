@@ -1520,7 +1520,7 @@ export async function downloadConsolidatedBatchReport(
 
   completedItems.forEach((item, idx) => {
     const res = item.auditResult!;
-    const statusText = res.status === 'DAT' ? 'ĐẠT (>=90đ)' : res.status === 'CAN_SUA_DOI' ? 'CẦN SỬA ĐỔI' : 'KHÔNG ĐẠT';
+    const statusText = res.status === 'DAT' ? 'GỢI Ý: ÍT DẤU HIỆU THEO MẪU' : res.status === 'CAN_SUA_DOI' ? 'GỢI Ý: CẦN RÀ SOÁT' : 'GỢI Ý: CẦN XEM XÉT';
     const errCount = res.issues.filter((i) => i.severity === 'error').length;
     const warnCount = res.issues.filter((i) => i.severity === 'warning').length;
 
