@@ -1208,7 +1208,7 @@ export async function createAuditReportWordDocument(
       children: [
         new TextRun({ text: '• Điểm sàng lọc nội bộ (không phải điểm tuân thủ): ', font: FONT_TIMES, bold: true }),
         new TextRun({ text: `${auditResult.overallScore} / 100 điểm `, font: FONT_TIMES, bold: true, color: auditResult.overallScore >= 80 ? '008000' : 'C00000' }),
-        new TextRun({ text: `(${auditResult.status === 'DAT' ? 'GỢI Ý: ÍT DẤU HIỆU THEO MẪU' : auditResult.status === 'CAN_SUA_DOI' ? 'GỢI Ý: CẦN RÀ SOÁT' : 'GỢI Ý: CẦN XEM XÉT'})`, font: FONT_TIMES, bold: true }),
+        new TextRun({ text: `(${'CẦN CÔNG CHỨC XÁC MINH'})`, font: FONT_TIMES, bold: true }),
       ],
     }),
     new Paragraph({
@@ -1520,7 +1520,7 @@ export async function downloadConsolidatedBatchReport(
 
   completedItems.forEach((item, idx) => {
     const res = item.auditResult!;
-    const statusText = res.status === 'DAT' ? 'GỢI Ý: ÍT DẤU HIỆU THEO MẪU' : res.status === 'CAN_SUA_DOI' ? 'GỢI Ý: CẦN RÀ SOÁT' : 'GỢI Ý: CẦN XEM XÉT';
+    const statusText = 'CẦN CÔNG CHỨC XÁC MINH';
     const errCount = res.issues.filter((i) => i.severity === 'error').length;
     const warnCount = res.issues.filter((i) => i.severity === 'warning').length;
 
@@ -1540,7 +1540,7 @@ export async function downloadConsolidatedBatchReport(
             children: [new Paragraph({ alignment: AlignmentType.CENTER, children: [new TextRun({ text: `${res.overallScore}/100`, font: FONT_TIMES, bold: true, size: SIZES.CAPTION })] })],
           }),
           new TableCell({
-            children: [new Paragraph({ alignment: AlignmentType.CENTER, children: [new TextRun({ text: statusText, font: FONT_TIMES, bold: true, size: SIZES.CAPTION, color: res.status === 'DAT' ? '006400' : res.status === 'CAN_SUA_DOI' ? 'B8860B' : 'C00000' })] })],
+            children: [new Paragraph({ alignment: AlignmentType.CENTER, children: [new TextRun({ text: statusText, font: FONT_TIMES, bold: true, size: SIZES.CAPTION, color: 'B8860B' })] })],
           }),
           new TableCell({
             children: [new Paragraph({ alignment: AlignmentType.CENTER, children: [new TextRun({ text: `${res.issues.length} (${errCount} lỗi, ${warnCount} cảnh báo)`, font: FONT_TIMES, size: SIZES.CAPTION })] })],
