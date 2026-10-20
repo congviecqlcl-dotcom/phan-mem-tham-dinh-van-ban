@@ -144,3 +144,10 @@ Không nên thêm một token bí mật cố định vào mã trình duyệt đ�
 - Đã sửa `.github/workflows/quality.yml` trên nhánh thử nghiệm để cài Bun 1.2.22, chạy `bun install --frozen-lockfile`, rồi chạy `bun run lint` và `bun run build`. Mục tiêu là sử dụng đúng tệp khóa hiện có và làm thất bại CI nếu khóa không đồng bộ với khai báo phụ thuộc.
 - Thay đổi workflow vừa được ghi vào commit `008b8d433a2180a8b6c3a0965573acc8df95548c`. **Chưa xác nhận CI của commit này đã hoàn tất thành công**; phải đợi kết quả Actions trước khi coi bước này đã qua kiểm tra.
 - Đây chỉ cải thiện tính nhất quán của cài đặt phụ thuộc. Nó không xử lý xác thực/phân quyền API, giới hạn tần suất, kiểm thử bảo mật, kiểm thử nghiệp vụ hoặc xác minh pháp luật.
+
+## Lưu ý triển khai Preview do tích hợp GitHub–Vercel
+
+- PR có bình luận tự động từ Vercel cho biết một deployment Preview ở trạng thái Ready đã được tạo cho nhánh thử nghiệm. Đây là hành vi tự động của tích hợp CI/CD, không phải thao tác triển khai Production do phiên rà soát này thực hiện.
+- Chưa xác minh được deployment Preview có yêu cầu đăng nhập hay bị giới hạn người xem hay không. Truy vấn cấu hình Vercel bị từ chối do phạm vi tài khoản hiện tại không có quyền truy cập; vì vậy không được kết luận Preview là công khai hoặc riêng tư.
+- Cần chủ dự án kiểm tra Deployment Protection/Preview Protection và xác nhận không có hồ sơ nghiệp vụ thật hoặc bí mật trong Preview. Nếu chưa thể xác nhận quyền truy cập, hãy coi URL Preview là môi trường chưa được phê duyệt và không đưa dữ liệu nhạy cảm vào.
+- Không tự thay đổi cấu hình Vercel, không xóa deployment và không triển khai Production khi chưa có quyền truy cập được xác nhận và sự đồng ý rõ ràng của chủ dự án.
