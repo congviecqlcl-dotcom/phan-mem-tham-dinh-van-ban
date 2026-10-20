@@ -109,3 +109,13 @@ Kết quả này xác nhận TypeScript check và build production trên commit 
 - Chưa có giới hạn tần suất theo người dùng/IP; giới hạn body và batch không thay thế biện pháp này.
 
 Không nên thêm một token bí mật cố định vào mã trình duyệt để “bảo vệ” API vì người dùng có thể trích xuất token. Thiết kế xác thực cần gắn với phiên người dùng được xác minh ở máy chủ hoặc cổng tin cậy phía trước; sau đó mới bổ sung giới hạn tần suất, kiểm soát chi phí và kiểm thử truy cập trái phép.
+
+
+## Cập nhật sau CI — kiểm tra đầu vào tệp và nguồn trả lời
+
+- API trò chuyện trả thêm trường nguồn: `gemini` khi có phản hồi từ Gemini hoặc `local_fallback` khi dùng bộ quy tắc cục bộ; cả hai có cảnh báo cần kiểm chứng với văn bản pháp luật gốc.
+- Giao diện trò chuyện hiển thị cảnh báo theo nguồn phản hồi. Khi API trả lỗi bất ngờ, giao diện dùng phản hồi dự phòng cục bộ nhưng kèm cảnh báo rõ ràng.
+- API trích xuất tệp trả thông báo lỗi chung cho người dùng, không nối trực tiếp thông điệp lỗi nội bộ vào phản hồi HTTP.
+- API phân tích Base64 kiểm tra cấu trúc chuỗi trước khi giải mã và kiểm tra kích thước dữ liệu sau giải mã. Đây là kiểm tra đầu vào cơ bản, **không thay thế kiểm tra chữ ký định dạng tệp, giới hạn tài nguyên parser, quét mã độc, xác thực hay phân quyền**.
+- GitHub Actions thành công tại commit `47bcb784d6dfd68854f394526c85d5bd36a46923` và commit tiếp theo `3a5f3fb846e531bf65f632ef9ce64fc801df968b`. Kết quả chỉ xác nhận TypeScript check và production build, không xác nhận an toàn API hoặc tính đúng đắn pháp lý.
+- Điều kiện chặn chưa thay đổi: chưa xác minh lớp xác thực/phân quyền ở máy chủ hoặc nền tảng, chưa có giới hạn tần suất theo người dùng/IP và chưa có kiểm thử bảo mật/hồi quy toàn diện. Không triển khai công khai hoặc đưa hồ sơ nghiệp vụ thật vào hệ thống trước khi xử lý các điều kiện này.
