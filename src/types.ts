@@ -43,7 +43,7 @@ export interface CategoryScore {
 
 export interface AuditResult {
   overallScore: number; // Legacy compatibility field; not a compliance score (currently 0)
-  source?: 'gemini' | 'local_rule';
+  source?: 'gemini' | 'local_rule' | 'client_rule';
   sourceNotice?: string;
   status: 'CAN_XAC_MINH';
   documentTypeDetected: string;
