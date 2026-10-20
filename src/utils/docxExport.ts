@@ -83,7 +83,7 @@ const BLACK_LINE_DATA = getBlackPixelData();
 
 /**
  * Tạo đường kẻ ngang nét liền (solid continuous line) chuẩn theo công cụ Shapes -> Line trong Word,
- * tuân thủ 100% quy định tại Phụ lục I - Nghị định 30/2020/NĐ-CP:
+ * được thiết kế theo một số quy cách trình bày tham chiếu Phụ lục I - Nghị định 30/2020/NĐ-CP; cần kiểm tra lại trước khi sử dụng:
  * - Dưới Tiêu ngữ: Nét liền có độ dài bằng đúng độ dài dòng chữ "Độc lập - Tự do - Hạnh phúc" (~6.5cm = 185px).
  * - Dưới Tên cơ quan: Nét liền có độ dài bằng từ 1/3 đến 1/2 độ dài dòng chữ (~2.8cm = 80px).
  * - Dưới Trích yếu: Nét liền có độ dài bằng từ 1/3 đến 1/2 độ dài trích yếu (~4.5cm = 130px).
@@ -561,7 +561,7 @@ export function parseAdminText(rawText: string): ParsedAdminDocument {
  */
 export async function createNghiDinh30WordDocument(
   fixedContent: string,
-  docTitle: string = 'Van_ban_chuan_ND30'
+  docTitle: string = 'Van_ban_goc_chua_sua'
 ): Promise<Blob> {
   const parsed = parseAdminText(fixedContent);
 
@@ -1026,7 +1026,7 @@ export async function createNghiDinh30WordDocument(
   // ----------------------------------------------------
   const doc = new Document({
     title: docTitle,
-    description: 'Văn bản hành chính chuẩn hóa theo Nghị định 30/2020/NĐ-CP',
+    description: 'Nội dung gốc được xuất ra Word với định dạng trình bày tham khảo; chưa xác nhận tuân thủ pháp luật',
     styles: {
       default: {
         document: {
@@ -1206,9 +1206,9 @@ export async function createAuditReportWordDocument(
       indent: { firstLine: INDENT_FIRST_LINE },
       spacing: PARAGRAPH_SPACING,
       children: [
-        new TextRun({ text: '• Điểm số tuân thủ: ', font: FONT_TIMES, bold: true }),
+        new TextRun({ text: '• Điểm sàng lọc nội bộ (không phải điểm tuân thủ): ', font: FONT_TIMES, bold: true }),
         new TextRun({ text: `${auditResult.overallScore} / 100 điểm `, font: FONT_TIMES, bold: true, color: auditResult.overallScore >= 80 ? '008000' : 'C00000' }),
-        new TextRun({ text: `(${auditResult.status === 'DAT' ? 'ĐẠT CHUẨN' : auditResult.status === 'CAN_SUA_DOI' ? 'CẦN SỬA ĐỔI' : 'KHÔNG ĐẠT'})`, font: FONT_TIMES, bold: true }),
+        new TextRun({ text: `(${auditResult.status === 'DAT' ? 'GỢI Ý: ÍT DẤU HIỆU THEO MẪU' : auditResult.status === 'CAN_SUA_DOI' ? 'GỢI Ý: CẦN RÀ SOÁT' : 'GỢI Ý: CẦN XEM XÉT'})`, font: FONT_TIMES, bold: true }),
       ],
     }),
     new Paragraph({
@@ -1313,7 +1313,7 @@ export async function createAuditReportWordDocument(
  */
 export async function downloadFixedAsWord(
   fixedContent: string,
-  fileName: string = 'Van_ban_chuan_hoa_ND30.docx'
+  fileName: string = 'Van_ban_goc_chua_sua.docx'
 ) {
   const cleanName = fileName.endsWith('.docx') ? fileName : `${fileName}.docx`;
   const blob = await createNghiDinh30WordDocument(fixedContent, cleanName);
@@ -1334,7 +1334,7 @@ export async function downloadAuditReportAsWord(
  */
 export async function downloadAllFixedAsZip(
   items: DocumentFileItem[],
-  zipFileName: string = 'Van_ban_da_chuan_hoa_ND30.zip'
+  zipFileName: string = 'Noi_dung_goc_chua_tu_dong_sua.zip'
 ) {
   const zip = new JSZip();
   const completedItems = items.filter((item) => item.auditResult?.fixedDocument);
@@ -1344,14 +1344,14 @@ export async function downloadAllFixedAsZip(
   }
 
   // Folder for fixed documents
-  const fixedFolder = zip.folder('1_Van_Ban_Da_Chuan_Hoa_ND30');
+  const fixedFolder = zip.folder('1_Noi_Dung_Goc_Chua_Tu_Dong_Sua');
   // Folder for audit reports
   const reportsFolder = zip.folder('2_Bao_Cao_Tham_Dinh_Chi_Tiet');
 
   for (let i = 0; i < completedItems.length; i++) {
     const item = completedItems[i];
     const baseName = item.name.replace(/\.[^/.]+$/, '').replace(/[/\\?%*:|"<>]/g, '_');
-    const docxName = `${String(i + 1).padStart(2, '0')}_${baseName}_chuan_ND30.docx`;
+    const docxName = `${String(i + 1).padStart(2, '0')}_${baseName}_ban_goc_chua_sua.docx`;
     const reportName = `Bao_cao_${String(i + 1).padStart(2, '0')}_${baseName}.docx`;
 
     // 1. Create fixed word document
