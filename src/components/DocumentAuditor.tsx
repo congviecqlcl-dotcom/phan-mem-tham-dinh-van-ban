@@ -869,15 +869,15 @@ export const DocumentAuditor: React.FC = () => {
             </div>
             <div className="bg-amber-50 p-4 rounded-2xl border border-amber-200 shadow-2xs text-center space-y-1">
               <div className="text-2xl font-bold text-amber-800">{warningDocs.length}</div>
-              <div className="text-xs text-amber-700 font-medium">Cần sửa đổi (60-89đ)</div>
+              <div className="text-xs text-amber-700 font-medium">Có dấu hiệu cần rà soát (điểm tham khảo)</div>
             </div>
             <div className="bg-rose-50 p-4 rounded-2xl border border-rose-200 shadow-2xs text-center space-y-1">
               <div className="text-2xl font-bold text-rose-800">{failedDocs.length}</div>
-              <div className="text-xs text-rose-700 font-medium">Không đạt (&lt;60đ)</div>
+              <div className="text-xs text-rose-700 font-medium">Nhiều dấu hiệu cần xem xét (không phải kết luận)</div>
             </div>
             <div className="bg-blue-50 p-4 rounded-2xl border border-blue-200 shadow-2xs text-center space-y-1">
               <div className="text-2xl font-bold text-blue-800">{avgScore}/100</div>
-              <div className="text-xs text-blue-700 font-medium">Điểm trung bình</div>
+              <div className="text-xs text-blue-700 font-medium">Điểm sàng lọc trung bình (không phải mức tuân thủ)</div>
             </div>
             <div className="bg-purple-50 p-4 rounded-2xl border border-purple-200 shadow-2xs text-center space-y-1">
               <div className="text-2xl font-bold text-purple-800">{totalIssuesAcrossAll}</div>
@@ -925,7 +925,7 @@ export const DocumentAuditor: React.FC = () => {
                     <th className="py-3 px-4 w-12 text-center">STT</th>
                     <th className="py-3 px-4">Tên tệp văn bản</th>
                     <th className="py-3 px-4">Loại văn bản</th>
-                    <th className="py-3 px-4 text-center">Điểm số</th>
+                    <th className="py-3 px-4 text-center">Điểm sàng lọc*</th>
                     <th className="py-3 px-4 text-center">Xếp loại</th>
                     <th className="py-3 px-4">Chi tiết sai sót</th>
                     <th className="py-3 px-4 text-right">Thao tác</th>
@@ -988,10 +988,10 @@ export const DocumentAuditor: React.FC = () => {
                               }`}
                             >
                               {res.status === 'DAT'
-                                ? 'ĐẠT CHUẨN'
+                                ? 'GỢI Ý: ÍT DẤU HIỆU THEO MẪU'
                                 : res.status === 'CAN_SUA_DOI'
-                                ? 'CẦN SỬA ĐỔI'
-                                : 'KHÔNG ĐẠT'}
+                                ? 'GỢI Ý: CẦN RÀ SOÁT'
+                                : 'GỢI Ý: CẦN XEM XÉT'}
                             </span>
                           ) : (
                             <span className="text-neutral-400">—</span>
@@ -1259,7 +1259,7 @@ export const DocumentAuditor: React.FC = () => {
                   <div className="text-xs text-neutral-500 space-y-1 max-w-sm">
                     <div>✓ Thể thức văn bản & Cấm viết tắt tùy tiện (Nghị định 30/2020)</div>
                     <div>✓ Quy tắc viết hoa chuẩn xác (Phụ lục II NĐ 30/2020)</div>
-                    <div>✓ Quy chuẩn ATTP & Xếp loại Đạt/Không đạt (Thông tư 17/2024)</div>
+                    <div>✓ Bộ quy tắc sàng lọc cục bộ (cần kiểm chứng căn cứ pháp lý)</div>
                     <div>✓ Nhãn hàng hóa & Cảnh báo TPCN (Nghị định 111/2021 & 181/2013)</div>
                     <div>✓ Xác thực địa giới hành chính 2025-2026</div>
                   </div>
@@ -1706,7 +1706,7 @@ export const DocumentAuditor: React.FC = () => {
                   <div className="bg-white rounded-2xl border border-neutral-200 p-5 space-y-4 shadow-sm">
                     <h4 className="font-bold text-sm text-neutral-900 flex items-center gap-2">
                       <CheckCircle2 className="w-4 h-4 text-emerald-600" />
-                      Các điểm đã thực hiện đúng và phù hợp quy chuẩn
+                      Các mục hệ thống chưa phát hiện dấu hiệu theo mẫu (không xác nhận tuân thủ)
                     </h4>
                     <div className="space-y-2.5">
                       {activeFile.auditResult.positivePoints.map((point, index) => (
