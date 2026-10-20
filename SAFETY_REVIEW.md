@@ -53,3 +53,17 @@ Phạm vi: rà soát tĩnh một phần mã trên nhánh thử nghiệm `safety-
 - Chưa triển khai công khai.
 
 Đây là báo cáo rà soát kỹ thuật ban đầu, không phải kết luận pháp lý hoặc chứng nhận an toàn của toàn hệ thống.
+
+## Phòng vệ bổ sung cho API — giới hạn đầu vào
+
+Trên nhánh thử nghiệm, đã bổ sung các giới hạn kỹ thuật ở phía máy chủ:
+
+- Giảm giới hạn body JSON/form từ 50 MB xuống 20 MB.
+- Giới hạn dữ liệu tệp dạng Base64 ở 15.000.000 ký tự trước khi xử lý.
+- Giới hạn nội dung văn bản ở 250.000 ký tự mỗi văn bản.
+- Giới hạn một lượt thẩm định hàng loạt tối đa 5 văn bản; kiểm tra kiểu dữ liệu và độ dài trước khi gọi bộ máy thẩm định.
+- Giới hạn câu hỏi trợ lý ở 10.000 ký tự.
+- Trả lỗi 400/413 cho đầu vào không hợp lệ hoặc vượt giới hạn, thay vì tiếp tục xử lý.
+
+**Giới hạn của biện pháp này:** đây chỉ là kiểm soát kích thước và khối lượng đầu vào, không phải xác thực, phân quyền hay giới hạn tần suất theo người dùng/IP. Chưa có kiểm thử build, tải, tệp biên hoặc kiểm thử hồi quy; cần xác nhận các giới hạn tương thích với kích thước hồ sơ thực tế. Rủi ro API chưa xác thực vẫn là điều kiện chặn triển khai công khai.
+
