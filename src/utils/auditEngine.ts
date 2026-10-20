@@ -297,12 +297,9 @@ export function runClientAuditEngine(content: string, docType?: DocumentType | s
   }, 0);
 
   const overallScore = Math.max(25, Math.min(100, totalWeight - deduction));
-  const status =
-    overallScore >= 85
-      ? 'DAT'
-      : overallScore >= 55
-      ? 'CAN_SUA_DOI'
-      : 'KHONG_DAT';
+  // A heuristic score must never be converted into a legal pass/fail status.
+  // Every automated result remains pending verification by a competent human.
+  const status = 'CAN_XAC_MINH';
 
   // Safety: do not silently rewrite legal/administrative documents using broad regex substitutions.
   // Preserve the original text until proposed edits can be reviewed individually by a human.
