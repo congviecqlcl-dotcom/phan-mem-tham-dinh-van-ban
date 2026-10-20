@@ -754,7 +754,7 @@ export const DocumentAuditor: React.FC = () => {
                   <span className={`text-[10px] ${isActive ? 'text-neutral-300' : 'text-neutral-500'}`}>
                     {res ? (
                       <span className={res.status === 'DAT' ? 'text-emerald-400' : res.status === 'CAN_SUA_DOI' ? 'text-amber-300' : 'text-rose-300'}>
-                        {res.status === 'DAT' ? 'Đạt chuẩn' : res.status === 'CAN_SUA_DOI' ? 'Cần sửa đổi' : 'Không đạt'} • {res.issues.length} lỗi
+                        {res.status === 'DAT' ? 'Gợi ý: ít dấu hiệu theo mẫu' : res.status === 'CAN_SUA_DOI' ? 'Gợi ý: cần rà soát' : 'Gợi ý: nhiều dấu hiệu cần xem xét'} • {res.issues.length} lỗi
                       </span>
                     ) : (
                       <span>{file.charCount ? `${file.charCount.toLocaleString('vi-VN')} ký tự` : 'Chờ thẩm định'}</span>
@@ -865,7 +865,7 @@ export const DocumentAuditor: React.FC = () => {
             </div>
             <div className="bg-emerald-50 p-4 rounded-2xl border border-emerald-200 shadow-2xs text-center space-y-1">
               <div className="text-2xl font-bold text-emerald-800">{passedDocs.length}</div>
-              <div className="text-xs text-emerald-700 font-medium">Đạt chuẩn (≥90đ)</div>
+              <div className="text-xs text-emerald-700 font-medium">Ít dấu hiệu theo mẫu (không phải kết luận tuân thủ)</div>
             </div>
             <div className="bg-amber-50 p-4 rounded-2xl border border-amber-200 shadow-2xs text-center space-y-1">
               <div className="text-2xl font-bold text-amber-800">{warningDocs.length}</div>
@@ -1567,10 +1567,10 @@ export const DocumentAuditor: React.FC = () => {
                       <div>
                         <h4 className="font-bold text-sm text-neutral-900 flex items-center gap-2">
                           <CheckCircle2 className="w-4 h-4 text-emerald-600" />
-                          Văn bản đã được chỉnh sửa chuẩn hóa 100%
+                          Nội dung gốc — chưa tự động chỉnh sửa
                         </h4>
                         <p className="text-xs text-neutral-500 mt-0.5">
-                          Đã khắc phục toàn bộ lỗi thể thức theo NĐ 30/2020 và chuẩn hóa thuật ngữ chuyên ngành.
+                          Hệ thống không tự sửa nội dung. Công chức cần đối chiếu từng phát hiện với hồ sơ và căn cứ hiện hành.
                         </p>
                       </div>
                       <div className="flex flex-wrap items-center gap-2">
