@@ -1206,9 +1206,17 @@ export async function createAuditReportWordDocument(
       indent: { firstLine: INDENT_FIRST_LINE },
       spacing: PARAGRAPH_SPACING,
       children: [
-        new TextRun({ text: '• Điểm sàng lọc nội bộ (không phải điểm tuân thủ): ', font: FONT_TIMES, bold: true }),
-        new TextRun({ text: `${auditResult.overallScore} / 100 điểm `, font: FONT_TIMES, bold: true, color: auditResult.overallScore >= 80 ? '008000' : 'C00000' }),
-        new TextRun({ text: `(${'CẦN CÔNG CHỨC XÁC MINH'})`, font: FONT_TIMES, bold: true }),
+        new TextRun({ text: '• Trạng thái xử lý: ', font: FONT_TIMES, bold: true }),
+        new TextRun({ text: 'CẦN CÔNG CHỨC XÁC MINH', font: FONT_TIMES, bold: true }),
+      ],
+    }),
+    new Paragraph({
+      indent: { firstLine: INDENT_FIRST_LINE },
+      spacing: PARAGRAPH_SPACING,
+      children: [
+        new TextRun({ text: '• Số dấu hiệu cần rà soát theo mẫu: ', font: FONT_TIMES, bold: true }),
+        new TextRun({ text: String(auditResult.issues.length), font: FONT_TIMES, bold: true }),
+        new TextRun({ text: ' (không phải kết luận tuân thủ pháp luật)', font: FONT_TIMES }),
       ],
     }),
     new Paragraph({
@@ -1504,7 +1512,7 @@ export async function downloadConsolidatedBatchReport(
         }),
         new TableCell({
           width: { size: 1000, type: WidthType.DXA },
-          children: [new Paragraph({ alignment: AlignmentType.CENTER, children: [new TextRun({ text: 'Điểm', font: FONT_TIMES, bold: true, size: SIZES.SMALL })] })],
+          children: [new Paragraph({ alignment: AlignmentType.CENTER, children: [new TextRun({ text: 'Số dấu hiệu', font: FONT_TIMES, bold: true, size: SIZES.SMALL })] })],
         }),
         new TableCell({
           width: { size: 1400, type: WidthType.DXA },
@@ -1537,7 +1545,7 @@ export async function downloadConsolidatedBatchReport(
             children: [new Paragraph({ children: [new TextRun({ text: res.documentTypeDetected || item.docType, font: FONT_TIMES, size: SIZES.CAPTION })] })],
           }),
           new TableCell({
-            children: [new Paragraph({ alignment: AlignmentType.CENTER, children: [new TextRun({ text: `${res.overallScore}/100`, font: FONT_TIMES, bold: true, size: SIZES.CAPTION })] })],
+            children: [new Paragraph({ alignment: AlignmentType.CENTER, children: [new TextRun({ text: String(res.issues.length), font: FONT_TIMES, bold: true, size: SIZES.CAPTION })] })],
           }),
           new TableCell({
             children: [new Paragraph({ alignment: AlignmentType.CENTER, children: [new TextRun({ text: statusText, font: FONT_TIMES, bold: true, size: SIZES.CAPTION, color: 'B8860B' })] })],
@@ -1580,7 +1588,7 @@ export async function downloadConsolidatedBatchReport(
       new Paragraph({
         children: [
           new TextRun({
-            text: `${docIndex + 1}. Văn bản: ${item.name} (${res.documentTypeDetected || item.docType}) - Điểm: ${res.overallScore}/100`,
+            text: `${docIndex + 1}. Văn bản: ${item.name} (${res.documentTypeDetected || item.docType}) - ${res.issues.length} dấu hiệu cần rà soát`,
             font: FONT_TIMES,
             size: SIZES.BODY,
             bold: true,
