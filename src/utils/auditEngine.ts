@@ -288,15 +288,9 @@ export function runClientAuditEngine(content: string, docType?: DocumentType | s
     });
   }
 
-  // Calculate scores
-  const totalWeight = 100;
-  const deduction = issues.reduce((acc, curr) => {
-    if (curr.severity === 'error') return acc + 18;
-    if (curr.severity === 'warning') return acc + 9;
-    return acc + 4;
-  }, 0);
-
-  const overallScore = Math.max(25, Math.min(100, totalWeight - deduction));
+  // Do not calculate an arbitrary aggregate score: it has no validated legal or
+  // statistical interpretation. Keep the legacy field temporarily for API compatibility.
+  const overallScore = 0;
   // A heuristic score must never be converted into a legal pass/fail status.
   // Every automated result remains pending verification by a competent human.
   const status = 'CAN_XAC_MINH';
