@@ -336,44 +336,8 @@ function runLocalRuleAudit(content: string, docType?: string) {
       ? "CAN_SUA_DOI"
       : "KHONG_DAT";
 
-  // Build clean fixed content with comprehensive abbreviation removal & capitalization fixes
-  let fixedDoc = content
-    .replace(/quyết\s*định\s*\n+v\/v\s*/gi, "QUYẾT ĐỊNH\nVề việc ")
-    .replace(/đảm bảo an toàn thực phẩm/gi, "bảo đảm an toàn thực phẩm")
-    .replace(/đảm bảo/gi, "bảo đảm")
-    // Fix improper abbreviations
-    .replace(/- Giám đốc, các PGĐ Sở[\.;]?/gi, "- Giám đốc Sở, các Phó Giám đốc Sở;")
-    .replace(/- Giám đốc, các PGĐ[\.;]?/gi, "- Giám đốc Sở, các Phó Giám đốc Sở;")
-    .replace(/các PGĐ Sở/gi, "các Phó Giám đốc Sở")
-    .replace(/các PGĐ\b/gi, "các Phó Giám đốc")
-    .replace(/- CCT, các Phó CCT[\.;]?/gi, "- Chi cục trưởng, các Phó Chi cục trưởng;")
-    .replace(/CCT, các Phó CCT/gi, "Chi cục trưởng, các Phó Chi cục trưởng")
-    .replace(/Phó CCT\b/gi, "Phó Chi cục trưởng")
-    .replace(/CCT\b/g, "Chi cục trưởng")
-    .replace(/Phòng TCCB Sở[\.;]?/gi, "Phòng Tổ chức cán bộ Sở;")
-    .replace(/Phòng TCCB\b/gi, "Phòng Tổ chức cán bộ")
-    .replace(/Trưởng phòng TCCB/gi, "Trưởng phòng Tổ chức cán bộ")
-    .replace(/Bộ Nông nghiệp và PTNT/g, "Bộ Nông nghiệp và Phát triển nông thôn")
-    .replace(/Bộ NN&PTNT/g, "Bộ Nông nghiệp và Phát triển nông thôn")
-    .replace(/Bộ NN và PTNT/g, "Bộ Nông nghiệp và Phát triển nông thôn")
-    .replace(/chế biến và PTTT/gi, "chế biến và Phát triển thị trường")
-    .replace(/Chế biến và PTTT/gi, "Chế biến và Phát triển thị trường")
-    .replace(/CBPTTT/g, "CLCB")
-    .replace(/Căn cứ Quyết định 09/g, "Căn cứ Quyết định số 09")
-    .replace(/- Lưu: VT, hồ sơ\./gi, "- Lưu: VT, CLCB (02 bản).")
-    .replace(/- Lưu: VT, CBPTTT\./gi, "- Lưu: VT, CLCB (02 bản).")
-    // Fix improper uppercase in agency names
-    .replace(/Bộ Nông Nghiệp Và Phát Triển Nông Thôn/g, "Bộ Nông nghiệp và Phát triển nông thôn")
-    .replace(/Sở Nông Nghiệp Và Môi Trường/g, "Sở Nông nghiệp và Môi trường")
-    .replace(/Ủy Ban Nhân Dân/g, "Ủy ban nhân dân")
-    .replace(/Chi Cục Chất Lượng Chế Biến Và Phát Triển Thị Trường/g, "Chi cục Chất lượng, Chế biến và Phát triển thị trường")
-    // Fix common improper mid-sentence capitalization
-    .replace(/ An Toàn Thực Phẩm/g, " an toàn thực phẩm")
-    .replace(/ Cơ Sở Sản Xuất/g, " cơ sở sản xuất")
-    .replace(/ Nông Lâm Thủy Sản/g, " nông, lâm, thủy sản")
-    .replace(/ Ngày Cấp:/g, " Ngày cấp:")
-    .replace(/ Mặt Hàng Kinh Doanh:/g, " Mặt hàng kinh doanh:")
-    .replace(/ Mã Doanh Nghiệp:/g, " Mã doanh nghiệp:");
+  // Safety: preserve source content; do not silently rewrite legal documents with broad regex rules.
+  const fixedDoc = content;
 
   return {
     overallScore,
@@ -389,12 +353,12 @@ function runLocalRuleAudit(content: string, docType?: string) {
         : "Văn bản hành chính"),
     summary:
       issues.length === 0
-        ? "Văn bản hoàn toàn chuẩn chỉnh, tuân thủ đúng 100% thể thức Nghị định 30/2020/NĐ-CP (không viết tắt tùy tiện, viết hoa đúng chuẩn Phụ lục II) và các quy định ATTP chuyên ngành."
-        : `Phát hiện ${issues.length} điểm cần hoàn thiện (${issues.filter((i: any) => i.severity === "error").length} lỗi nghiêm trọng, ${issues.filter((i: any) => i.severity === "warning").length} cảnh báo). Cần loại bỏ các từ viết tắt tùy tiện (như PGĐ, CCT, TCCB, PTTT) và chuẩn hóa lại quy tắc viết hoa theo Phụ lục II NĐ 30.`,
+        ? "Bộ quy tắc cục bộ chưa phát hiện dấu hiệu thuộc các mẫu đã lập trình. Điều này không chứng minh văn bản tuân thủ đầy đủ pháp luật hoặc không có sai sót."
+        : `Bộ quy tắc cục bộ ghi nhận ${issues.length} dấu hiệu cần rà soát (${issues.filter((i: any) => i.severity === "error").length} mức cao, ${issues.filter((i: any) => i.severity === "warning").length} cảnh báo). Cần đối chiếu từng dấu hiệu với văn bản gốc và căn cứ hiện hành trước khi kết luận.`,
     positivePoints: [
-      "Đã cập nhật đúng Thông tư số 17/2024/TT-BNNPTNT mới nhất của Bộ Nông nghiệp & PTNT.",
-      "Địa giới hành chính tuân thủ chuẩn xác theo Nghị quyết 202/2025/QH15 và Nghị quyết 1676/NQ-UBTVQH15.",
-      "Bố cục nội dung và thẩm quyền ban hành rõ ràng, đúng chức năng nhiệm vụ.",
+      "Đây là kết quả sàng lọc theo các mẫu quy tắc được lập trình; chưa xác minh đầy đủ hiệu lực và phạm vi áp dụng của mọi căn cứ pháp lý.",
+      "Không phát hiện dấu hiệu theo mẫu không đồng nghĩa với xác nhận địa giới hành chính hoặc nội dung pháp lý là chính xác.",
+      "Công chức cần kiểm tra hồ sơ gốc, thẩm quyền, căn cứ pháp lý và mọi đề xuất trước khi sử dụng.",
     ],
     issues,
     categoryScores: {
