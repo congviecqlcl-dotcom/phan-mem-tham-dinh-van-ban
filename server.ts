@@ -353,12 +353,9 @@ function runLocalRuleAudit(content: string, docType?: string) {
   }, 0);
 
   const overallScore = Math.max(20, Math.min(100, totalWeight - deduction));
-  const status =
-    overallScore >= 90
-      ? "DAT"
-      : overallScore >= 60
-      ? "CAN_SUA_DOI"
-      : "KHONG_DAT";
+  // A heuristic score must never be converted into a legal pass/fail status.
+  // Every automated result remains pending verification by a competent human.
+  const status = "CAN_XAC_MINH";
 
   // Safety: preserve source content; do not silently rewrite legal documents with broad regex rules.
   const fixedDoc = content;
@@ -602,8 +599,8 @@ YÊU CẦU ĐÁNH GIÁ:
                 overallScore: { type: Type.NUMBER, description: "Điểm tổng thể từ 0 đến 100" },
                 status: {
                   type: Type.STRING,
-                  enum: ["DAT", "CAN_SUA_DOI", "KHONG_DAT"],
-                  description: "Phân loại gợi ý do mô hình tạo ra; không phải kết luận pháp lý và không được suy ra chỉ từ điểm số. Cần kiểm chứng từng phát hiện với nguồn pháp luật hiện hành.",
+                  enum: ["CAN_XAC_MINH"],
+                  description: "Trạng thái bắt buộc: CAN_XAC_MINH. Kết quả AI không kết luận đạt/không đạt; công chức phải xác minh từng phát hiện với hồ sơ gốc và nguồn pháp luật hiện hành.",
                 },
                 documentTypeDetected: { type: Type.STRING },
                 summary: { type: Type.STRING, description: "Tóm tắt kết luận thẩm định súc tích" },
