@@ -304,47 +304,9 @@ export function runClientAuditEngine(content: string, docType?: DocumentType | s
       ? 'CAN_SUA_DOI'
       : 'KHONG_DAT';
 
-  // Build clean fixed content with comprehensive abbreviation removal & capitalization fixes
-  const fixedDoc = content
-    .replace(/quyết\s*định\s*\n+v\/v\s*/gi, 'QUYẾT ĐỊNH\nVề việc ')
-    .replace(/tờ\s*trình\s*\n+v\/v\s*/gi, 'TỜ TRÌNH\nVề việc ')
-    .replace(/đảm bảo an toàn thực phẩm/gi, 'bảo đảm an toàn thực phẩm')
-    .replace(/đảm bảo/gi, 'bảo đảm')
-    // Fix improper abbreviations
-    .replace(/- Giám đốc, các PGĐ Sở[\.;]?/gi, '- Giám đốc Sở, các Phó Giám đốc Sở;')
-    .replace(/- Giám đốc, các PGĐ[\.;]?/gi, '- Giám đốc Sở, các Phó Giám đốc Sở;')
-    .replace(/các PGĐ Sở/gi, 'các Phó Giám đốc Sở')
-    .replace(/các PGĐ\b/gi, 'các Phó Giám đốc')
-    .replace(/- CCT, các Phó CCT[\.;]?/gi, '- Chi cục trưởng, các Phó Chi cục trưởng;')
-    .replace(/CCT, các Phó CCT/gi, 'Chi cục trưởng, các Phó Chi cục trưởng')
-    .replace(/Phó CCT\b/gi, 'Phó Chi cục trưởng')
-    .replace(/CCT\b/g, 'Chi cục trưởng')
-    .replace(/Phòng TCCB Sở[\.;]?/gi, 'Phòng Tổ chức cán bộ Sở;')
-    .replace(/Phòng TCCB\b/gi, 'Phòng Tổ chức cán bộ')
-    .replace(/Trưởng phòng TCCB/gi, 'Trưởng phòng Tổ chức cán bộ')
-    .replace(/Phòng QLCL\b/gi, 'Phòng Quản lý chất lượng')
-    .replace(/Bộ Nông nghiệp và PTNT/g, 'Bộ Nông nghiệp và Phát triển nông thôn')
-    .replace(/Bộ NN&PTNT/g, 'Bộ Nông nghiệp và Phát triển nông thôn')
-    .replace(/Bộ NN và PTNT/g, 'Bộ Nông nghiệp và Phát triển nông thôn')
-    .replace(/chế biến và PTTT/gi, 'chế biến và Phát triển thị trường')
-    .replace(/Chế biến và PTTT/gi, 'Chế biến và Phát triển thị trường')
-    .replace(/CBPTTT/g, 'CLCB')
-    .replace(/Căn cứ Quyết định 09/g, 'Căn cứ Quyết định số 09')
-    .replace(/- Lưu: VT, hồ sơ\./gi, '- Lưu: VT, CLCB (02 bản).')
-    .replace(/- Lưu: VT, CBPTTT\./gi, '- Lưu: VT, CLCB (02 bản).')
-    .replace(/- Lưu: VT\./gi, '- Lưu: VT, CLCB (02 bản).')
-    // Fix improper uppercase in agency names
-    .replace(/Bộ Nông Nghiệp Và Phát Triển Nông Thôn/g, 'Bộ Nông nghiệp và Phát triển nông thôn')
-    .replace(/Sở Nông Nghiệp Và Môi Trường/g, 'Sở Nông nghiệp và Môi trường')
-    .replace(/Ủy Ban Nhân Dân/g, 'Ủy ban nhân dân')
-    .replace(/Chi Cục Chất Lượng Chế Biến Và Phát Triển Thị Trường/g, 'Chi cục Chất lượng, Chế biến và Phát triển thị trường')
-    // Fix common improper mid-sentence capitalization
-    .replace(/ An Toàn Thực Phẩm/g, ' an toàn thực phẩm')
-    .replace(/ Cơ Sở Sản Xuất/g, ' cơ sở sản xuất')
-    .replace(/ Nông Lâm Thủy Sản/g, ' nông, lâm, thủy sản')
-    .replace(/ Ngày Cấp:/g, ' Ngày cấp:')
-    .replace(/ Mặt Hàng Kinh Doanh:/g, ' Mặt hàng kinh doanh:')
-    .replace(/ Mã Doanh Nghiệp:/g, ' Mã doanh nghiệp:');
+  // Safety: do not silently rewrite legal/administrative documents using broad regex substitutions.
+  // Preserve the original text until proposed edits can be reviewed individually by a human.
+  const fixedDoc = content;
 
   const nowStr = new Date().toLocaleDateString('vi-VN', {
     day: '2-digit',
