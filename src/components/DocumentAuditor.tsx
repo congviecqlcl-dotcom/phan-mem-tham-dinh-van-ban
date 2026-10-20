@@ -603,9 +603,6 @@ export const DocumentAuditor: React.FC = () => {
   const needsHumanReviewDocs = completedDocs.filter((f) => f.auditResult?.status === 'CAN_XAC_MINH');
   const docsWithFindings = completedDocs.filter((f) => (f.auditResult?.issues?.length || 0) > 0);
   const docsWithHighSignals = completedDocs.filter((f) => f.auditResult?.issues?.some((issue) => issue.severity === 'error'));
-  const avgScore = completedDocs.length
-    ? Math.round(completedDocs.reduce((acc, curr) => acc + (curr.auditResult?.overallScore || 0), 0) / completedDocs.length)
-    : 0;
   const totalIssuesAcrossAll = completedDocs.reduce(
     (acc, curr) => acc + (curr.auditResult?.issues?.length || 0),
     0
@@ -732,16 +729,8 @@ export const DocumentAuditor: React.FC = () => {
                 {file.status === 'auditing' ? (
                   <Loader2 className="w-3.5 h-3.5 text-emerald-400 animate-spin" />
                 ) : res ? (
-                  <span
-                    className={`w-5 h-5 rounded-full flex items-center justify-center font-bold text-[10px] ${
-                      res.overallScore >= 90
-                        ? 'bg-emerald-500 text-white'
-                        : res.overallScore >= 60
-                        ? 'bg-amber-500 text-white'
-                        : 'bg-rose-500 text-white'
-                    }`}
-                  >
-                    {res.overallScore}
+                  <span className="w-5 h-5 rounded-full flex items-center justify-center font-bold text-[10px] bg-amber-100 text-amber-900" title="Số dấu hiệu cần rà soát">
+                    {res.issues.length}
                   </span>
                 ) : (
                   <FileText className={`w-3.5 h-3.5 ${isActive ? 'text-emerald-400' : 'text-neutral-400'}`} />
@@ -875,10 +864,6 @@ export const DocumentAuditor: React.FC = () => {
               <div className="text-2xl font-bold text-rose-800">{docsWithHighSignals.length}</div>
               <div className="text-xs text-rose-700 font-medium">Văn bản có dấu hiệu mức cao theo mẫu</div>
             </div>
-            <div className="bg-blue-50 p-4 rounded-2xl border border-blue-200 shadow-2xs text-center space-y-1">
-              <div className="text-2xl font-bold text-blue-800">{avgScore}/100</div>
-              <div className="text-xs text-blue-700 font-medium">Điểm sàng lọc trung bình (không phải mức tuân thủ)</div>
-            </div>
             <div className="bg-purple-50 p-4 rounded-2xl border border-purple-200 shadow-2xs text-center space-y-1">
               <div className="text-2xl font-bold text-purple-800">{totalIssuesAcrossAll}</div>
               <div className="text-xs text-purple-700 font-medium">Tổng sai sót phát hiện</div>
@@ -925,7 +910,7 @@ export const DocumentAuditor: React.FC = () => {
                     <th className="py-3 px-4 w-12 text-center">STT</th>
                     <th className="py-3 px-4">Tên tệp văn bản</th>
                     <th className="py-3 px-4">Loại văn bản</th>
-                    <th className="py-3 px-4 text-center">Điểm sàng lọc*</th>
+                    <th className="py-3 px-4 text-center">Số dấu hiệu</th>
                     <th className="py-3 px-4 text-center">Xếp loại</th>
                     <th className="py-3 px-4">Chi tiết sai sót</th>
                     <th className="py-3 px-4 text-right">Thao tác</th>
@@ -961,19 +946,11 @@ export const DocumentAuditor: React.FC = () => {
                         </td>
                         <td className="py-3 px-4 text-center">
                           {res ? (
-                            <span
-                              className={`inline-block font-bold text-xs px-2.5 py-0.5 rounded-full ${
-                                res.overallScore >= 90
-                                  ? 'bg-emerald-100 text-emerald-800'
-                                  : res.overallScore >= 60
-                                  ? 'bg-amber-100 text-amber-800'
-                                  : 'bg-rose-100 text-rose-800'
-                              }`}
-                            >
-                              {res.overallScore}/100
+                            <span className="inline-block font-semibold text-xs px-2.5 py-0.5 rounded-full bg-amber-100 text-amber-900">
+                              {res.issues.length} dấu hiệu
                             </span>
                           ) : (
-                            <span className="text-neutral-400 italic">Chưa thẩm định</span>
+                            <span className="text-neutral-400 italic">Chưa rà soát</span>
                           )}
                         </td>
                         <td className="py-3 px-4 text-center">
@@ -1261,25 +1238,17 @@ export const DocumentAuditor: React.FC = () => {
 
             {activeFile?.auditResult && !isAuditingSingle && (
               <div className="space-y-4">
-                {/* AI limitation notice: scores and labels are triage aids, not legal conclusions. */}
+                {/* Automated signals are not legal conclusions. */}
                 <div role="note" className="rounded-xl border border-amber-300 bg-amber-50 p-4 text-sm text-amber-950 space-y-1">
                   <div className="font-semibold">Lưu ý về kết quả hỗ trợ bằng AI</div>
-                  <p>Điểm số và nhãn phân loại dưới đây chỉ là gợi ý sàng lọc của hệ thống, không phải kết luận pháp lý hoặc quyết định thẩm định. Công chức cần kiểm tra từng phát hiện với hồ sơ gốc và văn bản pháp luật còn hiệu lực; nội dung chưa có căn cứ phải được xác minh trước khi sử dụng.</p>
+                  <p>Các dấu hiệu do hệ thống phát hiện chỉ là gợi ý rà soát theo mẫu đã lập trình, không phải kết luận pháp lý hoặc quyết định thẩm định. Công chức cần kiểm tra từng phát hiện với hồ sơ gốc và văn bản pháp luật còn hiệu lực. Không có dấu hiệu được phát hiện không chứng minh văn bản tuân thủ đầy đủ pháp luật.</p>
                 </div>
                 {/* Summary Header Card */}
                 <div className="bg-white rounded-2xl border border-neutral-200 p-5 shadow-sm space-y-4">
                   <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-neutral-100 pb-4">
                     <div className="flex items-center gap-3">
-                      <div
-                        className={`w-12 h-12 rounded-2xl flex items-center justify-center font-bold text-lg ${
-                          activeFile.auditResult.overallScore >= 90
-                            ? 'bg-emerald-100 text-emerald-800 border border-emerald-300'
-                            : activeFile.auditResult.overallScore >= 60
-                            ? 'bg-amber-100 text-amber-800 border border-amber-300'
-                            : 'bg-rose-100 text-rose-800 border border-rose-300'
-                        }`}
-                      >
-                        {activeFile.auditResult.overallScore}
+                      <div className="w-12 h-12 rounded-2xl flex items-center justify-center font-bold text-lg bg-amber-100 text-amber-900 border border-amber-300" title="Số dấu hiệu cần rà soát">
+                        {activeFile.auditResult.issues.length}
                       </div>
                       <div>
                         <div className="flex items-center gap-2">
@@ -1643,32 +1612,19 @@ export const DocumentAuditor: React.FC = () => {
                 {activeResultTab === 'scores' && (
                   <div className="bg-white rounded-2xl border border-neutral-200 p-5 space-y-4 shadow-sm">
                     <h4 className="font-bold text-sm text-neutral-900">
-                      Bảng đánh giá mức độ tuân thủ theo 5 nhóm quy định
+                      Tổng hợp dấu hiệu theo nhóm kiểm tra
                     </h4>
 
                     <div className="space-y-4 pt-2">
                       {Object.entries(activeFile.auditResult.categoryScores || {}).map(([key, rawCat]) => {
                         const cat = rawCat as CategoryScore;
-                        const percentage = Math.round((cat.score / cat.maxScore) * 100);
                         return (
                           <div key={key} className="space-y-1.5 p-3.5 rounded-xl bg-neutral-50 border border-neutral-150">
                             <div className="flex items-center justify-between text-xs">
                               <span className="font-semibold text-neutral-900">{cat.name}</span>
                               <span className="font-bold text-neutral-700">
-                                {cat.score} / {cat.maxScore} điểm ({percentage}%)
+                                {cat.totalIssues} dấu hiệu
                               </span>
-                            </div>
-                            <div className="w-full bg-neutral-200 h-2 rounded-full overflow-hidden">
-                              <div
-                                className={`h-full rounded-full transition-all ${
-                                  percentage >= 80
-                                    ? 'bg-emerald-600'
-                                    : percentage >= 50
-                                    ? 'bg-amber-500'
-                                    : 'bg-rose-500'
-                                }`}
-                                style={{ width: `${percentage}%` }}
-                              />
                             </div>
                             <div className="flex items-center justify-between text-[11px] text-neutral-500 pt-1">
                               <span>Tổng số vấn đề phát hiện: {cat.totalIssues}</span>
