@@ -11,8 +11,32 @@ dotenv.config();
 const app = express();
 const PORT = 3000;
 
-app.use(express.json({ limit: "50mb" }));
-app.use(express.urlencoded({ extended: true, limit: "50mb" }));
+// Defense in depth: cap request bodies and validate expensive inputs before parsing/AI work.
+app.use(express.json({ limit: "20mb" }));
+app.use(express.urlencoded({ extended: true, limit: "20mb", parameterLimit: 1000 }));
+
+const MAX_DOCUMENT_CHARS = 250_000;
+const MAX_BASE64_CHARS = 15_000_000;
+const MAX_BATCH_DOCUMENTS = 5;
+const MAX_CHAT_CHARS = 10_000;
+
+function isNonEmptyString(value: unknown): value is string {
+  return typeof value === "string" && value.trim().length > 0;
+}
+
+function exceedsStringLimit(value: unknown, maxLength: number): boolean {
+  return typeof value === "string" && value.length > maxLength;
+}
+
+function validateDocumentText(value: unknown): string | null {
+  if (value !== undefined && value !== null && typeof value !== "string") {
+    return "Trường nội dung văn bản phải là chuỗi ký tự.";
+  }
+  if (exceedsStringLimit(value, MAX_DOCUMENT_CHARS)) {
+    return `Nội dung vượt giới hạn ${MAX_DOCUMENT_CHARS.toLocaleString("vi-VN")} ký tự cho mỗi văn bản.`;
+  }
+  return null;
+}
 
 // Lazy initialization of Gemini Client
 let aiClient: GoogleGenAI | null = null;
@@ -446,9 +470,12 @@ function runLocalRuleAudit(content: string, docType?: string) {
 // API: Universal Document Parser (/api/parse-document)
 app.post("/api/parse-document", async (req, res) => {
   try {
-    const { fileName, base64Data, mimeType } = req.body;
-    if (!base64Data) {
-      return res.status(400).json({ error: "Chưa nhận được dữ liệu tệp văn bản." });
+    const { fileName, base64Data, mimeType } = req.body ?? {};
+    if (!isNonEmptyString(base64Data)) {
+      return res.status(400).json({ error: "Chưa nhận được dữ liệu tệp văn bản hợp lệ." });
+    }
+    if (base64Data.length > MAX_BASE64_CHARS) {
+      return res.status(413).json({ error: "Tệp vượt giới hạn xử lý. Hãy dùng tệp nhỏ hơn 15 MB trước khi mã hóa." });
     }
 
     const cleanBase64 = base64Data.replace(/^data:.*?;base64,/, "");
@@ -676,10 +703,18 @@ YÊU CẦU ĐÁNH GIÁ:
 // API: Document Audit Endpoint
 app.post("/api/audit-document", async (req, res) => {
   try {
-    const { content, docType, fileName, fileData, mimeType } = req.body;
+    const { content, docType, fileName, fileData, mimeType } = req.body ?? {};
 
     if (!content && !fileData) {
       return res.status(400).json({ error: "Không tìm thấy nội dung văn bản để thẩm định." });
+    }
+    const contentError = validateDocumentText(content);
+    if (contentError) return res.status(413).json({ error: contentError });
+    if (fileData !== undefined && fileData !== null && typeof fileData !== "string") {
+      return res.status(400).json({ error: "Dữ liệu tệp đính kèm không hợp lệ." });
+    }
+    if (exceedsStringLimit(fileData, MAX_BASE64_CHARS)) {
+      return res.status(413).json({ error: "Tệp vượt giới hạn xử lý. Hãy dùng tệp nhỏ hơn 15 MB trước khi mã hóa." });
     }
 
     const result = await performSingleAudit({ content, docType, fileName, fileData, mimeType });
@@ -693,9 +728,20 @@ app.post("/api/audit-document", async (req, res) => {
 // API: Batch Audit Endpoint (Thẩm định đồng thời nhiều văn bản)
 app.post("/api/batch-audit-documents", async (req, res) => {
   try {
-    const { documents } = req.body;
+    const { documents } = req.body ?? {};
     if (!documents || !Array.isArray(documents) || documents.length === 0) {
       return res.status(400).json({ error: "Danh sách văn bản cần thẩm định không hợp lệ." });
+    }
+    if (documents.length > MAX_BATCH_DOCUMENTS) {
+      return res.status(413).json({ error: `Mỗi lượt chỉ xử lý tối đa ${MAX_BATCH_DOCUMENTS} văn bản để kiểm soát tài nguyên.` });
+    }
+    for (let index = 0; index < documents.length; index += 1) {
+      const item = documents[index];
+      if (!item || typeof item !== "object") {
+        return res.status(400).json({ error: `Văn bản thứ ${index + 1} không hợp lệ.` });
+      }
+      const contentError = validateDocumentText(item.content);
+      if (contentError) return res.status(413).json({ error: `Văn bản thứ ${index + 1}: ${contentError}` });
     }
 
     // Process documents with graceful fallback
@@ -898,7 +944,13 @@ Bạn có thể chuyển sang tab **"Thẩm định văn bản"** để tải t�
 // API: Legal Assistant Chat
 app.post("/api/chat", async (req, res) => {
   try {
-    const { message } = req.body;
+    const { message } = req.body ?? {};
+    if (message !== undefined && message !== null && typeof message !== "string") {
+      return res.status(400).json({ error: "Câu hỏi phải là chuỗi ký tự." });
+    }
+    if (exceedsStringLimit(message, MAX_CHAT_CHARS)) {
+      return res.status(413).json({ error: `Câu hỏi vượt giới hạn ${MAX_CHAT_CHARS.toLocaleString("vi-VN")} ký tự.` });
+    }
     const ai = getAI();
 
     if (ai) {
