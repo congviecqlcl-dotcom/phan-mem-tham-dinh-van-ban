@@ -137,3 +137,10 @@ Không nên thêm một token bí mật cố định vào mã trình duyệt đ�
 6. **Căn cứ pháp luật:** prompt và quy tắc cục bộ còn nhiều viện dẫn viết cứng. Chưa xác minh độc lập từng điều khoản, hiệu lực, phạm vi và phiên bản áp dụng; không được coi các viện dẫn này là nguồn luật đã kiểm chứng.
 
 **Quyết định:** tiếp tục rà soát trên nhánh thử nghiệm và PR nháp; không hợp nhất, không triển khai công khai, không đưa hồ sơ nghiệp vụ thật vào hệ thống cho đến khi các điều kiện chặn được xử lý và kiểm thử phù hợp có bằng chứng.
+
+## Cập nhật CI — khóa phụ thuộc nhất quán (20/10/2026)
+
+- Phát hiện repo có `bun.lock` nhưng workflow trước đó dùng `npm install`, trong khi không có `package-lock.json`; cách cài đặt đó không sử dụng khóa phụ thuộc đã lưu trong repo.
+- Đã sửa `.github/workflows/quality.yml` trên nhánh thử nghiệm để cài Bun 1.2.22, chạy `bun install --frozen-lockfile`, rồi chạy `bun run lint` và `bun run build`. Mục tiêu là sử dụng đúng tệp khóa hiện có và làm thất bại CI nếu khóa không đồng bộ với khai báo phụ thuộc.
+- Thay đổi workflow vừa được ghi vào commit `008b8d433a2180a8b6c3a0965573acc8df95548c`. **Chưa xác nhận CI của commit này đã hoàn tất thành công**; phải đợi kết quả Actions trước khi coi bước này đã qua kiểm tra.
+- Đây chỉ cải thiện tính nhất quán của cài đặt phụ thuộc. Nó không xử lý xác thực/phân quyền API, giới hạn tần suất, kiểm thử bảo mật, kiểm thử nghiệp vụ hoặc xác minh pháp luật.
