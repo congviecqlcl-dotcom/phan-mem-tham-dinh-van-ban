@@ -89,3 +89,23 @@ Trên nhánh thử nghiệm, đã bổ sung các giới hạn kỹ thuật ở p
 - Cập nhật tiếp: đã bỏ các trường điểm và điểm tối đa khỏi nhóm `CategoryScore` trong bộ kiểm tra cục bộ và máy chủ; trường tổng hợp legacy `overallScore` vẫn tạm tồn tại bằng 0 để tương thích API.
 
 - Đã rà soát thêm đường xử lý Gemini và dự phòng phía máy chủ: bỏ điểm thành phần và các phép trừ điểm theo mức độ; schema không còn yêu cầu mô hình tạo điểm tổng hợp, máy chủ ghi đè trường legacy `overallScore` bằng 0. Cần kiểm thử thực tế cả đường Gemini và đường dự phòng trước khi phát hành.
+
+
+## Kết quả CI — 20/10/2026
+
+GitHub Actions run trên commit `811d638aa84e62843205f434f8f7cfdd8910e206` đã hoàn tất thành công:
+
+- `npm run lint`: thành công.
+- `npm run build`: thành công.
+- Workflow: [Quality checks run 39382261273](https://github.com/congviecqlcl-dotcom/phan-mem-tham-dinh-van-ban/actions/runs/39382261273).
+
+Kết quả này xác nhận TypeScript check và build production trên commit nói trên, không thay thế kiểm thử chức năng, kiểm thử bảo mật, kiểm thử tải hoặc xác minh pháp lý. Chưa có `package-lock.json`; quy trình hiện dùng `npm install`, nên việc tái lập chính xác phiên bản phụ thuộc chưa được bảo đảm.
+
+## Rà soát tiếp theo — các điểm API cần xử lý
+
+- Trong các route `/api/parse-document`, `/api/audit-document`, `/api/batch-audit-documents` và `/api/chat` đã đọc, chưa thấy middleware xác thực/phân quyền ở cấp ứng dụng. Chưa xác minh có lớp bảo vệ bên ngoài hay không.
+- `/api/audit-document` trả kết quả dự phòng với HTTP 200 khi có lỗi xử lý; cần phân biệt rõ lỗi hệ thống với kết quả phân tích dự phòng để giao diện không hiểu nhầm rằng AI đã xử lý thành công.
+- Kiểm tra đầu vào Base64 hiện giới hạn độ dài chuỗi nhưng chưa đủ để chứng minh dữ liệu thực sự là Base64 hợp lệ hoặc loại tệp đúng với nội dung.
+- Chưa có giới hạn tần suất theo người dùng/IP; giới hạn body và batch không thay thế biện pháp này.
+
+Không nên thêm một token bí mật cố định vào mã trình duyệt để “bảo vệ” API vì người dùng có thể trích xuất token. Thiết kế xác thực cần gắn với phiên người dùng được xác minh ở máy chủ hoặc cổng tin cậy phía trước; sau đó mới bổ sung giới hạn tần suất, kiểm soát chi phí và kiểm thử truy cập trái phép.
