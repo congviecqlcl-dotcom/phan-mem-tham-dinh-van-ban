@@ -495,7 +495,7 @@ app.post("/api/parse-document", async (req, res) => {
     });
   } catch (err: any) {
     console.error("Lỗi parse document:", err);
-    return res.status(500).json({ error: "Không thể trích xuất văn bản: " + (err.message || "") });
+    return res.status(500).json({ error: "Không thể trích xuất văn bản do lỗi xử lý tệp. Hãy kiểm tra định dạng tệp hoặc thử lại với tệp hợp lệ." });
   }
 });
 
@@ -918,7 +918,7 @@ app.post("/api/chat", async (req, res) => {
 
         const response = await chat.sendMessage({ message: message || "Xin chào" });
         if (response && response.text) {
-          return res.json({ reply: response.text });
+          return res.json({ reply: response.text, source: "gemini", notice: "Câu trả lời do mô hình AI tạo; cần đối chiếu văn bản pháp luật gốc, hiệu lực và phạm vi áp dụng trước khi sử dụng." });
         }
       } catch (geminiError: any) {
         // Fallback to intelligent legal Q&A engine
@@ -927,10 +927,10 @@ app.post("/api/chat", async (req, res) => {
 
     // High quality intelligent legal knowledge engine reply
     const replyText = getIntelligentLegalAnswer(message || "Xin chào");
-    return res.json({ reply: replyText });
+    return res.json({ reply: replyText, source: "local_fallback", notice: "Đây là câu trả lời từ bộ quy tắc cục bộ, không phải kết quả tra cứu pháp luật trực tiếp. Cần kiểm chứng với văn bản gốc hiện hành." });
   } catch (err: any) {
     const fallbackAnswer = getIntelligentLegalAnswer(req.body?.message || "Xin chào");
-    return res.json({ reply: fallbackAnswer });
+    return res.status(503).json({ error: "Trợ lý không thể xử lý câu hỏi lúc này. Vui lòng thử lại sau." });
   }
 });
 
