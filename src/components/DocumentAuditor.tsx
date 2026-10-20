@@ -419,7 +419,11 @@ export const DocumentAuditor: React.FC = () => {
 
       // If server route didn't return or failed (static host like Vercel), use client-side audit engine
       if (!result || !result.issues) {
-        result = runClientAuditEngine(target.content, target.docType, target.name);
+        result = {
+          ...runClientAuditEngine(target.content, target.docType, target.name),
+          source: 'client_rule',
+          sourceNotice: 'Kết quả từ bộ quy tắc cục bộ chạy trên trình duyệt do API không trả về kết quả thành công. Đây không phải tra cứu pháp luật trực tiếp; cần kiểm chứng với văn bản gốc hiện hành.',
+        };
       }
 
       setFiles((prev) =>
@@ -431,7 +435,11 @@ export const DocumentAuditor: React.FC = () => {
     } catch (err: any) {
       console.error('Lỗi thẩm định:', err);
       // Fallback directly
-      const fallbackResult = runClientAuditEngine(target.content, target.docType, target.name);
+      const fallbackResult = {
+        ...runClientAuditEngine(target.content, target.docType, target.name),
+        source: 'client_rule' as const,
+        sourceNotice: 'Kết quả dự phòng từ bộ quy tắc chạy trên trình duyệt sau lỗi xử lý. Chưa được xác minh với văn bản pháp luật gốc hiện hành.',
+      };
       setFiles((prev) =>
         prev.map((f) =>
           f.id === target.id ? { ...f, status: 'completed', auditResult: fallbackResult } : f
@@ -487,7 +495,11 @@ export const DocumentAuditor: React.FC = () => {
             }
 
             if (!res || !res.issues) {
-              res = runClientAuditEngine(docItem.content, docItem.docType, docItem.name);
+              res = {
+                ...runClientAuditEngine(docItem.content, docItem.docType, docItem.name),
+                source: 'client_rule',
+                sourceNotice: 'Kết quả từ bộ quy tắc cục bộ chạy trên trình duyệt do API không trả về kết quả thành công. Đây không phải tra cứu pháp luật trực tiếp; cần kiểm chứng với văn bản gốc hiện hành.',
+              };
             }
 
             setFiles((prev) =>
@@ -496,7 +508,11 @@ export const DocumentAuditor: React.FC = () => {
               )
             );
           } catch (err: any) {
-            const fallbackRes = runClientAuditEngine(docItem.content, docItem.docType, docItem.name);
+            const fallbackRes = {
+              ...runClientAuditEngine(docItem.content, docItem.docType, docItem.name),
+              source: 'client_rule' as const,
+              sourceNotice: 'Kết quả dự phòng từ bộ quy tắc chạy trên trình duyệt sau lỗi xử lý. Chưa được xác minh với văn bản pháp luật gốc hiện hành.',
+            };
             setFiles((prev) =>
               prev.map((f) =>
                 f.id === docItem.id ? { ...f, status: 'completed', auditResult: fallbackRes } : f
