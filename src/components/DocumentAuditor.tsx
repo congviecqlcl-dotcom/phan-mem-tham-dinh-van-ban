@@ -600,9 +600,7 @@ export const DocumentAuditor: React.FC = () => {
 
   // Aggregated Stats for Batch
   const completedDocs = files.filter((f) => f.auditResult);
-  const passedDocs = completedDocs.filter((f) => f.auditResult?.status === 'DAT');
-  const warningDocs = completedDocs.filter((f) => f.auditResult?.status === 'CAN_SUA_DOI');
-  const failedDocs = completedDocs.filter((f) => f.auditResult?.status === 'KHONG_DAT');
+  const needsHumanReviewDocs = completedDocs.filter((f) => f.auditResult?.status === 'CAN_XAC_MINH');
   const avgScore = completedDocs.length
     ? Math.round(completedDocs.reduce((acc, curr) => acc + (curr.auditResult?.overallScore || 0), 0) / completedDocs.length)
     : 0;
@@ -753,8 +751,8 @@ export const DocumentAuditor: React.FC = () => {
                   </span>
                   <span className={`text-[10px] ${isActive ? 'text-neutral-300' : 'text-neutral-500'}`}>
                     {res ? (
-                      <span className={res.status === 'DAT' ? 'text-emerald-400' : res.status === 'CAN_SUA_DOI' ? 'text-amber-300' : 'text-rose-300'}>
-                        {res.status === 'DAT' ? 'Gợi ý: ít dấu hiệu theo mẫu' : res.status === 'CAN_SUA_DOI' ? 'Gợi ý: cần rà soát' : 'Gợi ý: nhiều dấu hiệu cần xem xét'} • {res.issues.length} lỗi
+                      <span className={'text-amber-300'}>
+                        {'Cần công chức xác minh'} • {res.issues.length} lỗi
                       </span>
                     ) : (
                       <span>{file.charCount ? `${file.charCount.toLocaleString('vi-VN')} ký tự` : 'Chờ thẩm định'}</span>
@@ -864,16 +862,16 @@ export const DocumentAuditor: React.FC = () => {
               <div className="text-xs text-neutral-500 font-medium">Tổng số văn bản</div>
             </div>
             <div className="bg-emerald-50 p-4 rounded-2xl border border-emerald-200 shadow-2xs text-center space-y-1">
-              <div className="text-2xl font-bold text-emerald-800">{passedDocs.length}</div>
-              <div className="text-xs text-emerald-700 font-medium">Ít dấu hiệu theo mẫu (không phải kết luận tuân thủ)</div>
+              <div className="text-2xl font-bold text-emerald-800">{needsHumanReviewDocs.length}</div>
+              <div className="text-xs text-emerald-700 font-medium">Cần công chức xác minh</div>
             </div>
             <div className="bg-amber-50 p-4 rounded-2xl border border-amber-200 shadow-2xs text-center space-y-1">
-              <div className="text-2xl font-bold text-amber-800">{warningDocs.length}</div>
-              <div className="text-xs text-amber-700 font-medium">Có dấu hiệu cần rà soát (điểm tham khảo)</div>
+              <div className="text-2xl font-bold text-amber-800">{0}</div>
+              <div className="text-xs text-amber-700 font-medium">Số kết quả chờ xác minh</div>
             </div>
             <div className="bg-rose-50 p-4 rounded-2xl border border-rose-200 shadow-2xs text-center space-y-1">
-              <div className="text-2xl font-bold text-rose-800">{failedDocs.length}</div>
-              <div className="text-xs text-rose-700 font-medium">Nhiều dấu hiệu cần xem xét (không phải kết luận)</div>
+              <div className="text-2xl font-bold text-rose-800">{0}</div>
+              <div className="text-xs text-rose-700 font-medium">Không phân loại đạt/không đạt</div>
             </div>
             <div className="bg-blue-50 p-4 rounded-2xl border border-blue-200 shadow-2xs text-center space-y-1">
               <div className="text-2xl font-bold text-blue-800">{avgScore}/100</div>
@@ -980,18 +978,10 @@ export const DocumentAuditor: React.FC = () => {
                           {res ? (
                             <span
                               className={`font-semibold ${
-                                res.status === 'DAT'
-                                  ? 'text-emerald-700'
-                                  : res.status === 'CAN_SUA_DOI'
-                                  ? 'text-amber-700'
-                                  : 'text-rose-700'
+                                'text-amber-700'
                               }`}
                             >
-                              {res.status === 'DAT'
-                                ? 'GỢI Ý: ÍT DẤU HIỆU THEO MẪU'
-                                : res.status === 'CAN_SUA_DOI'
-                                ? 'GỢI Ý: CẦN RÀ SOÁT'
-                                : 'GỢI Ý: CẦN XEM XÉT'}
+                              {'CẦN CÔNG CHỨC XÁC MINH'}
                             </span>
                           ) : (
                             <span className="text-neutral-400">—</span>
@@ -1296,18 +1286,10 @@ export const DocumentAuditor: React.FC = () => {
                           </h3>
                           <span
                             className={`px-2.5 py-0.5 rounded-full text-xs font-semibold ${
-                              activeFile.auditResult.status === 'DAT'
-                                ? 'bg-emerald-100 text-emerald-800'
-                                : activeFile.auditResult.status === 'CAN_SUA_DOI'
-                                ? 'bg-amber-100 text-amber-800'
-                                : 'bg-rose-100 text-rose-800'
+                              'bg-amber-100 text-amber-800'
                             }`}
                           >
-                            {activeFile.auditResult.status === 'DAT'
-                              ? 'GỢI Ý: ĐẠT'
-                              : activeFile.auditResult.status === 'CAN_SUA_DOI'
-                              ? 'GỢI Ý: CẦN SỬA'
-                              : 'GỢI Ý: XEM XÉT'}
+                            {'CẦN CÔNG CHỨC XÁC MINH'}
                           </span>
                         </div>
                         <p className="text-xs text-neutral-500">
