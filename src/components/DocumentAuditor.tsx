@@ -524,8 +524,8 @@ export const DocumentAuditor: React.FC = () => {
     if (!activeFile?.auditResult?.fixedDocument) return;
     setIsExportingWord(true);
     try {
-      const targetName = activeFile.name ? activeFile.name.replace(/\.[^/.]+$/, '') : 'Van_ban_chuan_ND30';
-      await downloadFixedAsWord(activeFile.auditResult.fixedDocument, `${targetName}_chuan_ND30.docx`);
+      const targetName = activeFile.name ? activeFile.name.replace(/\.[^/.]+$/, '') : 'Van_ban_goc';
+      await downloadFixedAsWord(activeFile.auditResult.fixedDocument, `${targetName}_ban_goc_chua_sua.docx`);
     } catch (err) {
       console.error('Lỗi xuất Word:', err);
     } finally {
@@ -585,7 +585,7 @@ export const DocumentAuditor: React.FC = () => {
     const element = document.createElement('a');
     const file = new Blob([activeFile.auditResult.fixedDocument], { type: 'text/plain;charset=utf-8' });
     element.href = URL.createObjectURL(file);
-    element.download = `${activeFile.name.replace(/\.[^/.]+$/, '')}_chuan_ND30.txt`;
+    element.download = `${activeFile.name.replace(/\.[^/.]+$/, '')}_ban_goc_chua_sua.txt`;
     document.body.appendChild(element);
     element.click();
     document.body.removeChild(element);
@@ -834,7 +834,7 @@ export const DocumentAuditor: React.FC = () => {
                 onClick={handleDownloadAllZip}
                 disabled={isExportingZip}
                 className="flex items-center gap-1.5 bg-blue-700 hover:bg-blue-800 disabled:bg-neutral-400 text-white font-medium py-2 px-3 rounded-xl text-xs transition shadow-2xs"
-                title="Tải toàn bộ các văn bản đã chuẩn hóa (.docx) và báo cáo chi tiết vào file ZIP"
+                title="Tải nội dung gốc chưa tự động sửa và báo cáo vào file ZIP"
               >
                 {isExportingZip ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <FolderArchive className="w-3.5 h-3.5" />}
                 <span>{isExportingZip ? 'Đang nén ZIP...' : `Tải tất cả file Word (.ZIP)`}</span>
@@ -894,7 +894,7 @@ export const DocumentAuditor: React.FC = () => {
                   Bảng tổng hợp kết quả thẩm định hàng loạt
                 </h3>
                 <p className="text-xs text-neutral-500 mt-0.5">
-                  Nhấp vào từng dòng để xem chi tiết sai sót và tải về văn bản đã sửa đổi theo Nghị định 30/2020.
+                  Nhấp vào từng dòng để xem dấu hiệu cần rà soát. Nội dung xuất ra hiện giữ nguyên văn bản gốc.
                 </p>
               </div>
 
@@ -1024,7 +1024,7 @@ export const DocumentAuditor: React.FC = () => {
                               <button
                                 onClick={async () => {
                                   const targetName = file.name ? file.name.replace(/\.[^/.]+$/, '') : 'Van_ban';
-                                  await downloadFixedAsWord(res.fixedDocument, `${targetName}_chuan_ND30.docx`);
+                                  await downloadFixedAsWord(res.fixedDocument, `${targetName}_ban_goc_chua_sua.docx`);
                                 }}
                                 className="p-1 rounded-lg bg-blue-50 hover:bg-blue-100 text-blue-700 transition"
                                 title="Tải file Word đã sửa"
@@ -1390,7 +1390,7 @@ export const DocumentAuditor: React.FC = () => {
                       }`}
                     >
                       <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
-                      Văn bản chuẩn hóa 100%
+                      Nội dung văn bản gốc
                     </button>
                     <button
                       id="tab-scores-btn"
