@@ -28,6 +28,13 @@ function exceedsStringLimit(value: unknown, maxLength: number): boolean {
   return typeof value === "string" && value.length > maxLength;
 }
 
+function isStrictBase64(value: string): boolean {
+  // Accept standard Base64 only; reject ignored/invalid characters before Buffer's permissive decoder.
+  return value.length > 0 &&
+    value.length % 4 === 0 &&
+    /^(?:[A-Za-z0-9+/]{4})*(?:[A-Za-z0-9+/]{2}==|[A-Za-z0-9+/]{3}=)?$/.test(value);
+}
+
 function validateDocumentText(value: unknown): string | null {
   if (value !== undefined && value !== null && typeof value !== "string") {
     return "Trường nội dung văn bản phải là chuỗi ký tự.";
@@ -435,7 +442,13 @@ app.post("/api/parse-document", async (req, res) => {
     }
 
     const cleanBase64 = base64Data.replace(/^data:.*?;base64,/, "");
+    if (!isStrictBase64(cleanBase64)) {
+      return res.status(400).json({ error: "Dữ liệu tệp mã hóa không hợp lệ. Hãy tải lại tệp gốc và thử lại." });
+    }
     const buffer = Buffer.from(cleanBase64, "base64");
+    if (buffer.length === 0 || buffer.length > 11_250_000) {
+      return res.status(413).json({ error: "Kích thước tệp sau giải mã không hợp lệ hoặc vượt giới hạn xử lý." });
+    }
     const lowerName = (fileName || "").toLowerCase();
 
     let extractedText = "";
