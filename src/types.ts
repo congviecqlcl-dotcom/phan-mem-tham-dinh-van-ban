@@ -45,7 +45,7 @@ export interface CategoryScore {
 
 export interface AuditResult {
   overallScore: number; // 0 - 100
-  status: 'DAT' | 'CAN_SUA_DOI' | 'KHONG_DAT';
+  status: 'CAN_XAC_MINH';
   documentTypeDetected: string;
   summary: string;
   positivePoints: string[];
