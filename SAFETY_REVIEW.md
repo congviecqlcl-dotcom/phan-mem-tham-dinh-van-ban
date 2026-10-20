@@ -85,3 +85,5 @@ Trên nhánh thử nghiệm, đã bổ sung các giới hạn kỹ thuật ở p
 - Báo cáo Word cá nhân và báo cáo tổng hợp dùng số lượng dấu hiệu, không dùng điểm tổng hợp để xếp hạng.
 - Bộ kiểm tra cục bộ không còn tính điểm tổng hợp từ trọng số tự đặt. Trường `overallScore` tạm giữ giá trị 0 để tương thích cấu trúc API cũ; cần một đợt dọn kiểu dữ liệu và kiểm thử tích hợp trước khi xóa trường.
 - Đây là sửa đổi mã trên nhánh thử nghiệm. Chưa chạy build, lint hoặc test tự động; cần kiểm tra JSX/TypeScript và mọi luồng xuất Word trước khi coi là hoàn tất.
+
+- Cập nhật tiếp: đã bỏ các trường điểm và điểm tối đa khỏi nhóm `CategoryScore` trong bộ kiểm tra cục bộ và máy chủ; trường tổng hợp legacy `overallScore` vẫn tạm tồn tại bằng 0 để tương thích API.
