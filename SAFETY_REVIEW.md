@@ -67,3 +67,12 @@ Trên nhánh thử nghiệm, đã bổ sung các giới hạn kỹ thuật ở p
 
 **Giới hạn của biện pháp này:** đây chỉ là kiểm soát kích thước và khối lượng đầu vào, không phải xác thực, phân quyền hay giới hạn tần suất theo người dùng/IP. Chưa có kiểm thử build, tải, tệp biên hoặc kiểm thử hồi quy; cần xác nhận các giới hạn tương thích với kích thước hồ sơ thực tế. Rủi ro API chưa xác thực vẫn là điều kiện chặn triển khai công khai.
 
+## Loại bỏ suy diễn trạng thái đạt/không đạt từ điểm sàng lọc
+
+- Bộ kiểm tra cục bộ phía trình duyệt và máy chủ không còn ánh xạ điểm số heuristic sang các trạng thái `DAT`, `CAN_SUA_DOI`, `KHONG_DAT`.
+- Mọi kết quả thẩm định tự động hiện mang trạng thái `CAN_XAC_MINH` — “Cần công chức xác minh”. Trạng thái này được cập nhật trong kiểu dữ liệu, giao diện và báo cáo Word.
+- Đầu ra có cấu trúc của Gemini chỉ chấp nhận trạng thái `CAN_XAC_MINH`; không dùng nhãn do mô hình tạo ra để tuyên bố hồ sơ đạt/không đạt.
+- Bảng tổng hợp không còn chia văn bản thành nhóm đạt/không đạt dựa trên điểm; các ô nhóm cũ được đổi nhãn để nhấn mạnh rằng kết quả đang chờ xác minh.
+
+**Lưu ý còn mở:** trường điểm sàng lọc và các điểm thành phần vẫn tồn tại dưới dạng chỉ báo heuristic, chưa được kiểm chứng là thước đo có ý nghĩa nghiệp vụ. Không dùng điểm để quyết định hoặc xếp hạng tính hợp pháp. Cần cân nhắc thay điểm bằng số lượng dấu hiệu theo mức độ và mức độ bao phủ kiểm tra có thể giải thích được. Chưa chạy build/lint/test nên cần kiểm tra tương thích kiểu dữ liệu, JSX và báo cáo xuất trước khi nhập nhánh chính.
+
