@@ -17,6 +17,14 @@ Phạm vi: rà soát tĩnh một phần mã trên nhánh thử nghiệm `safety-
 - Định dạng Word được tạo ra vẫn chỉ là định dạng trình bày tham khảo; chưa được xác nhận là tuân thủ đầy đủ Nghị định 30/2020/NĐ-CP.
 - Các thay đổi này mới được ghi vào nhánh; chưa có build/lint/test để xác nhận không phát sinh lỗi giao diện, kiểu dữ liệu hoặc xuất tệp.
 
+## Rà soát máy chủ — phát hiện mới
+
+- Bộ quy tắc dự phòng phía máy chủ đã được sửa để giữ nguyên văn bản đầu vào, không tự thay thế nội dung bằng regex diện rộng.
+- Kết quả từ Gemini hiện cũng bị ghi đè trường `fixedDocument` bằng đúng nội dung đầu vào; nội dung AI viết lại chưa được đưa ra làm bản “đã sửa” trước khi có quy trình xem diff và người dùng duyệt.
+- Đã bỏ thông điệp dự phòng tuyên bố “tuân thủ đúng 100%” và thay bằng giới hạn của bộ quy tắc sàng lọc.
+- **Rủi ro bảo mật nghiêm trọng còn mở:** trong các route được kiểm tra, chưa thấy middleware xác thực/phân quyền cho `/api/parse-document`, `/api/audit-document`, `/api/batch-audit-documents` và `/api/chat`. Đây là phát hiện từ mã đã đọc, chưa xác minh lớp bảo vệ ngoài ứng dụng. Không triển khai công khai hoặc gửi hồ sơ nghiệp vụ thật qua các route này cho đến khi xác minh và xử lý xác thực, phân quyền, giới hạn tần suất, kích thước yêu cầu và kiểm soát chi phí.
+- Các route vẫn dùng giới hạn body 50 MB; chưa kiểm thử chống lạm dụng hoặc đo tài nguyên.
+
 ## Rủi ro còn tồn tại — chưa được xử lý xong
 
 1. **Điểm số và trạng thái tổng hợp:** bộ kiểm tra cục bộ vẫn tính điểm theo trọng số tự đặt và vẫn ánh xạ sang các trạng thái `DAT`, `CAN_SUA_DOI`, `KHONG_DAT`. Đây không phải căn cứ pháp lý và không nên được dùng như kết luận “đạt/không đạt”. Giao diện còn chỗ dùng ngưỡng điểm khác với bộ máy; cần sửa đồng bộ hoặc loại bỏ việc dùng điểm để phân loại tuân thủ.
