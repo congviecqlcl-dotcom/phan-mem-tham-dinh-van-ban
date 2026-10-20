@@ -601,6 +601,8 @@ export const DocumentAuditor: React.FC = () => {
   // Aggregated Stats for Batch
   const completedDocs = files.filter((f) => f.auditResult);
   const needsHumanReviewDocs = completedDocs.filter((f) => f.auditResult?.status === 'CAN_XAC_MINH');
+  const docsWithFindings = completedDocs.filter((f) => (f.auditResult?.issues?.length || 0) > 0);
+  const docsWithHighSignals = completedDocs.filter((f) => f.auditResult?.issues?.some((issue) => issue.severity === 'error'));
   const avgScore = completedDocs.length
     ? Math.round(completedDocs.reduce((acc, curr) => acc + (curr.auditResult?.overallScore || 0), 0) / completedDocs.length)
     : 0;
@@ -866,12 +868,12 @@ export const DocumentAuditor: React.FC = () => {
               <div className="text-xs text-emerald-700 font-medium">Cần công chức xác minh</div>
             </div>
             <div className="bg-amber-50 p-4 rounded-2xl border border-amber-200 shadow-2xs text-center space-y-1">
-              <div className="text-2xl font-bold text-amber-800">{0}</div>
-              <div className="text-xs text-amber-700 font-medium">Số kết quả chờ xác minh</div>
+              <div className="text-2xl font-bold text-amber-800">{docsWithFindings.length}</div>
+              <div className="text-xs text-amber-700 font-medium">Văn bản có dấu hiệu cần xem xét</div>
             </div>
             <div className="bg-rose-50 p-4 rounded-2xl border border-rose-200 shadow-2xs text-center space-y-1">
-              <div className="text-2xl font-bold text-rose-800">{0}</div>
-              <div className="text-xs text-rose-700 font-medium">Không phân loại đạt/không đạt</div>
+              <div className="text-2xl font-bold text-rose-800">{docsWithHighSignals.length}</div>
+              <div className="text-xs text-rose-700 font-medium">Văn bản có dấu hiệu mức cao theo mẫu</div>
             </div>
             <div className="bg-blue-50 p-4 rounded-2xl border border-blue-200 shadow-2xs text-center space-y-1">
               <div className="text-2xl font-bold text-blue-800">{avgScore}/100</div>
