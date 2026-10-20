@@ -119,3 +119,21 @@ Không nên thêm một token bí mật cố định vào mã trình duyệt đ�
 - API phân tích Base64 kiểm tra cấu trúc chuỗi trước khi giải mã và kiểm tra kích thước dữ liệu sau giải mã. Đây là kiểm tra đầu vào cơ bản, **không thay thế kiểm tra chữ ký định dạng tệp, giới hạn tài nguyên parser, quét mã độc, xác thực hay phân quyền**.
 - GitHub Actions thành công tại commit `47bcb784d6dfd68854f394526c85d5bd36a46923` và commit tiếp theo `3a5f3fb846e531bf65f632ef9ce64fc801df968b`. Kết quả chỉ xác nhận TypeScript check và production build, không xác nhận an toàn API hoặc tính đúng đắn pháp lý.
 - Điều kiện chặn chưa thay đổi: chưa xác minh lớp xác thực/phân quyền ở máy chủ hoặc nền tảng, chưa có giới hạn tần suất theo người dùng/IP và chưa có kiểm thử bảo mật/hồi quy toàn diện. Không triển khai công khai hoặc đưa hồ sơ nghiệp vụ thật vào hệ thống trước khi xử lý các điều kiện này.
+
+## Cập nhật tiếp theo — nguồn kết quả dự phòng phía trình duyệt (20/10/2026)
+
+- Khi API thẩm định không khả dụng hoặc trả lỗi, giao diện có thể chạy bộ quy tắc cục bộ ngay trên trình duyệt. Kết quả đó hiện được gắn nguồn `client_rule` và cảnh báo; không được hiểu là kết quả từ Gemini hoặc bằng chứng đã tra cứu pháp luật.
+- Kết quả trò chuyện phân biệt `gemini` và `local_fallback`; lỗi máy chủ bất ngờ ở một số tuyến được trả về dưới dạng lỗi thay vì giả lập kết quả thành công. Cần tiếp tục kiểm thử các nhánh lỗi thực tế để xác nhận mọi đường thoát đều giữ đúng nhãn nguồn.
+- GitHub Actions run [39398606165](https://github.com/congviecqlcl-dotcom/phan-mem-tham-dinh-van-ban/actions/runs/39398606165) đã thành công trên commit `d53893f898e7beeba1fd176a1d2524c72866c2fa`. Kết quả xác nhận TypeScript check và production build cho commit đó; không phải kiểm thử chức năng, bảo mật, tải hay tính đúng đắn pháp lý.
+- PR #1 vẫn ở trạng thái nháp, chưa nhập vào `main`, chưa triển khai công khai.
+
+## Điều kiện chặn hiện tại — cần giữ nguyên cho đến khi có bằng chứng
+
+1. **Xác thực và phân quyền:** chưa xác minh middleware bảo vệ API ở cấp ứng dụng hoặc cổng nền tảng. Tệp `.env.example` gợi ý môi trường Google AI Studio/Cloud Run nhưng chưa đủ để kết luận nơi triển khai đang hoạt động hoặc cơ chế truy cập thực tế. Không tự thêm token cố định vào frontend.
+2. **Giới hạn tần suất và chi phí:** chưa có bằng chứng về rate limiting theo người dùng/IP hoặc quota bảo vệ chi phí Gemini.
+3. **Tệp tải lên:** kiểm tra Base64 không thay thế xác minh chữ ký định dạng thực tế, giới hạn tài nguyên parser và kiểm thử tệp độc hại/biên.
+4. **Phụ thuộc:** repo có `bun.lock`, nhưng workflow đang dùng `npm install` và chưa có `package-lock.json`; cần chọn một trình quản lý gói và cơ chế khóa phụ thuộc nhất quán trước khi dựa vào CI để tái lập bản dựng.
+5. **Kiểm thử:** CI hiện chỉ chạy `npm run lint` và `npm run build`; chưa có kiểm thử tích hợp Gemini/dự phòng, phân quyền, giới hạn yêu cầu, xuất Word, hồi quy hay tải.
+6. **Căn cứ pháp luật:** prompt và quy tắc cục bộ còn nhiều viện dẫn viết cứng. Chưa xác minh độc lập từng điều khoản, hiệu lực, phạm vi và phiên bản áp dụng; không được coi các viện dẫn này là nguồn luật đã kiểm chứng.
+
+**Quyết định:** tiếp tục rà soát trên nhánh thử nghiệm và PR nháp; không hợp nhất, không triển khai công khai, không đưa hồ sơ nghiệp vụ thật vào hệ thống cho đến khi các điều kiện chặn được xử lý và kiểm thử phù hợp có bằng chứng.
