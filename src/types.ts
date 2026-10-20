@@ -33,8 +33,6 @@ export interface AuditIssue {
 
 export interface CategoryScore {
   name: string;
-  score: number;
-  maxScore: number;
   totalIssues: number;
   severityBreakdown: {
     error: number;
@@ -44,7 +42,7 @@ export interface CategoryScore {
 }
 
 export interface AuditResult {
-  overallScore: number; // 0 - 100
+  overallScore: number; // Legacy compatibility field; not a compliance score (currently 0)
   status: 'CAN_XAC_MINH';
   documentTypeDetected: string;
   summary: string;
