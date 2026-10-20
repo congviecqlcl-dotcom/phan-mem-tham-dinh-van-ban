@@ -414,7 +414,6 @@ function runLocalRuleAudit(content: string, docType?: string) {
       },
       dia_gioi_hanh_chinh: {
         name: "Địa giới hành chính 2025-2026",
-        score: 10,
         totalIssues: 0,
         severityBreakdown: { error: 0, warning: 0, suggestion: 0 },
       },
@@ -556,7 +555,7 @@ YÊU CẦU ĐÁNH GIÁ:
             responseSchema: {
               type: Type.OBJECT,
               properties: {
-                overallScore: { type: Type.NUMBER, description: "Điểm tổng thể từ 0 đến 100" },
+                overallScore: { type: Type.NUMBER, description: "Trường tương thích API cũ; máy chủ ghi đè bằng 0. Không phải điểm tuân thủ." },
                 status: {
                   type: Type.STRING,
                   enum: ["CAN_XAC_MINH"],
@@ -598,7 +597,7 @@ YÊU CẦU ĐÁNH GIÁ:
                   description: "Bản dự thảo chỉnh sửa do AI đề xuất; phải được công chức kiểm tra căn cứ pháp lý và nội dung trước khi sử dụng.",
                 },
               },
-              required: ["overallScore", "status", "documentTypeDetected", "summary", "positivePoints", "issues", "fixedDocument"],
+              required: ["status", "documentTypeDetected", "summary", "positivePoints", "issues", "fixedDocument"],
             },
           },
         });
@@ -619,19 +618,17 @@ YÊU CẦU ĐÁNH GIÁ:
               cat.totalIssues += 1;
               if (issue.severity === "error") {
                 cat.severityBreakdown.error += 1;
-                cat.score = Math.max(0, cat.score - (cat.maxScore >= 25 ? 8 : 4));
               } else if (issue.severity === "warning") {
                 cat.severityBreakdown.warning += 1;
-                cat.score = Math.max(0, cat.score - (cat.maxScore >= 25 ? 4 : 2));
               } else {
                 cat.severityBreakdown.suggestion += 1;
-                cat.score = Math.max(0, cat.score - 1);
               }
             }
           });
 
           return {
             ...parsed,
+            overallScore: 0, // Legacy API compatibility only; never use as a compliance score.
             // Safety: do not export model-rewritten legal text as if it were a reviewed correction.
             // Until a human-reviewed diff workflow exists, preserve the exact submitted content.
             fixedDocument: content || "",
