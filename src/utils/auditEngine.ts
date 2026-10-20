@@ -324,14 +324,6 @@ export function runClientAuditEngine(content: string, docType?: DocumentType | s
     categoryScores: {
       the_thuc: {
         name: 'Thể thức văn bản (Nghị định 30/2020)',
-        score: Math.max(
-          0,
-          25 -
-            issues
-              .filter((i) => i.category === 'the_thuc')
-              .reduce((s: number, i) => s + (i.severity === 'error' ? 10 : 5), 0)
-        ),
-        maxScore: 25,
         totalIssues: issues.filter((i) => i.category === 'the_thuc').length,
         severityBreakdown: {
           error: issues.filter((i) => i.category === 'the_thuc' && i.severity === 'error').length,
@@ -341,14 +333,6 @@ export function runClientAuditEngine(content: string, docType?: DocumentType | s
       },
       can_cu_phap_ly: {
         name: 'Căn cứ pháp lý & Hiệu lực',
-        score: Math.max(
-          0,
-          25 -
-            issues
-              .filter((i) => i.category === 'can_cu_phap_ly')
-              .reduce((s: number, i) => s + (i.severity === 'error' ? 10 : 5), 0)
-        ),
-        maxScore: 25,
         totalIssues: issues.filter((i) => i.category === 'can_cu_phap_ly').length,
         severityBreakdown: {
           error: issues.filter((i) => i.category === 'can_cu_phap_ly' && i.severity === 'error').length,
@@ -358,14 +342,6 @@ export function runClientAuditEngine(content: string, docType?: DocumentType | s
       },
       chuyen_mon_attp: {
         name: 'Chuyên môn ATTP & Quy trình',
-        score: Math.max(
-          0,
-          25 -
-            issues
-              .filter((i) => i.category === 'chuyen_mon_attp')
-              .reduce((s: number, i) => s + (i.severity === 'error' ? 10 : 5), 0)
-        ),
-        maxScore: 25,
         totalIssues: issues.filter((i) => i.category === 'chuyen_mon_attp').length,
         severityBreakdown: {
           error: issues.filter((i) => i.category === 'chuyen_mon_attp' && i.severity === 'error').length,
@@ -375,14 +351,6 @@ export function runClientAuditEngine(content: string, docType?: DocumentType | s
       },
       nhan_quang_cao: {
         name: 'Nhãn hàng hóa & Quảng cáo',
-        score: Math.max(
-          0,
-          15 -
-            issues
-              .filter((i) => i.category === 'nhan_quang_cao')
-              .reduce((s: number, i) => s + (i.severity === 'error' ? 8 : 4), 0)
-        ),
-        maxScore: 15,
         totalIssues: issues.filter((i) => i.category === 'nhan_quang_cao').length,
         severityBreakdown: {
           error: issues.filter((i) => i.category === 'nhan_quang_cao' && i.severity === 'error').length,
@@ -392,14 +360,6 @@ export function runClientAuditEngine(content: string, docType?: DocumentType | s
       },
       dia_gioi_hanh_chinh: {
         name: 'Địa giới hành chính (NQ 202/2025)',
-        score: Math.max(
-          0,
-          10 -
-            issues
-              .filter((i) => i.category === 'dia_gioi_hanh_chinh')
-              .reduce((s: number, i) => s + (i.severity === 'error' ? 5 : 2), 0)
-        ),
-        maxScore: 10,
         totalIssues: issues.filter((i) => i.category === 'dia_gioi_hanh_chinh').length,
         severityBreakdown: {
           error: issues.filter((i) => i.category === 'dia_gioi_hanh_chinh' && i.severity === 'error').length,
