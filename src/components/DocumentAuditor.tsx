@@ -1257,7 +1257,7 @@ export const DocumentAuditor: React.FC = () => {
                 {/* Automated signals are not legal conclusions. */}
                 <div role="note" className="rounded-xl border border-amber-300 bg-amber-50 p-4 text-sm text-amber-950 space-y-1">
                   <div className="font-semibold">Nguồn và giới hạn kết quả</div>
-                  <p>{activeFile.auditResult.source === 'gemini' ? 'Nguồn xử lý: Gemini (mô hình AI).' : activeFile.auditResult.source === 'local_rule' ? 'Nguồn xử lý: bộ quy tắc cục bộ theo mẫu đã lập trình.' : 'Chưa xác định được nguồn xử lý từ dữ liệu kết quả.'}</p>
+                  <p>{activeFile.auditResult.source === 'gemini' ? 'Nguồn xử lý: Gemini (mô hình AI).' : activeFile.auditResult.source === 'local_rule' ? 'Nguồn xử lý: bộ quy tắc cục bộ phía máy chủ.' : activeFile.auditResult.source === 'client_rule' ? 'Nguồn xử lý: bộ quy tắc cục bộ chạy trên trình duyệt.' : 'Chưa xác định được nguồn xử lý từ dữ liệu kết quả.'}</p>
                   {activeFile.auditResult.sourceNotice && <p>{activeFile.auditResult.sourceNotice}</p>}
                   <p>Các dấu hiệu do hệ thống phát hiện chỉ là gợi ý rà soát, không phải kết luận pháp lý hoặc quyết định thẩm định. Công chức cần kiểm tra từng phát hiện với hồ sơ gốc và văn bản pháp luật còn hiệu lực. Không có dấu hiệu được phát hiện không chứng minh văn bản tuân thủ đầy đủ pháp luật.</p>
                 </div>
