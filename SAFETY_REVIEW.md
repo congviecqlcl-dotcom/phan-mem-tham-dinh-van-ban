@@ -12,7 +12,7 @@ Phạm vi: rà soát tĩnh một phần mã trên nhánh thử nghiệm `safety-
 ## Cập nhật tiếp theo trên nhánh thử nghiệm
 
 - Giao diện không còn dùng một số nhãn “Đạt chuẩn/Không đạt” làm kết luận; các nhãn được đổi thành gợi ý sàng lọc.
-- Điểm được gọi là điểm sàng lọc/tham khảo, không phải điểm tuân thủ pháp luật.
+- Đã bỏ điểm tổng hợp tự đặt khỏi giao diện chính, bảng tổng hợp và báo cáo Word; giao diện dùng số lượng dấu hiệu cần rà soát. Trường điểm cũ vẫn tồn tại trong kiểu dữ liệu để tránh thay đổi API đột ngột và chưa được loại bỏ hoàn toàn.
 - Tên tệp, thư mục ZIP và mô tả tài liệu xuất đã được đổi để phản ánh rằng nội dung văn bản gốc đang được giữ nguyên, chưa tự động sửa.
 - Định dạng Word được tạo ra vẫn chỉ là định dạng trình bày tham khảo; chưa được xác nhận là tuân thủ đầy đủ Nghị định 30/2020/NĐ-CP.
 - Các thay đổi này mới được ghi vào nhánh; chưa có build/lint/test để xác nhận không phát sinh lỗi giao diện, kiểu dữ liệu hoặc xuất tệp.
@@ -27,7 +27,8 @@ Phạm vi: rà soát tĩnh một phần mã trên nhánh thử nghiệm `safety-
 
 ## Rủi ro còn tồn tại — chưa được xử lý xong
 
-1. **Điểm số và trạng thái tổng hợp:** bộ kiểm tra cục bộ vẫn tính điểm theo trọng số tự đặt và vẫn ánh xạ sang các trạng thái `DAT`, `CAN_SUA_DOI`, `KHONG_DAT`. Đây không phải căn cứ pháp lý và không nên được dùng như kết luận “đạt/không đạt”. Giao diện còn chỗ dùng ngưỡng điểm khác với bộ máy; cần sửa đồng bộ hoặc loại bỏ việc dùng điểm để phân loại tuân thủ.
+1. **Điểm số tổng hợp:** đã loại bỏ điểm tổng hợp tự đặt khỏi giao diện và báo cáo Word; thay bằng số lượng dấu hiệu phát hiện theo mẫu. Trường `overallScore` vẫn còn trong cấu trúc dữ liệu để tương thích ngược và hiện được đặt bằng 0 ở bộ kiểm tra cục bộ; cần loại bỏ trường này hoàn toàn trong một đợt thay đổi có kiểm thử API. Điểm nhóm cũ vẫn còn trong dữ liệu kết quả nhưng giao diện chuyển sang số lượng dấu hiệu, không hiển thị tỷ lệ tuân thủ.
+
 2. **Quy tắc pháp lý cục bộ:** nhiều quy tắc, giải thích và viện dẫn được viết cứng trong mã. Chưa xác minh độc lập hiệu lực, phạm vi áp dụng, phiên bản và tính chính xác của từng điều khoản. Phải coi chúng là dấu hiệu sàng lọc chưa được thẩm định, không phải cơ sở pháp lý đã xác nhận.
 3. **Máy chủ/API:** rà soát trước đó chưa xác minh được xác thực và phân quyền thực tế cho các tuyến API. Không phát hành công khai trước khi kiểm tra đầy đủ lớp ứng dụng và cấu hình nền tảng.
 4. **Dữ liệu hồ sơ:** cần kiểm tra cách lưu, truyền, ghi log, thời hạn lưu và quyền truy cập đối với hồ sơ có thông tin cá nhân hoặc thông tin nghiệp vụ.
@@ -76,3 +77,11 @@ Trên nhánh thử nghiệm, đã bổ sung các giới hạn kỹ thuật ở p
 
 **Lưu ý còn mở:** trường điểm sàng lọc và các điểm thành phần vẫn tồn tại dưới dạng chỉ báo heuristic, chưa được kiểm chứng là thước đo có ý nghĩa nghiệp vụ. Không dùng điểm để quyết định hoặc xếp hạng tính hợp pháp. Cần cân nhắc thay điểm bằng số lượng dấu hiệu theo mức độ và mức độ bao phủ kiểm tra có thể giải thích được. Chưa chạy build/lint/test nên cần kiểm tra tương thích kiểu dữ liệu, JSX và báo cáo xuất trước khi nhập nhánh chính.
 
+
+
+## Cập nhật tiếp theo — loại bỏ điểm số khỏi hiển thị
+
+- Giao diện không còn hiển thị điểm tổng hợp `x/100`, điểm trung bình theo lô hoặc thanh phần trăm theo nhóm; thay bằng số lượng dấu hiệu theo mẫu kiểm tra.
+- Báo cáo Word cá nhân và báo cáo tổng hợp dùng số lượng dấu hiệu, không dùng điểm tổng hợp để xếp hạng.
+- Bộ kiểm tra cục bộ không còn tính điểm tổng hợp từ trọng số tự đặt. Trường `overallScore` tạm giữ giá trị 0 để tương thích cấu trúc API cũ; cần một đợt dọn kiểu dữ liệu và kiểm thử tích hợp trước khi xóa trường.
+- Đây là sửa đổi mã trên nhánh thử nghiệm. Chưa chạy build, lint hoặc test tự động; cần kiểm tra JSX/TypeScript và mọi luồng xuất Word trước khi coi là hoàn tất.
