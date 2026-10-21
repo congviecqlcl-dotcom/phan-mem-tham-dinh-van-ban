@@ -547,7 +547,7 @@ YÊU CẦU ĐÁNH GIÁ:
 2. Kiểm tra Căn cứ pháp lý & Hiệu lực (Thông tư 17/2024 có hiệu lực 15/01/2025 đã bỏ phân loại A/B/C sang Đạt/Không đạt, bãi bỏ GCN kiến thức ATTP chuyển chủ cơ sở tự xác nhận, thời hạn khắc phục 30 ngày, các văn bản hết hiệu lực như TT 51/2014, TT 45/2014, TT 32/2022...).
 3. Kiểm tra Chuyên môn ATTP, Thẩm quyền quản lý, Ghi nhãn hàng hóa (NĐ 111/2021), Quảng cáo (NĐ 181/2013).
 4. Kiểm tra Địa giới hành chính theo Nghị quyết 202/2025/QH15 & Nghị quyết 1676/NQ-UBTVQH15 (xã Vĩnh An, Tiên Lữ, Hy Cương, Lâm Thao... tỉnh Phú Thọ mới).
-5. Tạo ra bản toàn văn đã được sửa đúng hoàn chỉnh 100% (fixedDocument). Lưu ý: Đối với các đường kẻ ngang phân cách (dưới Tiêu ngữ 'Độc lập - Tự do - Hạnh phúc', Tên cơ quan ban hành, Trích yếu văn bản), phải sử dụng nét liền chuẩn (─────────────────────────), không sử dụng các dấu gạch nối rời đứt đoạn.
+5. Không tự viết lại toàn văn trong trường fixedDocument. Máy chủ sẽ giữ nguyên nội dung đầu vào cho đến khi có quy trình so sánh từng thay đổi và người dùng duyệt rõ ràng. Chỉ nêu từng dấu hiệu cần rà soát trong issues; không tuyên bố đã sửa đúng hoặc tuân thủ đầy đủ.
 `;
 
         const parts: any[] = [];
@@ -681,6 +681,13 @@ app.post("/api/audit-document", async (req, res) => {
     }
     const contentError = validateDocumentText(content);
     if (contentError) return res.status(413).json({ error: contentError });
+    // This endpoint returns a text-based audit result. Do not silently report an
+    // empty local-rule analysis when a caller sends only an attachment payload.
+    if (!isNonEmptyString(content)) {
+      return res.status(400).json({
+        error: "Chưa có nội dung văn bản đã trích xuất để thẩm định. Hãy trích xuất văn bản từ tệp trước khi gửi yêu cầu.",
+      });
+    }
     if (fileData !== undefined && fileData !== null && typeof fileData !== "string") {
       return res.status(400).json({ error: "Dữ liệu tệp đính kèm không hợp lệ." });
     }
