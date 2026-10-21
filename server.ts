@@ -718,6 +718,11 @@ app.post("/api/batch-audit-documents", async (req, res) => {
       if (!item || typeof item !== "object") {
         return res.status(400).json({ error: `Văn bản thứ ${index + 1} không hợp lệ.` });
       }
+      if (!isNonEmptyString(item.content)) {
+        return res.status(400).json({
+          error: `Văn bản thứ ${index + 1} chưa có nội dung văn bản đã trích xuất để thẩm định.`,
+        });
+      }
       const contentError = validateDocumentText(item.content);
       if (contentError) return res.status(413).json({ error: `Văn bản thứ ${index + 1}: ${contentError}` });
     }
