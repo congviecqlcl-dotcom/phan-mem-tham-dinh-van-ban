@@ -1012,7 +1012,7 @@ export const DocumentAuditor: React.FC = () => {
                                   await downloadFixedAsWord(res.fixedDocument, `${targetName}_ban_goc_chua_sua.docx`);
                                 }}
                                 className="p-1 rounded-lg bg-blue-50 hover:bg-blue-100 text-blue-700 transition"
-                                title="Tải file Word đã sửa"
+                                title="Tải bản văn bản gốc được giữ nguyên; chưa được tự động sửa hoặc xác nhận tuân thủ"
                               >
                                 <Download className="w-3.5 h-3.5" />
                               </button>
@@ -1550,10 +1550,10 @@ export const DocumentAuditor: React.FC = () => {
                           disabled={isExportingWord}
                           onClick={handleDownloadWordDoc}
                           className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-blue-700 hover:bg-blue-800 disabled:bg-neutral-400 text-white text-xs font-semibold transition shadow-sm"
-                          title="Tải văn bản hoàn chỉnh dạng file Microsoft Word (.docx) chuẩn Nghị định 30/2020: Lề trái 3cm, lề phải 2cm, trên 2cm, dưới 2cm, Times New Roman"
+                          title="Tải nội dung văn bản gốc được giữ nguyên dưới dạng Word; định dạng tệp không đồng nghĩa với xác nhận tuân thủ Nghị định 30/2020/NĐ-CP"
                         >
                           {isExportingWord ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <FileText className="w-3.5 h-3.5" />}
-                          <span>{isExportingWord ? 'Đang tạo Word...' : 'Tải file Word (.DOCX) chuẩn NĐ 30'}</span>
+                          <span>{isExportingWord ? 'Đang tạo Word...' : 'Tải bản gốc (.DOCX)'}</span>
                         </button>
                         <button
                           id="btn-download-report-fixed-tab"
