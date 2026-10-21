@@ -215,9 +215,15 @@ export const DocumentAuditor: React.FC = () => {
     }
 
     setIsExtracting(false);
+    const readyCount = newItems.filter((item) => item.status === 'ready').length;
+    const failedCount = newItems.length - readyCount;
     setExtractStatus({
-      type: 'success',
-      message: `Đã nạp thành công ${newItems.length} tệp văn bản. Nhấn "Thẩm định tất cả" để xử lý hàng loạt!`,
+      type: failedCount === 0 ? 'success' : readyCount === 0 ? 'error' : 'info',
+      message: failedCount === 0
+        ? `Đã trích xuất thành công ${readyCount}/${newItems.length} tệp. Nhấn "Thẩm định tất cả" để xử lý hàng loạt!`
+        : readyCount === 0
+          ? `Không trích xuất được nội dung của ${failedCount} tệp. Hãy kiểm tra định dạng; hệ thống hỗ trợ PDF, DOCX và TXT/MD/CSV/LOG.`
+          : `Đã trích xuất ${readyCount}/${newItems.length} tệp; ${failedCount} tệp lỗi và chưa được đưa vào thẩm định. Hãy kiểm tra định dạng hoặc nội dung các tệp lỗi.`,
     });
 
     if (fileInputRef.current) {
