@@ -567,7 +567,7 @@ export const DocumentAuditor: React.FC = () => {
   const handleDownloadAllZip = async () => {
     setIsExportingZip(true);
     try {
-      await downloadAllFixedAsZip(files, `Bo_van_ban_chuan_hoa_ND30_${Date.now()}.zip`);
+      await downloadAllFixedAsZip(files, `Bo_van_ban_goc_chua_sua_${Date.now()}.zip`);
     } catch (err: any) {
       alert(err.message || 'Lỗi khi tải gói tệp ZIP.');
     } finally {
