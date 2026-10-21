@@ -500,6 +500,11 @@ app.post("/api/parse-document", async (req, res) => {
     }
 
     extractedText = (extractedText || "").trim();
+    if (!extractedText) {
+      return res.status(422).json({
+        error: "Không trích xuất được văn bản từ tệp. Tệp có thể là bản quét ảnh, bị hỏng hoặc không chứa lớp văn bản; hãy kiểm tra tệp hoặc cung cấp bản có thể tìm kiếm văn bản.",
+      });
+    }
 
     // Auto-detect Document Type from extracted text
     let detectedType = "khac";
