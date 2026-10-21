@@ -532,7 +532,7 @@ async function performSingleAudit(params: {
     for (const modelName of modelsToTry) {
       try {
         const promptText = `
-Hãy thẩm định và kiểm tra toàn diện văn bản sau đây đối chiếu với 12 văn bản quy phạm pháp luật (Luật ATTP 55/2010, NĐ 15/2018, TT 17/2024, TT 38/2018, TT 17/2018, TT 17/2021, TT 48/2013, NĐ 43/2017, NĐ 111/2021, NĐ 181/2013, NĐ 30/2020/NĐ-CP, NQ 202/2025/QH15 & NQ 1676/NQ-UBTVQH15).
+Hãy rà soát sơ bộ văn bản dưới đây theo các nhóm vấn đề pháp lý có liên quan. Danh sách văn bản tham chiếu bên dưới chỉ gợi ý phạm vi cần xem xét; văn bản gốc chưa được cung cấp trong yêu cầu này, vì vậy không được tuyên bố đã đối chiếu trực tiếp, xác minh hiệu lực hoặc xác nhận điều khoản nếu không có căn cứ kiểm chứng được. Mọi viện dẫn chưa kiểm chứng phải được ghi rõ là cần công chức đối chiếu với nguồn chính thức hiện hành.
 
 Loại văn bản: ${docType || "Tự động nhận diện"}
 Tên tệp: ${fileName || "Văn bản người dùng"}
