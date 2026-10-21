@@ -159,3 +159,11 @@ Không nên thêm một token bí mật cố định vào mã trình duyệt đ�
 - Prompt Gemini không còn yêu cầu tạo toàn văn đã sửa “100%”; yêu cầu hiện tập trung vào các dấu hiệu cần rà soát. Máy chủ vẫn giữ nguyên nội dung gốc trong trường `fixedDocument` cho đến khi có quy trình xem khác biệt và người dùng duyệt.
 - Đây là thay đổi trên nhánh thử nghiệm. Cần CI xác nhận TypeScript/build; chưa có kiểm thử tích hợp chứng minh API trả đúng mã 400 cho nội dung rỗng, và chưa có kiểm thử Gemini thực tế.
 - Các điều kiện chặn triển khai vẫn giữ nguyên: xác thực/phân quyền chưa xác minh, chưa có rate limiting, chưa kiểm tra bảo vệ Preview và chưa kiểm thử bảo mật/hồi quy toàn diện.
+
+
+## Kiểm tra tiếp — đầu vào rỗng trong thẩm định hàng loạt (21/10/2026)
+
+- Rà soát sâu hơn phát hiện tuyến `/api/batch-audit-documents` vẫn chấp nhận phần tử không có `content`, vì bộ kiểm tra độ dài không coi `undefined` là lỗi. Nhánh dự phòng có thể trả một kết quả rà soát trên chuỗi rỗng và đánh dấu `success: true`.
+- Đã thêm kiểm tra bắt buộc nội dung văn bản không rỗng cho từng phần tử của yêu cầu hàng loạt, trả HTTP 400 nếu thiếu nội dung. Thay đổi nằm trên nhánh thử nghiệm, commit `f93b2349c5c82e6775548d1186cb07807cab71ac`.
+- CI của commit báo cáo trước đó `e0d34b4f53ca6459e7df9f98c3b1783adff666f9` đã thành công: cài phụ thuộc khóa bằng Bun, TypeScript check và production build. **Chưa có kết quả CI cho commit mới `f93b234...`**, nên thay đổi mới chưa được xác nhận build.
+- Chưa có kiểm thử tích hợp xác minh các mã HTTP cho cả API đơn lẻ và hàng loạt. Xác thực/phân quyền API và giới hạn tần suất vẫn là điều kiện chặn triển khai.
