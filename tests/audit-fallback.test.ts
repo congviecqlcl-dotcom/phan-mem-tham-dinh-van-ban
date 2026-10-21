@@ -1,4 +1,5 @@
-import { describe, expect, it } from "bun:test";
+import { describe, it } from "node:test";
+import assert from "node:assert/strict";
 import {
   createLocalFallbackResponse,
   LOCAL_FALLBACK_NOTICE,
@@ -9,21 +10,21 @@ describe("createLocalFallbackResponse", () => {
     const auditResult = { status: "CAN_XAC_MINH" };
     const result = createLocalFallbackResponse("doc-1", "ho-so.pdf", auditResult);
 
-    expect(result.success).toBe(false);
-    expect(result.source).toBe("local_fallback");
-    expect(result.sourceNotice).toBe(LOCAL_FALLBACK_NOTICE);
-    expect(result.auditResult).toBe(auditResult);
-    expect(result.id).toBe("doc-1");
-    expect(result.name).toBe("ho-so.pdf");
+    assert.equal(result.success, false);
+    assert.equal(result.source, "local_fallback");
+    assert.equal(result.sourceNotice, LOCAL_FALLBACK_NOTICE);
+    assert.equal(result.auditResult, auditResult);
+    assert.equal(result.id, "doc-1");
+    assert.equal(result.name, "ho-so.pdf");
   });
 
   it("preserves missing identifiers without changing the fallback source", () => {
     const result = createLocalFallbackResponse(undefined, undefined, null);
 
-    expect(result.success).toBe(false);
-    expect(result.source).toBe("local_fallback");
-    expect(result.id).toBeUndefined();
-    expect(result.name).toBeUndefined();
-    expect(result.auditResult).toBeNull();
+    assert.equal(result.success, false);
+    assert.equal(result.source, "local_fallback");
+    assert.equal(result.id, undefined);
+    assert.equal(result.name, undefined);
+    assert.equal(result.auditResult, null);
   });
 });
