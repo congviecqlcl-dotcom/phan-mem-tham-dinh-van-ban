@@ -190,18 +190,33 @@ export const DocumentAuditor: React.FC = () => {
 
     for (const file of incomingFiles) {
       const fileId = `file-${Date.now()}-${Math.random().toString(36).substr(2, 6)}`;
-      const { text, detectedType } = await extractTextFromFile(file);
+      try {
+        const { text, detectedType } = await extractTextFromFile(file);
+        const hasText = Boolean(text && text.trim().length > 0);
 
-      newItems.push({
-        id: fileId,
-        name: file.name,
-        size: file.size,
-        content: text || '',
-        docType: detectedType,
-        status: text ? 'ready' : 'error',
-        errorMessage: text ? undefined : 'Không thể đọc nội dung văn bản.',
-        charCount: text ? text.length : 0,
-      });
+        newItems.push({
+          id: fileId,
+          name: file.name,
+          size: file.size,
+          content: hasText ? text : '',
+          docType: detectedType,
+          status: hasText ? 'ready' : 'error',
+          errorMessage: hasText ? undefined : 'Không trích xuất được văn bản; tệp này sẽ không được đưa vào thẩm định.',
+          charCount: hasText ? text.length : 0,
+        });
+      } catch (extractErr) {
+        console.warn(`Không thể xử lý tệp "${file.name}":`, extractErr);
+        newItems.push({
+          id: fileId,
+          name: file.name,
+          size: file.size,
+          content: '',
+          docType: 'khac',
+          status: 'error',
+          errorMessage: 'Đã xảy ra lỗi khi đọc tệp; tệp này sẽ không được đưa vào thẩm định.',
+          charCount: 0,
+        });
+      }
     }
 
     // Append to existing files or replace initial if initial was untouched
