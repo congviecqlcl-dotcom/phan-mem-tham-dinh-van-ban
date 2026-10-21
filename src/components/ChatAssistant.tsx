@@ -80,7 +80,8 @@ Bạn có thể đặt bất kỳ câu hỏi nào về thẩm quyền, biểu m�
               : data.source === 'gemini'
               ? '\n\n⚠️ LƯU Ý: Câu trả lời do AI tạo. Cần đối chiếu văn bản pháp luật gốc, hiệu lực và phạm vi áp dụng trước khi sử dụng.'
               : '';
-          replyText = (data.reply || '') + (data.notice ? '\n\n⚠️ ' + data.notice : sourceNotice);
+          const apiNotice = data.notice ? '\n\n⚠️ ' + data.notice : '';
+          replyText = (data.reply || '') + sourceNotice + apiNotice;
         }
       } catch (netErr) {
         console.warn('Network chat error, using local legal engine:', netErr);
