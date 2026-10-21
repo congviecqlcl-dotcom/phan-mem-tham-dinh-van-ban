@@ -94,10 +94,11 @@ export const DocumentAuditor: React.FC = () => {
   };
 
   // Extract text from a single file object
-  const extractTextFromFile = async (file: File): Promise<{ text: string; detectedType: DocumentType }> => {
+  const extractTextFromFile = async (file: File): Promise<{ text: string; detectedType: DocumentType; errorMessage?: string }> => {
     const lowerName = file.name.toLowerCase();
     let text = '';
     let detectedType: DocumentType = 'khac';
+    let extractionError: string | undefined;
 
     // 1. Client-side Mammoth for DOCX
     if (lowerName.endsWith('.docx')) {
@@ -142,7 +143,14 @@ export const DocumentAuditor: React.FC = () => {
             if (data.detectedType && data.detectedType !== 'khac') {
               detectedType = data.detectedType as DocumentType;
             }
+          } else {
+            extractionError = 'Không tìm thấy văn bản có thể trích xuất trong tệp.';
           }
+        } else {
+          const data = await response.json().catch(() => ({}));
+          extractionError = typeof data.error === 'string'
+            ? data.error
+            : 'Máy chủ không hỗ trợ hoặc không đọc được định dạng tệp này.';
         }
       } catch (serverErr) {
         console.warn('Server parser error:', serverErr);
@@ -172,7 +180,7 @@ export const DocumentAuditor: React.FC = () => {
       }
     }
 
-    return { text: text.trim(), detectedType };
+    return { text: text.trim(), detectedType, errorMessage: extractionError };
   };
 
   // Process multiple uploaded files in parallel
@@ -191,7 +199,7 @@ export const DocumentAuditor: React.FC = () => {
     for (const file of incomingFiles) {
       const fileId = `file-${Date.now()}-${Math.random().toString(36).substr(2, 6)}`;
       try {
-        const { text, detectedType } = await extractTextFromFile(file);
+        const { text, detectedType, errorMessage } = await extractTextFromFile(file);
         const hasText = Boolean(text && text.trim().length > 0);
 
         newItems.push({
@@ -201,7 +209,7 @@ export const DocumentAuditor: React.FC = () => {
           content: hasText ? text : '',
           docType: detectedType,
           status: hasText ? 'ready' : 'error',
-          errorMessage: hasText ? undefined : 'Không trích xuất được văn bản; tệp này sẽ không được đưa vào thẩm định.',
+          errorMessage: hasText ? undefined : (errorMessage || 'Không trích xuất được văn bản; tệp này sẽ không được đưa vào thẩm định.'),
           charCount: hasText ? text.length : 0,
         });
       } catch (extractErr) {
