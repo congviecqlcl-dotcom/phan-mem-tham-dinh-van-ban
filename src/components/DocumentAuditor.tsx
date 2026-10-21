@@ -149,10 +149,8 @@ export const DocumentAuditor: React.FC = () => {
       }
     }
 
-    // 4. Fallback text read
-    if (!text) {
-      text = await file.text().catch(() => '');
-    }
+    // Do not treat failed PDF/DOC/DOCX/RTF parsing as plain UTF-8 text.
+    // Unsupported or unreadable binary files remain empty and are marked as errors.
 
     // Auto-detect Document Type if not detected
     if (detectedType === 'khac' && text) {
