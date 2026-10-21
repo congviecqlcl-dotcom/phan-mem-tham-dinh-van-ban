@@ -5,6 +5,7 @@ import { GoogleGenAI, Type } from "@google/genai";
 import { createServer as createViteServer } from "vite";
 import { PDFParse } from "pdf-parse";
 import mammoth from "mammoth";
+import { createLocalFallbackResponse } from "./server/audit-fallback";
 
 dotenv.config();
 
@@ -768,15 +769,11 @@ app.post("/api/batch-audit-documents", async (req, res) => {
           };
         } catch (itemErr: any) {
           const fallback = runLocalRuleAudit(docItem.content || "", docItem.docType);
-          return {
-            id: docItem.id,
-            name: docItem.name || docItem.fileName,
-            // The request completed only via local rules; do not imply the primary AI audit succeeded.
-            success: false,
-            source: "local_fallback",
-            sourceNotice: "Không thể hoàn tất thẩm định bằng AI; kết quả dưới đây do bộ quy tắc cục bộ tạo ra và cần công chức kiểm tra.",
-            auditResult: fallback,
-          };
+          return createLocalFallbackResponse(
+            docItem.id,
+            docItem.name || docItem.fileName,
+            fallback,
+          );
         }
       })
     );
