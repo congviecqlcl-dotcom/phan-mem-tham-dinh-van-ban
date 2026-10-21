@@ -151,3 +151,11 @@ Không nên thêm một token bí mật cố định vào mã trình duyệt đ�
 - Chưa xác minh được deployment Preview có yêu cầu đăng nhập hay bị giới hạn người xem hay không. Truy vấn cấu hình Vercel bị từ chối do phạm vi tài khoản hiện tại không có quyền truy cập; vì vậy không được kết luận Preview là công khai hoặc riêng tư.
 - Cần chủ dự án kiểm tra Deployment Protection/Preview Protection và xác nhận không có hồ sơ nghiệp vụ thật hoặc bí mật trong Preview. Nếu chưa thể xác nhận quyền truy cập, hãy coi URL Preview là môi trường chưa được phê duyệt và không đưa dữ liệu nhạy cảm vào.
 - Không tự thay đổi cấu hình Vercel, không xóa deployment và không triển khai Production khi chưa có quyền truy cập được xác nhận và sự đồng ý rõ ràng của chủ dự án.
+
+
+## API thẩm định — chặn kết quả rỗng giả và giảm chi phí prompt (21/10/2026)
+
+- API `/api/audit-document` hiện từ chối yêu cầu không có nội dung văn bản đã trích xuất, kể cả khi có gửi kèm chuỗi dữ liệu tệp. Trước thay đổi, đường xử lý này có thể đi vào bộ quy tắc cục bộ với chuỗi rỗng và trả về một kết quả trông như đã thẩm định.
+- Prompt Gemini không còn yêu cầu tạo toàn văn đã sửa “100%”; yêu cầu hiện tập trung vào các dấu hiệu cần rà soát. Máy chủ vẫn giữ nguyên nội dung gốc trong trường `fixedDocument` cho đến khi có quy trình xem khác biệt và người dùng duyệt.
+- Đây là thay đổi trên nhánh thử nghiệm. Cần CI xác nhận TypeScript/build; chưa có kiểm thử tích hợp chứng minh API trả đúng mã 400 cho nội dung rỗng, và chưa có kiểm thử Gemini thực tế.
+- Các điều kiện chặn triển khai vẫn giữ nguyên: xác thực/phân quyền chưa xác minh, chưa có rate limiting, chưa kiểm tra bảo vệ Preview và chưa kiểm thử bảo mật/hồi quy toàn diện.
