@@ -771,7 +771,10 @@ app.post("/api/batch-audit-documents", async (req, res) => {
           return {
             id: docItem.id,
             name: docItem.name || docItem.fileName,
-            success: true,
+            // The request completed only via local rules; do not imply the primary AI audit succeeded.
+            success: false,
+            source: "local_fallback",
+            sourceNotice: "Không thể hoàn tất thẩm định bằng AI; kết quả dưới đây do bộ quy tắc cục bộ tạo ra và cần công chức kiểm tra.",
             auditResult: fallback,
           };
         }
