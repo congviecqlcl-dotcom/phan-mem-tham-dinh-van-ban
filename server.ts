@@ -451,11 +451,26 @@ app.post("/api/parse-document", async (req, res) => {
     if (buffer.length === 0 || buffer.length > 11_250_000) {
       return res.status(413).json({ error: "Kích thước tệp sau giải mã không hợp lệ hoặc vượt giới hạn xử lý." });
     }
-    const lowerName = (fileName || "").toLowerCase();
+    const lowerName = typeof fileName === "string" ? fileName.toLowerCase() : "";
+    const isPdf = lowerName.endsWith(".pdf") || mimeType === "application/pdf";
+    const isDocx =
+      lowerName.endsWith(".docx") ||
+      mimeType === "application/vnd.openxmlformats-officedocument.wordprocessingml.document";
+    const isPlainText = /\\.(txt|md|csv|log)$/i.test(lowerName) ||
+      ["text/plain", "text/markdown", "text/csv"].includes(mimeType || "");
+
+    // Never decode legacy binary Word or RTF files as UTF-8: that can produce
+    // garbage text which looks like extracted content. Only handle formats with
+    // an explicit parser or a plain-text representation.
+    if (!isPdf && !isDocx && !isPlainText) {
+      return res.status(415).json({
+        error: "Định dạng tệp chưa được hỗ trợ. Hiện hỗ trợ PDF, DOCX và tệp văn bản thuần TXT/MD/CSV/LOG; hãy chuyển DOC/RTF sang DOCX hoặc PDF trước khi tải lên.",
+      });
+    }
 
     let extractedText = "";
 
-    if (lowerName.endsWith(".pdf") || mimeType === "application/pdf") {
+    if (isPdf) {
       try {
         const parser = new PDFParse({ data: buffer });
         const textResult = await parser.getText();
@@ -464,17 +479,16 @@ app.post("/api/parse-document", async (req, res) => {
       } catch (pdfErr: any) {
         console.warn("Lỗi đọc PDF:", pdfErr);
       }
-    } else if (lowerName.endsWith(".docx") || mimeType === "application/vnd.openxmlformats-officedocument.wordprocessingml.document") {
+    } else if (isDocx) {
       try {
         const result = await mammoth.extractRawText({ buffer });
         extractedText = result.value || "";
       } catch (docxErr: any) {
         console.warn("Lỗi đọc DOCX:", docxErr);
       }
-    } else {
-      // Decode as UTF-8 or string
+    } else if (isPlainText) {
+      // Decode only formats explicitly identified as plain text.
       extractedText = buffer.toString("utf-8");
-      // Clean invalid null characters if any
       if (extractedText.includes("\u0000")) {
         extractedText = extractedText.replace(/\u0000/g, "");
       }
