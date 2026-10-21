@@ -452,12 +452,17 @@ app.post("/api/parse-document", async (req, res) => {
       return res.status(413).json({ error: "Kích thước tệp sau giải mã không hợp lệ hoặc vượt giới hạn xử lý." });
     }
     const lowerName = typeof fileName === "string" ? fileName.toLowerCase() : "";
-    const isPdf = lowerName.endsWith(".pdf") || mimeType === "application/pdf";
-    const isDocx =
-      lowerName.endsWith(".docx") ||
-      mimeType === "application/vnd.openxmlformats-officedocument.wordprocessingml.document";
-    const isPlainText = /\\.(txt|md|csv|log)$/i.test(lowerName) ||
-      ["text/plain", "text/markdown", "text/csv"].includes(mimeType || "");
+    const hasExtension = /\.[a-z0-9]+$/i.test(lowerName);
+    const mime = typeof mimeType === "string" ? mimeType.toLowerCase().split(";")[0].trim() : "";
+    // A supplied filename extension takes precedence over the client-supplied MIME type.
+    // MIME is only a fallback when no extension is present, since it is untrusted input.
+    const isPdf = hasExtension ? lowerName.endsWith(".pdf") : mime === "application/pdf";
+    const isDocx = hasExtension
+      ? lowerName.endsWith(".docx")
+      : mime === "application/vnd.openxmlformats-officedocument.wordprocessingml.document";
+    const isPlainText = hasExtension
+      ? /\.(txt|md|csv|log)$/i.test(lowerName)
+      : ["text/plain", "text/markdown", "text/csv"].includes(mime);
 
     // Never decode legacy binary Word or RTF files as UTF-8: that can produce
     // garbage text which looks like extracted content. Only handle formats with
