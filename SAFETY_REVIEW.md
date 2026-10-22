@@ -167,3 +167,13 @@ Không nên thêm một token bí mật cố định vào mã trình duyệt đ�
 - Đã thêm kiểm tra bắt buộc nội dung văn bản không rỗng cho từng phần tử của yêu cầu hàng loạt, trả HTTP 400 nếu thiếu nội dung. Thay đổi nằm trên nhánh thử nghiệm, commit `f93b2349c5c82e6775548d1186cb07807cab71ac`.
 - CI của commit báo cáo trước đó `e0d34b4f53ca6459e7df9f98c3b1783adff666f9` đã thành công: cài phụ thuộc khóa bằng Bun, TypeScript check và production build. **Chưa có kết quả CI cho commit mới `f93b234...`**, nên thay đổi mới chưa được xác nhận build.
 - Chưa có kiểm thử tích hợp xác minh các mã HTTP cho cả API đơn lẻ và hàng loạt. Xác thực/phân quyền API và giới hạn tần suất vẫn là điều kiện chặn triển khai.
+
+
+## Cập nhật trạng thái kiểm thử và rà soát — 22/10/2026
+
+- CI cho commit `7293ea15f2783f38bc7a469831bc8199fe2f4752` đã hoàn tất thành công: kiểm tra TypeScript, unit tests và production build đều thành công. Run: https://github.com/congviecqlcl-dotcom/phan-mem-tham-dinh-van-ban/actions/runs/39757384271
+- Đã thay bộ trả lời pháp luật dự phòng ở trình duyệt trong `src/utils/chatEngine.ts` bằng thông báo trung tính khi AI không khả dụng. Không còn trả lời theo các đoạn pháp lý soạn sẵn trong helper này; yêu cầu người dùng cung cấp văn bản hoặc nguồn chính thức để đối chiếu.
+- Rà soát lại `server.ts`: các route `/api/parse-document`, `/api/audit-document`, `/api/batch-audit-documents` và `/api/chat` được khai báo trực tiếp bằng `app.post`; trong phần mã máy chủ đã kiểm tra, chưa thấy middleware xác thực/phân quyền hoặc giới hạn tần suất. Đây là phát hiện rà soát mã, không chứng minh rằng nền tảng triển khai không có lớp bảo vệ bên ngoài.
+- Chưa tự ý thêm cơ chế xác thực vào nhánh vì cần xác định cơ chế đăng nhập và cách triển khai thực tế trước khi chọn giải pháp; thêm một cổng xác thực không tương thích có thể làm hỏng luồng sử dụng hiện tại. Giới hạn tần suất trong bộ nhớ tiến trình, nếu triển khai đơn lẻ, cũng không đủ làm biện pháp chống lạm dụng đáng tin cậy cho môi trường serverless.
+- Các điều kiện chặn vẫn giữ nguyên: chưa xác minh lớp bảo vệ nền tảng; chưa có xác thực/phân quyền được xác nhận ở cấp ứng dụng; chưa có giới hạn tần suất/kiểm soát ngân sách AI được xác nhận; chưa kiểm toán lưu trữ, log và quyền truy cập hồ sơ; các viện dẫn pháp luật viết cứng chưa được xác minh độc lập theo nguồn chính thức.
+- Trạng thái: PR vẫn là Draft, chưa merge vào `main`, chưa triển khai công khai. Không dùng hồ sơ nghiệp vụ thật cho đến khi các điều kiện chặn được xử lý và xác minh.
