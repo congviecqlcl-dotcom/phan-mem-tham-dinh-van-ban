@@ -801,164 +801,17 @@ app.post("/api/batch-audit-documents", async (req, res) => {
   }
 });
 
-// Helper: Intelligent Legal Q&A Knowledge Engine
-function getIntelligentLegalAnswer(question: string): string {
-  const q = question.toLowerCase();
-
-  if (q.includes("17/2024") || (q.includes("thông tư 17") && q.includes("2024")) || q.includes("xếp loại") || q.includes("hạng a") || q.includes("hạng b") || q.includes("hạng c")) {
-    return `### 📜 Các điểm sửa đổi cốt lõi của Thông tư số 17/2024/TT-BNNPTNT (Hiệu lực từ 15/01/2025):
-
-Thông tư số 17/2024/TT-BNNPTNT sửa đổi, bổ sung toàn diện Thông tư số 38/2018/TT-BNNPTNT và Thông tư số 48/2013/TT-BNNPTNT với các cải cách lớn:
-
-1. **Bãi bỏ phân hạng A, B, C**:
-   - Chuyển sang chỉ còn **02 mức xếp loại: "Đạt" hoặc "Không đạt"** (Khoản 9 Điều 1 sửa đổi Điều 8 TT 38).
-   - Cơ sở xếp loại "Đạt" được cấp Giấy chứng nhận cơ sở đủ điều kiện ATTP có thời hạn hiệu lực **03 năm**.
-
-2. **Chủ cơ sở tự xác nhận kiến thức ATTP**:
-   - Bãi bỏ thủ tục cơ quan nhà nước tổ chức thi và cấp Giấy xác nhận kiến thức ATTP.
-   - Chủ cơ sở tự tổ chức tập huấn hoặc cử nhân viên tham gia tập huấn kiến thức ATTP và **tự lập, ký Giấy xác nhận tập huấn kiến thức ATTP** cho người trực tiếp SXKD.
-
-3. **Rút ngắn thời hạn khắc phục sai lỗi**:
-   - Thời hạn tối đa để cơ sở khắc phục các điểm không phù hợp (lỗi) được rút ngắn còn **tối đa không quá 30 ngày** (trước đây là 60 ngày).
-
-4. **Thời hạn thẩm định thực tế**:
-   - Cơ quan có thẩm quyền tổ chức đoàn thẩm định thực tế tại cơ sở trong thời hạn **15 ngày làm việc** kể từ ngày nhận đủ hồ sơ hợp lệ.
-
-5. **Cập nhật cơ quan Trung ương**:
-   - Thay đổi tên gọi và thẩm quyền từ Cục Quản lý Chất lượng Nông lâm sản và Thủy sản thành **Cục Chất lượng, Chế biến và Phát triển thị trường**.`;
-  }
-
-  if (q.includes("miễn") || q.includes("điều 12") || q.includes("không thuộc diện cấp")) {
-    return `### 📋 10 nhóm cơ sở được MIỄN cấp Giấy chứng nhận ATTP theo Điều 12 Nghị định số 15/2018/NĐ-CP:
-
-1. **Sản xuất ban đầu nhỏ lẻ** (trồng trọt, chăn nuôi, đánh bắt quy mô hộ gia đình, cá nhân).
-2. **Sản xuất, kinh doanh thực phẩm không có địa điểm cố định**.
-3. **Sơ chế nhỏ lẻ**.
-4. **Kinh doanh thực phẩm nhỏ lẻ** (hộ gia đình, cá nhân kinh doanh không thuộc diện đăng ký kinh doanh).
-5. **Kinh doanh thực phẩm bao gói sẵn** (chỉ bán hàng đã đóng gói kín nguyên đai nguyên kiện).
-6. **Sản xuất, kinh doanh dụng cụ, vật liệu bao gói, chứa đựng thực phẩm**.
-7. **Nhà hàng trong khách sạn**.
-8. **Bếp ăn tập thể** không có đăng ký ngành nghề kinh doanh thực phẩm.
-9. **Kinh doanh thức ăn đường phố**.
-10. **Cơ sở đã được cấp một trong các Giấy chứng nhận thực hành tốt còn hiệu lực**:
-    - **GMP** (Thực hành sản xuất tốt);
-    - **HACCP** (Hệ thống phân tích mối nguy và điểm kiểm soát tới hạn);
-    - **ISO 22000** (Hệ thống quản lý ATTP);
-    - **IFS** (Tiêu chuẩn thực phẩm quốc tế);
-    - **BRC** (Tiêu chuẩn toàn cầu về an toàn thực phẩm);
-    - **FSSC 22000** hoặc tương đương.
-
-*(Lưu ý: Các cơ sở nông lâm thủy sản thuộc đối tượng 1, 2, 3, 4, 9 thực hiện ký Bản cam kết sản xuất kinh doanh thực phẩm an toàn theo Thông tư số 17/2018/TT-BNNPTNT)*.`;
-  }
-
-  if (q.includes("nghị định 30") || q.includes("30/2020") || q.includes("thể thức") || q.includes("trích yếu") || q.includes("v/v") || q.includes("dấu câu")) {
-    return `### 📐 Quy định cốt lõi về Thể thức & Kỹ thuật trình bày văn bản theo Nghị định 30/2020/NĐ-CP:
-
-1. **Quy tắc Trích yếu văn bản (Mục II Phần I Phụ lục I)**:
-   - **Văn bản có tên loại** (Quyết định, Tờ trình, Kế hoạch, Thông báo...): Ghi tên loại in hoa đứng đậm, trích yếu in thường đứng đậm ngay phía dưới (bắt đầu bằng *"Về việc..."*). **TUYỆT ĐỐI KHÔNG DÙNG CHỮ VIẾT TẮT "V/v"**.
-   - **Công văn**: Trích yếu đặt tại ô 5b, in thường đứng, bắt đầu bằng cụm từ **"V/v"**.
-   - **Đường kẻ ngang**: Dưới trích yếu có đường kẻ nét liền mảnh, độ dài bằng **1/3 đến 1/2** độ dài của dòng chữ và đặt cân đối ở giữa.
-
-2. **Quy tắc Căn cứ ban hành**:
-   - Trình bày bằng chữ in thường, kiểu chữ nghiêng.
-   - Cuối mỗi căn cứ kết thúc bằng **dấu chấm phẩy (;)**, riêng căn cứ cuối cùng kết thúc bằng **dấu chấm (.)**.
-   - Viện dẫn lần đầu phải ghi đầy đủ tên loại, số, ký hiệu, ngày ban hành và tên cơ quan ban hành (không viết tắt như *Bộ NN&PTNT*).
-
-3. **Quy tắc Nơi nhận (Ô số 9b)**:
-   - Cuối mỗi dòng ghi cơ quan, đơn vị nhận kết thúc bằng **dấu chấm phẩy (;)**.
-   - Dòng cuối cùng ghi: \`- Lưu: VT, [Ký hiệu đơn vị soạn thảo] (số lượng bản lưu).\` và kết thúc bằng **dấu chấm (.)**.
-
-4. **Thẩm quyền ký & Mực ký**:
-   - Ghi quyền hạn ký: TM. (Thay mặt), KT. (Ký thay), Q. (Quyền), TL. (Thừa lệnh), TUQ. (Thừa ủy quyền).
-   - Chức vụ in hoa đứng đậm; họ và tên in thường đứng đậm.
-   - Mực ký: Bắt buộc dùng **mực màu xanh**, không dùng mực đỏ hay các màu mực khác.`;
-  }
-
-  if (q.includes("nhãn") || q.includes("111/2021") || q.includes("43/2017") || q.includes("phụ gia") || q.includes("bảo vệ sức khỏe") || q.includes("nhãn phụ")) {
-    return `### 🏷️ Quy định bắt buộc về Ghi nhãn hàng hóa (Nghị định 43/2017/NĐ-CP & Nghị định 111/2021/NĐ-CP):
-
-1. **Nội dung bắt buộc trên nhãn thực phẩm (Phụ lục I NĐ 111/2021)**:
-   - Tên hàng hóa (vị trí nổi bật, dễ đọc).
-   - Tên và địa chỉ của tổ chức, cá nhân chịu trách nhiệm về hàng hóa.
-   - **Xuất xứ hàng hóa**: Phải ghi rõ ràng cụm từ như *"Sản xuất tại"*, *"Chế tạo tại"*, *"Xuất xứ:"* kèm tên nước/vùng lãnh thổ (không viết tắt).
-   - Định lượng (khối lượng tịnh, thể tích thực).
-   - Ngày sản xuất (NSX) và Hạn sử dụng (HSD).
-   - Thành phần hoặc thành phần định lượng.
-   - Thông tin cảnh báo, hướng dẫn sử dụng và hướng dẫn bảo quản.
-
-2. **Cách ghi Phụ gia thực phẩm**:
-   - Phải ghi rõ: **Tên nhóm chức năng + Tên phụ gia** (hoặc mã quốc tế INS).
-   - Ví dụ: *"Chất điều vị (INS 621)"* hoặc *"Chất điều vị (Mononatri glutamat)"*.
-   - Với chất tạo ngọt, chất tạo màu, hương liệu phải ghi rõ loại tổng hợp hay tự nhiên.
-
-3. **Đối với Thực phẩm bảo vệ sức khỏe (TPBVSK)**:
-   - Bắt buộc ghi tên phân nhóm: **"Thực phẩm bảo vệ sức khỏe"**.
-   - Bắt buộc ghi dòng khuyến cáo với kích thước dễ nhìn: **"Thực phẩm này không phải là thuốc và không có tác dụng thay thế thuốc chữa bệnh"**.`;
-  }
-
-  if (q.includes("quảng cáo") || q.includes("181/2013") || q.includes("thuốc chữa bệnh")) {
-    return `### 📢 Quy định Quảng cáo Thực phẩm theo Nghị định 181/2013/NĐ-CP & Luật ATTP:
-
-1. **Điều kiện quảng cáo thực phẩm**:
-   - Phải có Giấy xác nhận nội dung quảng cáo do cơ quan y tế có thẩm quyền cấp trước khi phát hành.
-   - Nội dung phải chính xác, khớp với Bản tự công bố hoặc Giấy tiếp nhận đăng ký bản công bố sản phẩm.
-
-2. **Các hành vi nghiêm cấm**:
-   - Nghiêm cấm quảng cáo thực phẩm gây hiểu nhầm có tác dụng như thuốc chữa bệnh.
-   - Cấm sử dụng hình ảnh, uy tín, thư tín của cán bộ y tế, cơ sở y tế, danh hiệu bác sĩ, dược sĩ để quảng cáo thực phẩm.
-   - Cấm dùng từ ngữ khẳng định tuyệt đối như *"trị dứt điểm"*, *"chữa khỏi 100%"*, *"thay thế thuốc điều trị"*.
-
-3. **Khuyến cáo bắt buộc khi quảng cáo TPBVSK**:
-   - Phải đọc hoặc hiển thị rõ ràng thông điệp: **"Thực phẩm này không phải là thuốc và không có tác dụng thay thế thuốc chữa bệnh"** (thời lượng đọc ít nhất 3-5 giây trên truyền hình/radio).`;
-  }
-
-  if (q.includes("thu hồi") || q.includes("truy xuất") || q.includes("17/2021") || q.includes("24 giờ")) {
-    return `### 🔍 Quy trình Truy xuất nguồn gốc & Thu hồi thực phẩm theo Thông tư số 17/2021/TT-BNNPTNT:
-
-1. **Nguyên tắc truy xuất**:
-   - Áp dụng nguyên tắc **"Một bước trước - Một bước sau"** (nhận biết cơ sở cung cấp nguyên liệu đầu vào và cơ sở tiếp nhận sản phẩm đầu ra).
-
-2. **Thời hạn lưu trữ hồ sơ truy xuất**:
-   - Tối thiểu **06 tháng**: Đối với sản phẩm có hạn sử dụng dưới 06 tháng.
-   - Tối thiểu **02 năm**: Đối với sản phẩm có hạn sử dụng từ 06 tháng trở lên.
-   - Tối thiểu **12 tháng kể từ ngày thu hoạch**: Đối với sản phẩm tươi sống không ghi hạn sử dụng.
-
-3. **Quy trình thu hồi thực phẩm không bảo đảm an toàn**:
-   - Trong vòng **24 giờ** kể từ khi xác định sản phẩm không an toàn: Cơ sở phải thông báo tạm dừng lưu thông và thông báo kế hoạch thu hồi đến các bên phân phối và cơ quan thẩm quyền.
-   - Báo cáo kết quả thu hồi trong thời hạn quy định.
-
-4. **04 Hình thức xử lý sản phẩm thu hồi**:
-   - **Khắc phục lỗi ghi nhãn / lỗi kỹ thuật** (nếu có thể);
-   - **Chuyển mục đích sử dụng** (chế biến thức ăn chăn nuôi, làm phân bón...);
-   - **Tái xuất** (đối với hàng nhập khẩu);
-   - **Tiêu hủy** (đối với sản phẩm gây hại nghiêm trọng).`;
-  }
-
-  if (q.includes("địa giới") || q.includes("phú thọ") || q.includes("202/2025") || q.includes("1676/2025") || q.includes("xã") || q.includes("sáp nhập")) {
-    return `### 🗺️ Địa giới hành chính mới tỉnh Phú Thọ theo Nghị quyết 202/2025/QH15 & 1676/NQ-UBTVQH15:
-
-1. **Tổ chức cấp tỉnh**:
-   - Sắp xếp và điều chỉnh đơn vị hành chính tạo nên địa bàn tỉnh Phú Thọ mới hiện đại, tích hợp không gian phát triển nông nghiệp công nghệ cao và logistics thực phẩm.
-
-2. **148 Đơn vị hành chính cấp xã/phường sáp nhập mới**:
-   - Các xã tiêu biểu: **Xã Vĩnh An, Xã Tiên Lữ, Xã Hy Cương, Xã Lâm Thao, Xã Phùng Nguyên, Xã Trạm Thản, Xã Dân Chủ, Xã Phú Mỹ...**
-   
-3. **Yêu cầu đối với hồ sơ pháp lý & nhãn mác**:
-   - Toàn bộ hồ sơ đề nghị cấp Giấy chứng nhận ATTP, Biên bản thẩm định, Bản tự công bố và Nhãn hàng hóa phải ghi đúng tên đơn vị hành chính cấp xã, huyện, tỉnh mới theo Nghị quyết 1676/NQ-UBTVQH15, không dùng địa danh cũ đã bãi bỏ.`;
-  }
-
-  // General fallback
-  return `### 📚 Phản hồi Pháp lý & Nghiệp vụ An toàn Thực phẩm:
-
-Về câu hỏi của bạn liên quan đến: **"${question}"**
-
-Hệ thống thẩm định DocuGuard AI tổng hợp các căn cứ pháp lý áp dụng như sau:
-1. **Về Thể thức văn bản**: Tuân thủ nghiêm ngặt **Nghị định số 30/2020/NĐ-CP** (trích yếu không có "V/v" với văn bản có tên loại, căn cứ in nghiêng chấm phẩy, nơi nhận đúng dấu câu).
-2. **Về Thẩm quyền & Quy trình ATTP**: Áp dụng **Thông tư số 17/2024/TT-BNNPTNT** (hiệu lực từ 15/01/2025: xếp loại Đạt/Không đạt, chủ cơ sở tự tập huấn và xác nhận kiến thức ATTP, hạn khắc phục tối đa 30 ngày) và **Nghị định số 15/2018/NĐ-CP** (10 nhóm cơ sở miễn cấp GCN).
-3. **Về Nhãn hàng hóa & Quảng cáo**: Áp dụng **Nghị định số 111/2021/NĐ-CP, Nghị định 43/2017/NĐ-CP** và **Nghị định số 181/2013/NĐ-CP** (khuyến cáo bắt buộc của TPCN).
-4. **Về Địa giới hành chính**: Cập nhật chuẩn xác theo **Nghị quyết số 202/2025/QH15** và **Nghị quyết số 1676/NQ-UBTVQH15**.
-
-Bạn có thể chuyển sang tab **"Thẩm định văn bản"** để tải tệp trực tiếp hoặc đặt thêm các câu hỏi chi tiết về từng điều khoản!`;
+// Safe local fallback: do not present canned legal summaries as verified research.
+function getIntelligentLegalAnswer(_question: string): string {
+  return [
+    "### Chưa đủ căn cứ để xác nhận nội dung pháp lý",
+    "",
+    "Trợ lý AI hiện không khả dụng hoặc chưa trả về câu trả lời có thể sử dụng. Bộ dự phòng cục bộ không thực hiện tra cứu văn bản pháp luật trực tiếp, nên không đưa ra kết luận về điều khoản, hiệu lực, thời hạn hoặc thẩm quyền.",
+    "",
+    "Để tiếp tục, hãy cung cấp văn bản pháp luật hoặc đường dẫn đến nguồn chính thức cần đối chiếu. Cần kiểm tra văn bản gốc, văn bản sửa đổi/bãi bỏ, ngày hiệu lực và phạm vi áp dụng trước khi sử dụng kết quả.",
+    "",
+    "Mọi kết quả hỗ trợ chỉ có tính chất tham khảo; công chức có thẩm quyền phải kiểm tra và quyết định."
+  ].join("\n");
 }
 
 // API: Legal Assistant Chat
