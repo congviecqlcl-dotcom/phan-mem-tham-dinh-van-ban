@@ -761,10 +761,21 @@ app.post("/api/batch-audit-documents", async (req, res) => {
             docType: docItem.docType,
             fileName: docItem.name || docItem.fileName,
           });
+          // A returned local-rule result is not a successful AI audit.
+          if (audit?.source !== "gemini") {
+            return createLocalFallbackResponse(
+              docItem.id,
+              docItem.name || docItem.fileName,
+              audit,
+            );
+          }
+
           return {
             id: docItem.id,
             name: docItem.name || docItem.fileName,
             success: true,
+            source: "gemini",
+            sourceNotice: audit.sourceNotice,
             auditResult: audit,
           };
         } catch (itemErr: any) {
