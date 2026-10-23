@@ -288,63 +288,16 @@ export function runClientAuditEngine(content: string, docType?: DocumentType | s
     });
   }
 
-  // Calculate scores
-  const totalWeight = 100;
-  const deduction = issues.reduce((acc, curr) => {
-    if (curr.severity === 'error') return acc + 18;
-    if (curr.severity === 'warning') return acc + 9;
-    return acc + 4;
-  }, 0);
+  // Do not calculate an arbitrary aggregate score: it has no validated legal or
+  // statistical interpretation. Keep the legacy field temporarily for API compatibility.
+  const overallScore = 0;
+  // A heuristic score must never be converted into a legal pass/fail status.
+  // Every automated result remains pending verification by a competent human.
+  const status = 'CAN_XAC_MINH';
 
-  const overallScore = Math.max(25, Math.min(100, totalWeight - deduction));
-  const status =
-    overallScore >= 85
-      ? 'DAT'
-      : overallScore >= 55
-      ? 'CAN_SUA_DOI'
-      : 'KHONG_DAT';
-
-  // Build clean fixed content with comprehensive abbreviation removal & capitalization fixes
-  const fixedDoc = content
-    .replace(/quyết\s*định\s*\n+v\/v\s*/gi, 'QUYẾT ĐỊNH\nVề việc ')
-    .replace(/tờ\s*trình\s*\n+v\/v\s*/gi, 'TỜ TRÌNH\nVề việc ')
-    .replace(/đảm bảo an toàn thực phẩm/gi, 'bảo đảm an toàn thực phẩm')
-    .replace(/đảm bảo/gi, 'bảo đảm')
-    // Fix improper abbreviations
-    .replace(/- Giám đốc, các PGĐ Sở[\.;]?/gi, '- Giám đốc Sở, các Phó Giám đốc Sở;')
-    .replace(/- Giám đốc, các PGĐ[\.;]?/gi, '- Giám đốc Sở, các Phó Giám đốc Sở;')
-    .replace(/các PGĐ Sở/gi, 'các Phó Giám đốc Sở')
-    .replace(/các PGĐ\b/gi, 'các Phó Giám đốc')
-    .replace(/- CCT, các Phó CCT[\.;]?/gi, '- Chi cục trưởng, các Phó Chi cục trưởng;')
-    .replace(/CCT, các Phó CCT/gi, 'Chi cục trưởng, các Phó Chi cục trưởng')
-    .replace(/Phó CCT\b/gi, 'Phó Chi cục trưởng')
-    .replace(/CCT\b/g, 'Chi cục trưởng')
-    .replace(/Phòng TCCB Sở[\.;]?/gi, 'Phòng Tổ chức cán bộ Sở;')
-    .replace(/Phòng TCCB\b/gi, 'Phòng Tổ chức cán bộ')
-    .replace(/Trưởng phòng TCCB/gi, 'Trưởng phòng Tổ chức cán bộ')
-    .replace(/Phòng QLCL\b/gi, 'Phòng Quản lý chất lượng')
-    .replace(/Bộ Nông nghiệp và PTNT/g, 'Bộ Nông nghiệp và Phát triển nông thôn')
-    .replace(/Bộ NN&PTNT/g, 'Bộ Nông nghiệp và Phát triển nông thôn')
-    .replace(/Bộ NN và PTNT/g, 'Bộ Nông nghiệp và Phát triển nông thôn')
-    .replace(/chế biến và PTTT/gi, 'chế biến và Phát triển thị trường')
-    .replace(/Chế biến và PTTT/gi, 'Chế biến và Phát triển thị trường')
-    .replace(/CBPTTT/g, 'CLCB')
-    .replace(/Căn cứ Quyết định 09/g, 'Căn cứ Quyết định số 09')
-    .replace(/- Lưu: VT, hồ sơ\./gi, '- Lưu: VT, CLCB (02 bản).')
-    .replace(/- Lưu: VT, CBPTTT\./gi, '- Lưu: VT, CLCB (02 bản).')
-    .replace(/- Lưu: VT\./gi, '- Lưu: VT, CLCB (02 bản).')
-    // Fix improper uppercase in agency names
-    .replace(/Bộ Nông Nghiệp Và Phát Triển Nông Thôn/g, 'Bộ Nông nghiệp và Phát triển nông thôn')
-    .replace(/Sở Nông Nghiệp Và Môi Trường/g, 'Sở Nông nghiệp và Môi trường')
-    .replace(/Ủy Ban Nhân Dân/g, 'Ủy ban nhân dân')
-    .replace(/Chi Cục Chất Lượng Chế Biến Và Phát Triển Thị Trường/g, 'Chi cục Chất lượng, Chế biến và Phát triển thị trường')
-    // Fix common improper mid-sentence capitalization
-    .replace(/ An Toàn Thực Phẩm/g, ' an toàn thực phẩm')
-    .replace(/ Cơ Sở Sản Xuất/g, ' cơ sở sản xuất')
-    .replace(/ Nông Lâm Thủy Sản/g, ' nông, lâm, thủy sản')
-    .replace(/ Ngày Cấp:/g, ' Ngày cấp:')
-    .replace(/ Mặt Hàng Kinh Doanh:/g, ' Mặt hàng kinh doanh:')
-    .replace(/ Mã Doanh Nghiệp:/g, ' Mã doanh nghiệp:');
+  // Safety: do not silently rewrite legal/administrative documents using broad regex substitutions.
+  // Preserve the original text until proposed edits can be reviewed individually by a human.
+  const fixedDoc = content;
 
   const nowStr = new Date().toLocaleDateString('vi-VN', {
     day: '2-digit',
@@ -360,25 +313,17 @@ export function runClientAuditEngine(content: string, docType?: DocumentType | s
     documentTypeDetected,
     summary:
       issues.length === 0
-        ? 'Văn bản hoàn toàn chuẩn chỉnh, tuân thủ đúng 100% thể thức Nghị định 30/2020/NĐ-CP (không viết tắt tùy tiện, viết hoa đúng chuẩn Phụ lục II) và các quy định ATTP chuyên ngành.'
-        : `Phát hiện ${issues.length} điểm cần hoàn thiện (${issues.filter((i) => i.severity === 'error').length} lỗi nghiêm trọng, ${issues.filter((i) => i.severity === 'warning').length} cảnh báo). Cần loại bỏ các từ viết tắt tùy tiện (như PGĐ, CCT, TCCB, PTTT) và chuẩn hóa lại quy tắc viết hoa theo Phụ lục II NĐ 30.`,
+        ? 'Bộ quy tắc kiểm tra cục bộ chưa phát hiện dấu hiệu thuộc các mẫu kiểm tra đã lập trình. Điều này không chứng minh văn bản tuân thủ đầy đủ pháp luật hoặc không có sai sót.'
+        : `Bộ quy tắc kiểm tra cục bộ ghi nhận ${issues.length} dấu hiệu cần rà soát (${issues.filter((i) => i.severity === 'error').length} dấu hiệu mức cao, ${issues.filter((i) => i.severity === 'warning').length} cảnh báo). Mỗi dấu hiệu cần được đối chiếu với văn bản gốc và quy định hiện hành trước khi kết luận.`,
     positivePoints: [
-      'Đã cập nhật đúng Thông tư số 17/2024/TT-BNNPTNT mới nhất của Bộ Nông nghiệp & PTNT.',
-      'Địa giới hành chính tuân thủ chuẩn xác theo Nghị quyết 202/2025/QH15 và Nghị quyết 1676/NQ-UBTVQH15.',
-      'Bố cục nội dung và thẩm quyền ban hành rõ ràng, đúng chức năng nhiệm vụ.',
+      'Đây là kết quả rà soát tự động theo các mẫu quy tắc đã lập trình, không phải xác nhận tuân thủ pháp luật.',
+      'Hệ thống chưa tự xác minh hiệu lực, phạm vi áp dụng hoặc sửa đổi mới nhất của mọi căn cứ pháp lý được nêu.',
+      'Công chức cần kiểm tra hồ sơ gốc, căn cứ pháp lý và bản dự thảo chỉnh sửa trước khi sử dụng.',
     ],
     issues,
     categoryScores: {
       the_thuc: {
         name: 'Thể thức văn bản (Nghị định 30/2020)',
-        score: Math.max(
-          0,
-          25 -
-            issues
-              .filter((i) => i.category === 'the_thuc')
-              .reduce((s: number, i) => s + (i.severity === 'error' ? 10 : 5), 0)
-        ),
-        maxScore: 25,
         totalIssues: issues.filter((i) => i.category === 'the_thuc').length,
         severityBreakdown: {
           error: issues.filter((i) => i.category === 'the_thuc' && i.severity === 'error').length,
@@ -388,14 +333,6 @@ export function runClientAuditEngine(content: string, docType?: DocumentType | s
       },
       can_cu_phap_ly: {
         name: 'Căn cứ pháp lý & Hiệu lực',
-        score: Math.max(
-          0,
-          25 -
-            issues
-              .filter((i) => i.category === 'can_cu_phap_ly')
-              .reduce((s: number, i) => s + (i.severity === 'error' ? 10 : 5), 0)
-        ),
-        maxScore: 25,
         totalIssues: issues.filter((i) => i.category === 'can_cu_phap_ly').length,
         severityBreakdown: {
           error: issues.filter((i) => i.category === 'can_cu_phap_ly' && i.severity === 'error').length,
@@ -405,14 +342,6 @@ export function runClientAuditEngine(content: string, docType?: DocumentType | s
       },
       chuyen_mon_attp: {
         name: 'Chuyên môn ATTP & Quy trình',
-        score: Math.max(
-          0,
-          25 -
-            issues
-              .filter((i) => i.category === 'chuyen_mon_attp')
-              .reduce((s: number, i) => s + (i.severity === 'error' ? 10 : 5), 0)
-        ),
-        maxScore: 25,
         totalIssues: issues.filter((i) => i.category === 'chuyen_mon_attp').length,
         severityBreakdown: {
           error: issues.filter((i) => i.category === 'chuyen_mon_attp' && i.severity === 'error').length,
@@ -422,14 +351,6 @@ export function runClientAuditEngine(content: string, docType?: DocumentType | s
       },
       nhan_quang_cao: {
         name: 'Nhãn hàng hóa & Quảng cáo',
-        score: Math.max(
-          0,
-          15 -
-            issues
-              .filter((i) => i.category === 'nhan_quang_cao')
-              .reduce((s: number, i) => s + (i.severity === 'error' ? 8 : 4), 0)
-        ),
-        maxScore: 15,
         totalIssues: issues.filter((i) => i.category === 'nhan_quang_cao').length,
         severityBreakdown: {
           error: issues.filter((i) => i.category === 'nhan_quang_cao' && i.severity === 'error').length,
@@ -439,14 +360,6 @@ export function runClientAuditEngine(content: string, docType?: DocumentType | s
       },
       dia_gioi_hanh_chinh: {
         name: 'Địa giới hành chính (NQ 202/2025)',
-        score: Math.max(
-          0,
-          10 -
-            issues
-              .filter((i) => i.category === 'dia_gioi_hanh_chinh')
-              .reduce((s: number, i) => s + (i.severity === 'error' ? 5 : 2), 0)
-        ),
-        maxScore: 10,
         totalIssues: issues.filter((i) => i.category === 'dia_gioi_hanh_chinh').length,
         severityBreakdown: {
           error: issues.filter((i) => i.category === 'dia_gioi_hanh_chinh' && i.severity === 'error').length,
