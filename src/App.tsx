@@ -1,17 +1,31 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Navbar, ActiveTab } from './components/Navbar';
 import { DocumentAuditor } from './components/DocumentAuditor';
 import { ChatAssistant } from './components/ChatAssistant';
 import { LegalExplorer } from './components/LegalExplorer';
 import { TemplateGenerator } from './components/TemplateGenerator';
+import { LoginScreen } from './components/LoginScreen';
+import { getAccessToken, signOut, validateCurrentSession } from './utils/auth';
 
 export default function App() {
   const [activeTab, setActiveTab] = useState<ActiveTab>('auditor');
+  const [authenticated, setAuthenticated] = useState(false);
+  const [checkingSession, setCheckingSession] = useState(true);
+
+  useEffect(() => {
+    let mounted = true;
+    validateCurrentSession().then((valid) => {
+      if (mounted) { setAuthenticated(valid); setCheckingSession(false); }
+    });
+    return () => { mounted = false; };
+  }, []);
+
+  const handleSignOut = () => { signOut(); setAuthenticated(false); setActiveTab('auditor'); };
 
   return (
     <div className="min-h-screen bg-neutral-100 text-neutral-900 flex flex-col antialiased font-sans">
       {/* Top Navigation */}
-      <Navbar activeTab={activeTab} setActiveTab={setActiveTab} />
+      <div className="flex items-center justify-end gap-3 bg-white px-4 py-2 border-b border-neutral-200 text-xs"><span className="text-neutral-500">Đã đăng nhập</span><button onClick={handleSignOut} className="font-semibold text-emerald-800 underline">Đăng xuất</button></div>\n      <Navbar activeTab={activeTab} setActiveTab={setActiveTab} />
 
       {/* Main Content Workspace */}
       <main className="flex-1 max-w-7xl w-full mx-auto p-4 sm:p-6 lg:p-8">
