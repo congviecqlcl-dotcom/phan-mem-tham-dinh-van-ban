@@ -5,14 +5,46 @@ import { GoogleGenAI, Type } from "@google/genai";
 import { createServer as createViteServer } from "vite";
 import { PDFParse } from "pdf-parse";
 import mammoth from "mammoth";
+import { createLocalFallbackResponse } from "./server/audit-fallback";
 
 dotenv.config();
 
 const app = express();
 const PORT = 3000;
 
-app.use(express.json({ limit: "50mb" }));
-app.use(express.urlencoded({ extended: true, limit: "50mb" }));
+// Defense in depth: cap request bodies and validate expensive inputs before parsing/AI work.
+app.use(express.json({ limit: "20mb" }));
+app.use(express.urlencoded({ extended: true, limit: "20mb", parameterLimit: 1000 }));
+
+const MAX_DOCUMENT_CHARS = 250_000;
+const MAX_BASE64_CHARS = 15_000_000;
+const MAX_BATCH_DOCUMENTS = 5;
+const MAX_CHAT_CHARS = 10_000;
+
+function isNonEmptyString(value: unknown): value is string {
+  return typeof value === "string" && value.trim().length > 0;
+}
+
+function exceedsStringLimit(value: unknown, maxLength: number): boolean {
+  return typeof value === "string" && value.length > maxLength;
+}
+
+function isStrictBase64(value: string): boolean {
+  // Accept standard Base64 only; reject ignored/invalid characters before Buffer's permissive decoder.
+  return value.length > 0 &&
+    value.length % 4 === 0 &&
+    /^(?:[A-Za-z0-9+/]{4})*(?:[A-Za-z0-9+/]{2}==|[A-Za-z0-9+/]{3}=)?$/.test(value);
+}
+
+function validateDocumentText(value: unknown): string | null {
+  if (value !== undefined && value !== null && typeof value !== "string") {
+    return "Trường nội dung văn bản phải là chuỗi ký tự.";
+  }
+  if (exceedsStringLimit(value, MAX_DOCUMENT_CHARS)) {
+    return `Nội dung vượt giới hạn ${MAX_DOCUMENT_CHARS.toLocaleString("vi-VN")} ký tự cho mỗi văn bản.`;
+  }
+  return null;
+}
 
 // Lazy initialization of Gemini Client
 let aiClient: GoogleGenAI | null = null;
@@ -33,30 +65,21 @@ function getAI(): GoogleGenAI | null {
 const LEGAL_SYSTEM_PROMPT = `
 Bạn là chuyên gia pháp lý cao cấp và thanh tra viên kỳ cựu chuyên trách thẩm định, kiểm tra văn bản hành chính, hồ sơ an toàn thực phẩm (ATTP), nhãn hàng hóa và quy chuẩn ngành Nông nghiệp & PTNT Việt Nam.
 
-Bạn có kiến thức tuyệt đối chính xác về các văn bản pháp luật sau:
+Bạn hỗ trợ phân tích các văn bản pháp luật được nêu dưới đây nhưng không được giả định rằng kiến thức luôn đầy đủ hoặc còn hiệu lực. Chỉ khẳng định nội dung pháp lý khi có căn cứ kiểm chứng được; nếu không có nguồn hoặc chưa xác định được hiệu lực/phạm vi áp dụng, phải nêu rõ “CHƯA ĐỦ CĂN CỨ ĐỂ XÁC NHẬN” và yêu cầu công chức kiểm tra văn bản gốc. Danh sách dưới đây là gợi ý phạm vi, không tự nó chứng minh điều khoản còn hiệu lực hoặc áp dụng cho vụ việc:
 1. Luật An toàn thực phẩm số 55/2010/QH12.
-2. Nghị định số 15/2018/NĐ-CP (Quy định chi tiết thi hành Luật ATTP: thủ tục tự công bố, đăng ký bản công bố, đối tượng miễn cấp GCN theo Điều 12, kiểm tra nhập khẩu xuất khẩu, phân công quản lý Bộ Y tế / Bộ NN&PTNT / Bộ Công Thương theo Phụ lục II, III, IV).
-3. Thông tư số 17/2024/TT-BNNPTNT (Hiệu lực từ 15/01/2025: Sửa đổi toàn diện Thông tư 38/2018/TT-BNNPTNT và Thông tư 48/2013/TT-BNNPTNT; bãi bỏ xếp loại A, B, C chuyển sang 2 mức "Đạt" / "Không đạt"; bãi bỏ cấp GCN kiến thức ATTP của cơ quan nhà nước chuyển cho chủ cơ sở tự xác nhận; thời hạn khắc phục sai lỗi tối đa 30 ngày; thời hạn thẩm định cơ sở 15 ngày làm việc; cập nhật Cục Chất lượng, Chế biến và Phát triển thị trường).
-4. Thông tư số 38/2018/TT-BNNPTNT (Thẩm định, chứng nhận cơ sở SXKD nông lâm thủy sản - chú ý các phần đã được sửa đổi bởi TT 17/2024).
-5. Thông tư số 17/2018/TT-BNNPTNT (Quản lý cơ sở không thuộc diện cấp GCN thông qua Ký Bản cam kết ATTP 3 năm/lần, kiểm tra hàng năm).
-6. Thông tư số 17/2021/TT-BNNPTNT (Truy xuất nguồn gốc theo nguyên tắc 1 bước trước - 1 bước sau, thời gian lưu hồ sơ 6 tháng/2 năm/12 tháng, quy trình thu hồi 24 giờ, 4 hình thức xử lý).
-7. Thông tư số 48/2013/TT-BNNPTNT (Kiểm tra, chứng nhận ATTP thủy sản xuất khẩu, danh sách ưu tiên, cấp chứng thư).
-8. Nghị định số 43/2017/NĐ-CP (Nhãn hàng hóa, ngôn ngữ tiếng Việt, kích thước chữ tối thiểu 1.2mm / 0.9mm, xuất xứ, NSX/HSD).
-9. Nghị định số 111/2021/NĐ-CP (Sửa đổi Nghị định 43: cách ghi xuất xứ "sản xuất tại...", không viết tắt tên nước; cách ghi phụ gia mã INS, chất tạo ngọt/tạo màu/hương liệu; nhãn phụ khi thông quan; Phụ lục I thay thế).
-10. Nghị định số 181/2013/NĐ-CP (Chi tiết Luật Quảng cáo đối với TPCN, thực phẩm dinh dưỡng, thuốc, mỹ phẩm; bắt buộc ghi/đọc khuyến cáo "Thực phẩm này không phải là thuốc và không có tác dụng thay thế thuốc chữa bệnh").
-11. Nghị định số 30/2020/NĐ-CP (Thể thức và kỹ thuật trình bày văn bản hành chính):
-    - **QUY TẮC CẤM VIẾT TẮT TÙY TIỆN (Phụ lục I NĐ 30)**:
-      + Tuyệt đối KHÔNG viết tắt chức vụ, chức danh: "PGĐ" (phải viết "Phó Giám đốc"), "GĐ" ("Giám đốc"), "PCT" ("Phó Chủ tịch"), "CT" ("Chủ tịch"), "CCT" ("Chi cục trưởng"), "TP" ("Trưởng phòng"), "PP" ("Phó Trưởng phòng"), "BGD" ("Ban Giám đốc").
-      + Tuyệt đối KHÔNG viết tắt tên cơ quan trong nội dung & viện dẫn: "Bộ NN&PTNT" / "Bộ NN và PTNT" (phải viết "Bộ Nông nghiệp và Phát triển nông thôn"), "SNN&PTNT" ("Sở Nông nghiệp và Môi trường" hoặc "Sở Nông nghiệp và Phát triển nông thôn"), "PTTT" ("Chi cục Chất lượng, Chế biến và Phát triển thị trường").
-      + Tuyệt đối KHÔNG viết tắt địa danh hành chính trong câu văn: "TP.HCM" ("Thành phố Hồ Chí Minh"), "HN" ("Thành phố Hà Nội"), "TX." ("thị xã"), "TP." ("thành phố"), "H." ("huyện"), "TW" ("Trung ương").
-      + CHỈ ĐƯỢC PHÉP viết tắt các từ ngữ chuẩn đã quy định: TM. (Thay mặt), KT. (Ký thay), TL. (Thừa lệnh), TUQ. (Thừa ủy quyền), Q. (Quyền), UBND, HĐND, VT trong dòng lưu nơi nhận (Lưu: VT,...), TNHH, CP trong tên doanh nghiệp, và chữ viết tắt tên loại văn bản trong số ký hiệu (QĐ, TTr, TT, NĐ).
-    - **QUY TẮC VIẾT HOA CHUẨN XÁC (Phụ lục II NĐ 30)**:
-      + Tên cơ quan, tổ chức: Viết hoa chữ cái đầu của từ, cụm từ chỉ loại hình và chức năng (Ví dụ: "Bộ Nông nghiệp và Phát triển nông thôn", "Sở Nông nghiệp và Môi trường", "Chi cục Chất lượng, Chế biến và Phát triển thị trường", "Ủy ban nhân dân tỉnh"). KHÔNG viết hoa các liên từ nối như "và", "của", "tại", "thuộc" (Không viết "Bộ Nông Nghiệp Và Phát Triển Nông Thôn").
-      + Chức vụ, chức danh: Viết hoa khi đi liền với tên cơ quan hoặc chỉ đích danh một vị trí cụ thể ("Giám đốc Sở", "Phó Giám đốc Sở", "Chi cục trưởng", "Chủ tịch Ủy ban nhân dân tỉnh", "Thủ tướng Chính phủ"). Viết thường khi nói chung chung ("các phó giám đốc", "trưởng các phòng, ban").
-      + CẤM VIẾT HOA TÙY TIỆN DANH TỪ CHUNG: Không viết hoa giữa câu các danh từ chung như: "an toàn thực phẩm" (không viết "An Toàn Thực Phẩm"), "cơ sở sản xuất" (không viết "Cơ Sở Sản Xuất"), "nông, lâm, thủy sản" (không viết "Nông Lâm Thủy Sản"), "ngày cấp" (không viết "Ngày Cấp"), "hồ sơ" (không viết "Hồ Sơ"), "chuyên viên" (không viết "Chuyên Viên").
-      + Viết hoa tên loại văn bản và điều khoản khi viện dẫn cụ thể: "Điều 1", "Khoản 2", "Điểm a", "Luật An toàn thực phẩm", "Nghị định số 30/2020/NĐ-CP", "Thông tư số 17/2024/TT-BNNPTNT".
-      + Bố cục 2 cột: Cột trái Cơ quan ban hành, Số ký hiệu. Cột phải Quốc hiệu (in hoa đậm), Tiêu ngữ (đậm), ngày tháng (nghiêng). Trích yếu Quyết định/Tờ trình KHÔNG dùng chữ "V/v", có gạch ngang dưới trích yếu. Căn cứ in nghiêng, kết thúc bằng dấu chấm phẩy (;), căn cứ cuối bằng dấu chấm (.). Nơi nhận: từng dòng dấu chấm phẩy (;), dòng Lưu kết thúc bằng dấu chấm (.). Quyền hạn ký (KT. GIÁM ĐỐC / PHÓ GIÁM ĐỐC) nằm ở cột bên phải.
-12. Nghị quyết số 202/2025/QH15 & Nghị quyết số 1676/NQ-UBTVQH15 (Sắp xếp tỉnh Phú Thọ mới gồm Vĩnh Phúc, Hòa Bình, Phú Thọ và 148 đơn vị hành chính cấp xã mới: Vĩnh An, Tiên Lữ, Hy Cương, Lâm Thao, Phùng Nguyên, Trạm Thản, Dân Chủ, Phú Mỹ...).
+2. Nghị định số 15/2018/NĐ-CP.
+3. Thông tư số 17/2024/TT-BNNPTNT.
+4. Thông tư số 38/2018/TT-BNNPTNT.
+5. Thông tư số 17/2018/TT-BNNPTNT.
+6. Thông tư số 17/2021/TT-BNNPTNT.
+7. Thông tư số 48/2013/TT-BNNPTNT.
+8. Nghị định số 43/2017/NĐ-CP.
+9. Nghị định số 111/2021/NĐ-CP.
+10. Nghị định số 181/2013/NĐ-CP.
+11. Nghị định số 30/2020/NĐ-CP.
+12. Nghị quyết số 202/2025/QH15 và Nghị quyết số 1676/NQ-UBTVQH15.
+
+Các tên văn bản trên chỉ là danh mục gợi ý phạm vi. Không suy ra từ danh mục này rằng văn bản còn hiệu lực, chưa bị sửa đổi/thay thế, áp dụng cho tình huống cụ thể, hoặc rằng bất kỳ mô tả nội dung nào đã được xác minh. Không nhắc lại các chi tiết pháp lý cụ thể như thời hạn, thẩm quyền, điều kiện, mức xử lý hoặc quy tắc trình bày nếu không có toàn văn nguồn chính thức và căn cứ hiện hành để kiểm chứng.
 
 KHI THẨM ĐỊNH VĂN BẢN ĐƯỢC CUNG CẤP:
 Hãy phân tích tỉ mỉ từng chi tiết theo 4 trục:
@@ -65,7 +88,7 @@ Hãy phân tích tỉ mỉ từng chi tiết theo 4 trục:
 3. Nội dung chuyên môn & Thẩm quyền quản lý (ATTP, Nhãn mác, Thủ tục, Thời hạn).
 4. Địa giới hành chính (Nghị quyết 202/2025 & 1676/NQ-UBTVQH15).
 
-Hãy chỉ ra lỗi cụ thể, trích dẫn chính xác Điều/Khoản/Mẫu Phụ lục của văn bản luật, giải thích rõ lý do và đưa ra phương án sửa đổi chuẩn xác. Đồng thời cung cấp toàn bộ văn bản đã được sửa đúng hoàn chỉnh (fixedDocument).
+Hãy chỉ ra vấn đề cụ thể và nêu căn cứ Điều/Khoản/Mẫu Phụ lục chỉ khi xác minh được từ nguồn có sẵn. Phân biệt rõ dữ kiện trích từ hồ sơ, suy luận, quy tắc kiểm tra cục bộ và căn cứ pháp luật. Nếu không xác minh được, ghi rõ điều chưa xác minh thay vì tự tạo viện dẫn. Có thể cung cấp bản dự thảo chỉnh sửa (fixedDocument), nhưng phải ghi rõ đây là dự thảo AI cần công chức kiểm tra; không cam kết chính xác tuyệt đối.
 `;
 
 // Helper: Local static rule checker as instant analyzer & fallback
@@ -320,63 +343,19 @@ function runLocalRuleAudit(content: string, docType?: string) {
     });
   }
 
-  // Calculate scores
-  const totalWeight = 100;
-  const deduction = issues.reduce((acc, curr) => {
-    if (curr.severity === "error") return acc + 18;
-    if (curr.severity === "warning") return acc + 9;
-    return acc + 4;
-  }, 0);
+  // Legacy compatibility field only; this is not a legal or statistical score.
+  const overallScore = 0;
+  // A heuristic score must never be converted into a legal pass/fail status.
+  // Every automated result remains pending verification by a competent human.
+  const status = "CAN_XAC_MINH";
 
-  const overallScore = Math.max(20, Math.min(100, totalWeight - deduction));
-  const status =
-    overallScore >= 90
-      ? "DAT"
-      : overallScore >= 60
-      ? "CAN_SUA_DOI"
-      : "KHONG_DAT";
-
-  // Build clean fixed content with comprehensive abbreviation removal & capitalization fixes
-  let fixedDoc = content
-    .replace(/quyết\s*định\s*\n+v\/v\s*/gi, "QUYẾT ĐỊNH\nVề việc ")
-    .replace(/đảm bảo an toàn thực phẩm/gi, "bảo đảm an toàn thực phẩm")
-    .replace(/đảm bảo/gi, "bảo đảm")
-    // Fix improper abbreviations
-    .replace(/- Giám đốc, các PGĐ Sở[\.;]?/gi, "- Giám đốc Sở, các Phó Giám đốc Sở;")
-    .replace(/- Giám đốc, các PGĐ[\.;]?/gi, "- Giám đốc Sở, các Phó Giám đốc Sở;")
-    .replace(/các PGĐ Sở/gi, "các Phó Giám đốc Sở")
-    .replace(/các PGĐ\b/gi, "các Phó Giám đốc")
-    .replace(/- CCT, các Phó CCT[\.;]?/gi, "- Chi cục trưởng, các Phó Chi cục trưởng;")
-    .replace(/CCT, các Phó CCT/gi, "Chi cục trưởng, các Phó Chi cục trưởng")
-    .replace(/Phó CCT\b/gi, "Phó Chi cục trưởng")
-    .replace(/CCT\b/g, "Chi cục trưởng")
-    .replace(/Phòng TCCB Sở[\.;]?/gi, "Phòng Tổ chức cán bộ Sở;")
-    .replace(/Phòng TCCB\b/gi, "Phòng Tổ chức cán bộ")
-    .replace(/Trưởng phòng TCCB/gi, "Trưởng phòng Tổ chức cán bộ")
-    .replace(/Bộ Nông nghiệp và PTNT/g, "Bộ Nông nghiệp và Phát triển nông thôn")
-    .replace(/Bộ NN&PTNT/g, "Bộ Nông nghiệp và Phát triển nông thôn")
-    .replace(/Bộ NN và PTNT/g, "Bộ Nông nghiệp và Phát triển nông thôn")
-    .replace(/chế biến và PTTT/gi, "chế biến và Phát triển thị trường")
-    .replace(/Chế biến và PTTT/gi, "Chế biến và Phát triển thị trường")
-    .replace(/CBPTTT/g, "CLCB")
-    .replace(/Căn cứ Quyết định 09/g, "Căn cứ Quyết định số 09")
-    .replace(/- Lưu: VT, hồ sơ\./gi, "- Lưu: VT, CLCB (02 bản).")
-    .replace(/- Lưu: VT, CBPTTT\./gi, "- Lưu: VT, CLCB (02 bản).")
-    // Fix improper uppercase in agency names
-    .replace(/Bộ Nông Nghiệp Và Phát Triển Nông Thôn/g, "Bộ Nông nghiệp và Phát triển nông thôn")
-    .replace(/Sở Nông Nghiệp Và Môi Trường/g, "Sở Nông nghiệp và Môi trường")
-    .replace(/Ủy Ban Nhân Dân/g, "Ủy ban nhân dân")
-    .replace(/Chi Cục Chất Lượng Chế Biến Và Phát Triển Thị Trường/g, "Chi cục Chất lượng, Chế biến và Phát triển thị trường")
-    // Fix common improper mid-sentence capitalization
-    .replace(/ An Toàn Thực Phẩm/g, " an toàn thực phẩm")
-    .replace(/ Cơ Sở Sản Xuất/g, " cơ sở sản xuất")
-    .replace(/ Nông Lâm Thủy Sản/g, " nông, lâm, thủy sản")
-    .replace(/ Ngày Cấp:/g, " Ngày cấp:")
-    .replace(/ Mặt Hàng Kinh Doanh:/g, " Mặt hàng kinh doanh:")
-    .replace(/ Mã Doanh Nghiệp:/g, " Mã doanh nghiệp:");
+  // Safety: preserve source content; do not silently rewrite legal documents with broad regex rules.
+  const fixedDoc = content;
 
   return {
     overallScore,
+    source: "local_rule",
+    sourceNotice: "Kết quả từ bộ quy tắc cục bộ theo mẫu đã lập trình; chưa phải tra cứu pháp luật trực tiếp và không chứng minh tuân thủ đầy đủ.",
     status,
     documentTypeDetected:
       docType ||
@@ -389,25 +368,17 @@ function runLocalRuleAudit(content: string, docType?: string) {
         : "Văn bản hành chính"),
     summary:
       issues.length === 0
-        ? "Văn bản hoàn toàn chuẩn chỉnh, tuân thủ đúng 100% thể thức Nghị định 30/2020/NĐ-CP (không viết tắt tùy tiện, viết hoa đúng chuẩn Phụ lục II) và các quy định ATTP chuyên ngành."
-        : `Phát hiện ${issues.length} điểm cần hoàn thiện (${issues.filter((i: any) => i.severity === "error").length} lỗi nghiêm trọng, ${issues.filter((i: any) => i.severity === "warning").length} cảnh báo). Cần loại bỏ các từ viết tắt tùy tiện (như PGĐ, CCT, TCCB, PTTT) và chuẩn hóa lại quy tắc viết hoa theo Phụ lục II NĐ 30.`,
+        ? "Bộ quy tắc cục bộ chưa phát hiện dấu hiệu thuộc các mẫu đã lập trình. Điều này không chứng minh văn bản tuân thủ đầy đủ pháp luật hoặc không có sai sót."
+        : `Bộ quy tắc cục bộ ghi nhận ${issues.length} dấu hiệu cần rà soát (${issues.filter((i: any) => i.severity === "error").length} mức cao, ${issues.filter((i: any) => i.severity === "warning").length} cảnh báo). Cần đối chiếu từng dấu hiệu với văn bản gốc và căn cứ hiện hành trước khi kết luận.`,
     positivePoints: [
-      "Đã cập nhật đúng Thông tư số 17/2024/TT-BNNPTNT mới nhất của Bộ Nông nghiệp & PTNT.",
-      "Địa giới hành chính tuân thủ chuẩn xác theo Nghị quyết 202/2025/QH15 và Nghị quyết 1676/NQ-UBTVQH15.",
-      "Bố cục nội dung và thẩm quyền ban hành rõ ràng, đúng chức năng nhiệm vụ.",
+      "Đây là kết quả sàng lọc theo các mẫu quy tắc được lập trình; chưa xác minh đầy đủ hiệu lực và phạm vi áp dụng của mọi căn cứ pháp lý.",
+      "Không phát hiện dấu hiệu theo mẫu không đồng nghĩa với xác nhận địa giới hành chính hoặc nội dung pháp lý là chính xác.",
+      "Công chức cần kiểm tra hồ sơ gốc, thẩm quyền, căn cứ pháp lý và mọi đề xuất trước khi sử dụng.",
     ],
     issues,
     categoryScores: {
       the_thuc: {
         name: "Thể thức văn bản (Nghị định 30/2020)",
-        score: Math.max(
-          0,
-          25 -
-            issues
-              .filter((i: any) => i.category === "the_thuc")
-              .reduce((s: number, i: any) => s + (i.severity === "error" ? 10 : 5), 0)
-        ),
-        maxScore: 25,
         totalIssues: issues.filter((i: any) => i.category === "the_thuc").length,
         severityBreakdown: {
           error: issues.filter((i: any) => i.category === "the_thuc" && i.severity === "error").length,
@@ -417,14 +388,6 @@ function runLocalRuleAudit(content: string, docType?: string) {
       },
       can_cu_phap_ly: {
         name: "Căn cứ pháp lý & Hiệu lực",
-        score: Math.max(
-          0,
-          25 -
-            issues
-              .filter((i: any) => i.category === "can_cu_phap_ly")
-              .reduce((s: number, i: any) => s + (i.severity === "error" ? 10 : 5), 0)
-        ),
-        maxScore: 25,
         totalIssues: issues.filter((i: any) => i.category === "can_cu_phap_ly").length,
         severityBreakdown: {
           error: issues.filter((i: any) => i.category === "can_cu_phap_ly" && i.severity === "error").length,
@@ -434,14 +397,6 @@ function runLocalRuleAudit(content: string, docType?: string) {
       },
       chuyen_mon_attp: {
         name: "Chuyên môn ATTP & Quy trình",
-        score: Math.max(
-          0,
-          25 -
-            issues
-              .filter((i: any) => i.category === "chuyen_mon_attp")
-              .reduce((s: number, i: any) => s + (i.severity === "error" ? 10 : 5), 0)
-        ),
-        maxScore: 25,
         totalIssues: issues.filter((i: any) => i.category === "chuyen_mon_attp").length,
         severityBreakdown: {
           error: issues.filter((i: any) => i.category === "chuyen_mon_attp" && i.severity === "error").length,
@@ -451,14 +406,6 @@ function runLocalRuleAudit(content: string, docType?: string) {
       },
       nhan_quang_cao: {
         name: "Ghi nhãn & Quảng cáo",
-        score: Math.max(
-          0,
-          15 -
-            issues
-              .filter((i: any) => i.category === "nhan_quang_cao")
-              .reduce((s: number, i: any) => s + (i.severity === "error" ? 8 : 4), 0)
-        ),
-        maxScore: 15,
         totalIssues: issues.filter((i: any) => i.category === "nhan_quang_cao").length,
         severityBreakdown: {
           error: issues.filter((i: any) => i.category === "nhan_quang_cao" && i.severity === "error").length,
@@ -468,8 +415,6 @@ function runLocalRuleAudit(content: string, docType?: string) {
       },
       dia_gioi_hanh_chinh: {
         name: "Địa giới hành chính 2025-2026",
-        score: 10,
-        maxScore: 10,
         totalIssues: 0,
         severityBreakdown: { error: 0, warning: 0, suggestion: 0 },
       },
@@ -482,18 +427,47 @@ function runLocalRuleAudit(content: string, docType?: string) {
 // API: Universal Document Parser (/api/parse-document)
 app.post("/api/parse-document", async (req, res) => {
   try {
-    const { fileName, base64Data, mimeType } = req.body;
-    if (!base64Data) {
-      return res.status(400).json({ error: "Chưa nhận được dữ liệu tệp văn bản." });
+    const { fileName, base64Data, mimeType } = req.body ?? {};
+    if (!isNonEmptyString(base64Data)) {
+      return res.status(400).json({ error: "Chưa nhận được dữ liệu tệp văn bản hợp lệ." });
+    }
+    if (base64Data.length > MAX_BASE64_CHARS) {
+      return res.status(413).json({ error: "Tệp vượt giới hạn xử lý. Hãy dùng tệp nhỏ hơn 15 MB trước khi mã hóa." });
     }
 
     const cleanBase64 = base64Data.replace(/^data:.*?;base64,/, "");
+    if (!isStrictBase64(cleanBase64)) {
+      return res.status(400).json({ error: "Dữ liệu tệp mã hóa không hợp lệ. Hãy tải lại tệp gốc và thử lại." });
+    }
     const buffer = Buffer.from(cleanBase64, "base64");
-    const lowerName = (fileName || "").toLowerCase();
+    if (buffer.length === 0 || buffer.length > 11_250_000) {
+      return res.status(413).json({ error: "Kích thước tệp sau giải mã không hợp lệ hoặc vượt giới hạn xử lý." });
+    }
+    const lowerName = typeof fileName === "string" ? fileName.toLowerCase() : "";
+    const hasExtension = /\.[a-z0-9]+$/i.test(lowerName);
+    const mime = typeof mimeType === "string" ? mimeType.toLowerCase().split(";")[0].trim() : "";
+    // A supplied filename extension takes precedence over the client-supplied MIME type.
+    // MIME is only a fallback when no extension is present, since it is untrusted input.
+    const isPdf = hasExtension ? lowerName.endsWith(".pdf") : mime === "application/pdf";
+    const isDocx = hasExtension
+      ? lowerName.endsWith(".docx")
+      : mime === "application/vnd.openxmlformats-officedocument.wordprocessingml.document";
+    const isPlainText = hasExtension
+      ? /\.(txt|md|csv|log)$/i.test(lowerName)
+      : ["text/plain", "text/markdown", "text/csv"].includes(mime);
+
+    // Never decode legacy binary Word or RTF files as UTF-8: that can produce
+    // garbage text which looks like extracted content. Only handle formats with
+    // an explicit parser or a plain-text representation.
+    if (!isPdf && !isDocx && !isPlainText) {
+      return res.status(415).json({
+        error: "Định dạng tệp chưa được hỗ trợ. Hiện hỗ trợ PDF, DOCX và tệp văn bản thuần TXT/MD/CSV/LOG; hãy chuyển DOC/RTF sang DOCX hoặc PDF trước khi tải lên.",
+      });
+    }
 
     let extractedText = "";
 
-    if (lowerName.endsWith(".pdf") || mimeType === "application/pdf") {
+    if (isPdf) {
       try {
         const parser = new PDFParse({ data: buffer });
         const textResult = await parser.getText();
@@ -502,23 +476,27 @@ app.post("/api/parse-document", async (req, res) => {
       } catch (pdfErr: any) {
         console.warn("Lỗi đọc PDF:", pdfErr);
       }
-    } else if (lowerName.endsWith(".docx") || mimeType === "application/vnd.openxmlformats-officedocument.wordprocessingml.document") {
+    } else if (isDocx) {
       try {
         const result = await mammoth.extractRawText({ buffer });
         extractedText = result.value || "";
       } catch (docxErr: any) {
         console.warn("Lỗi đọc DOCX:", docxErr);
       }
-    } else {
-      // Decode as UTF-8 or string
+    } else if (isPlainText) {
+      // Decode only formats explicitly identified as plain text.
       extractedText = buffer.toString("utf-8");
-      // Clean invalid null characters if any
       if (extractedText.includes("\u0000")) {
         extractedText = extractedText.replace(/\u0000/g, "");
       }
     }
 
     extractedText = (extractedText || "").trim();
+    if (!extractedText) {
+      return res.status(422).json({
+        error: "Không trích xuất được văn bản từ tệp. Tệp có thể là bản quét ảnh, bị hỏng hoặc không chứa lớp văn bản; hãy kiểm tra tệp hoặc cung cấp bản có thể tìm kiếm văn bản.",
+      });
+    }
 
     // Auto-detect Document Type from extracted text
     let detectedType = "khac";
@@ -548,7 +526,7 @@ app.post("/api/parse-document", async (req, res) => {
     });
   } catch (err: any) {
     console.error("Lỗi parse document:", err);
-    return res.status(500).json({ error: "Không thể trích xuất văn bản: " + (err.message || "") });
+    return res.status(500).json({ error: "Không thể trích xuất văn bản do lỗi xử lý tệp. Hãy kiểm tra định dạng tệp hoặc thử lại với tệp hợp lệ." });
   }
 });
 
@@ -570,7 +548,7 @@ async function performSingleAudit(params: {
     for (const modelName of modelsToTry) {
       try {
         const promptText = `
-Hãy thẩm định và kiểm tra toàn diện văn bản sau đây đối chiếu với 12 văn bản quy phạm pháp luật (Luật ATTP 55/2010, NĐ 15/2018, TT 17/2024, TT 38/2018, TT 17/2018, TT 17/2021, TT 48/2013, NĐ 43/2017, NĐ 111/2021, NĐ 181/2013, NĐ 30/2020/NĐ-CP, NQ 202/2025/QH15 & NQ 1676/NQ-UBTVQH15).
+Hãy rà soát sơ bộ văn bản dưới đây theo các nhóm vấn đề pháp lý có liên quan. Danh sách văn bản tham chiếu bên dưới chỉ gợi ý phạm vi cần xem xét; văn bản gốc chưa được cung cấp trong yêu cầu này, vì vậy không được tuyên bố đã đối chiếu trực tiếp, xác minh hiệu lực hoặc xác nhận điều khoản nếu không có căn cứ kiểm chứng được. Mọi viện dẫn chưa kiểm chứng phải được ghi rõ là cần công chức đối chiếu với nguồn chính thức hiện hành.
 
 Loại văn bản: ${docType || "Tự động nhận diện"}
 Tên tệp: ${fileName || "Văn bản người dùng"}
@@ -582,10 +560,10 @@ ${content || ""}
 
 YÊU CẦU ĐÁNH GIÁ:
 1. Đánh giá tính chính xác về Thể thức & Kỹ thuật trình bày theo Nghị định 30/2020/NĐ-CP (Quốc hiệu, Tiêu ngữ, Tên cơ quan, Số & Ký hiệu, Trích yếu có bị lỗi 'V/v' không, đường kẻ ngang dưới trích yếu, căn cứ in nghiêng và dấu chấm phẩy, quyền hạn ký TM./KT./Q./TL./TUQ., họ tên đứng đậm, nơi nhận dấu chấm phẩy và dòng Lưu, TUYỆT ĐỐI KHÔNG VIẾT TẮT PGĐ, GĐ, PCT, CT, CCT, TP, TCCB, PTTT theo Phụ lục I, TUÂN THỦ quy tắc viết hoa Phụ lục II).
-2. Kiểm tra Căn cứ pháp lý & Hiệu lực (Thông tư 17/2024 có hiệu lực 15/01/2025 đã bỏ phân loại A/B/C sang Đạt/Không đạt, bãi bỏ GCN kiến thức ATTP chuyển chủ cơ sở tự xác nhận, thời hạn khắc phục 30 ngày, các văn bản hết hiệu lực như TT 51/2014, TT 45/2014, TT 32/2022...).
+2. Kiểm tra Căn cứ pháp lý & Hiệu lực: coi các số hiệu và chủ đề như TT 17/2024, phân loại A/B/C, giấy chứng nhận kiến thức ATTP, thời hạn khắc phục và các thông tư được nhắc đến là nội dung cần tra cứu/đối chiếu; không mặc định rằng văn bản đã bị bãi bỏ, được thay thế hoặc áp dụng cho hồ sơ này nếu chưa có nguồn chính thức, điều khoản liên quan, ngày hiệu lực và phạm vi áp dụng.
 3. Kiểm tra Chuyên môn ATTP, Thẩm quyền quản lý, Ghi nhãn hàng hóa (NĐ 111/2021), Quảng cáo (NĐ 181/2013).
 4. Kiểm tra Địa giới hành chính theo Nghị quyết 202/2025/QH15 & Nghị quyết 1676/NQ-UBTVQH15 (xã Vĩnh An, Tiên Lữ, Hy Cương, Lâm Thao... tỉnh Phú Thọ mới).
-5. Tạo ra bản toàn văn đã được sửa đúng hoàn chỉnh 100% (fixedDocument). Lưu ý: Đối với các đường kẻ ngang phân cách (dưới Tiêu ngữ 'Độc lập - Tự do - Hạnh phúc', Tên cơ quan ban hành, Trích yếu văn bản), phải sử dụng nét liền chuẩn (─────────────────────────), không sử dụng các dấu gạch nối rời đứt đoạn.
+5. Không tự viết lại toàn văn trong trường fixedDocument. Máy chủ sẽ giữ nguyên nội dung đầu vào cho đến khi có quy trình so sánh từng thay đổi và người dùng duyệt rõ ràng. Chỉ nêu từng dấu hiệu cần rà soát trong issues; không tuyên bố đã sửa đúng hoặc tuân thủ đầy đủ.
 `;
 
         const parts: any[] = [];
@@ -608,11 +586,11 @@ YÊU CẦU ĐÁNH GIÁ:
             responseSchema: {
               type: Type.OBJECT,
               properties: {
-                overallScore: { type: Type.NUMBER, description: "Điểm tổng thể từ 0 đến 100" },
+                overallScore: { type: Type.NUMBER, description: "Trường tương thích API cũ; máy chủ ghi đè bằng 0. Không phải điểm tuân thủ." },
                 status: {
                   type: Type.STRING,
-                  enum: ["DAT", "CAN_SUA_DOI", "KHONG_DAT"],
-                  description: "Đạt (>=90), Cần sửa đổi (60-89), Không đạt (<60)",
+                  enum: ["CAN_XAC_MINH"],
+                  description: "Trạng thái bắt buộc: CAN_XAC_MINH. Kết quả AI không kết luận đạt/không đạt; công chức phải xác minh từng phát hiện với hồ sơ gốc và nguồn pháp luật hiện hành.",
                 },
                 documentTypeDetected: { type: Type.STRING },
                 summary: { type: Type.STRING, description: "Tóm tắt kết luận thẩm định súc tích" },
@@ -647,10 +625,10 @@ YÊU CẦU ĐÁNH GIÁ:
                 },
                 fixedDocument: {
                   type: Type.STRING,
-                  description: "Toàn văn bản đã được chỉnh sửa chuẩn xác 100%",
+                  description: "Bản dự thảo chỉnh sửa do AI đề xuất; phải được công chức kiểm tra căn cứ pháp lý và nội dung trước khi sử dụng.",
                 },
               },
-              required: ["overallScore", "status", "documentTypeDetected", "summary", "positivePoints", "issues", "fixedDocument"],
+              required: ["status", "documentTypeDetected", "summary", "positivePoints", "issues", "fixedDocument"],
             },
           },
         });
@@ -658,11 +636,11 @@ YÊU CẦU ĐÁNH GIÁ:
         if (response.text) {
           const parsed = JSON.parse(response.text);
           const categoryScores: Record<string, any> = {
-            the_thuc: { name: "Thể thức văn bản (Nghị định 30/2020)", score: 25, maxScore: 25, totalIssues: 0, severityBreakdown: { error: 0, warning: 0, suggestion: 0 } },
-            can_cu_phap_ly: { name: "Căn cứ pháp lý & Hiệu lực", score: 25, maxScore: 25, totalIssues: 0, severityBreakdown: { error: 0, warning: 0, suggestion: 0 } },
-            chuyen_mon_attp: { name: "Chuyên môn ATTP & Quy trình", score: 25, maxScore: 25, totalIssues: 0, severityBreakdown: { error: 0, warning: 0, suggestion: 0 } },
-            nhan_quang_cao: { name: "Ghi nhãn & Quảng cáo", score: 15, maxScore: 15, totalIssues: 0, severityBreakdown: { error: 0, warning: 0, suggestion: 0 } },
-            dia_gioi_hanh_chinh: { name: "Địa giới hành chính 2025-2026", score: 10, maxScore: 10, totalIssues: 0, severityBreakdown: { error: 0, warning: 0, suggestion: 0 } },
+            the_thuc: { name: "Thể thức văn bản (Nghị định 30/2020)", totalIssues: 0, severityBreakdown: { error: 0, warning: 0, suggestion: 0 } },
+            can_cu_phap_ly: { name: "Căn cứ pháp lý & Hiệu lực", totalIssues: 0, severityBreakdown: { error: 0, warning: 0, suggestion: 0 } },
+            chuyen_mon_attp: { name: "Chuyên môn ATTP & Quy trình", totalIssues: 0, severityBreakdown: { error: 0, warning: 0, suggestion: 0 } },
+            nhan_quang_cao: { name: "Ghi nhãn & Quảng cáo", totalIssues: 0, severityBreakdown: { error: 0, warning: 0, suggestion: 0 } },
+            dia_gioi_hanh_chinh: { name: "Địa giới hành chính 2025-2026", totalIssues: 0, severityBreakdown: { error: 0, warning: 0, suggestion: 0 } },
           };
 
           parsed.issues?.forEach((issue: any) => {
@@ -671,20 +649,23 @@ YÊU CẦU ĐÁNH GIÁ:
               cat.totalIssues += 1;
               if (issue.severity === "error") {
                 cat.severityBreakdown.error += 1;
-                cat.score = Math.max(0, cat.score - (cat.maxScore >= 25 ? 8 : 4));
               } else if (issue.severity === "warning") {
                 cat.severityBreakdown.warning += 1;
-                cat.score = Math.max(0, cat.score - (cat.maxScore >= 25 ? 4 : 2));
               } else {
                 cat.severityBreakdown.suggestion += 1;
-                cat.score = Math.max(0, cat.score - 1);
               }
             }
           });
 
           return {
             ...parsed,
+            overallScore: 0, // Legacy API compatibility only; never use as a compliance score.
+            // Safety: do not export model-rewritten legal text as if it were a reviewed correction.
+            // Until a human-reviewed diff workflow exists, preserve the exact submitted content.
+            fixedDocument: content || "",
             categoryScores,
+            source: "gemini",
+            sourceNotice: "Kết quả do Gemini tạo; cần kiểm tra từng phát hiện với hồ sơ gốc và văn bản pháp luật hiện hành.",
             auditDate: new Date().toLocaleDateString("vi-VN"),
           };
         }
@@ -709,26 +690,57 @@ YÊU CẦU ĐÁNH GIÁ:
 // API: Document Audit Endpoint
 app.post("/api/audit-document", async (req, res) => {
   try {
-    const { content, docType, fileName, fileData, mimeType } = req.body;
+    const { content, docType, fileName, fileData, mimeType } = req.body ?? {};
 
     if (!content && !fileData) {
       return res.status(400).json({ error: "Không tìm thấy nội dung văn bản để thẩm định." });
+    }
+    const contentError = validateDocumentText(content);
+    if (contentError) return res.status(413).json({ error: contentError });
+    // This endpoint returns a text-based audit result. Do not silently report an
+    // empty local-rule analysis when a caller sends only an attachment payload.
+    if (!isNonEmptyString(content)) {
+      return res.status(400).json({
+        error: "Chưa có nội dung văn bản đã trích xuất để thẩm định. Hãy trích xuất văn bản từ tệp trước khi gửi yêu cầu.",
+      });
+    }
+    if (fileData !== undefined && fileData !== null && typeof fileData !== "string") {
+      return res.status(400).json({ error: "Dữ liệu tệp đính kèm không hợp lệ." });
+    }
+    if (exceedsStringLimit(fileData, MAX_BASE64_CHARS)) {
+      return res.status(413).json({ error: "Tệp vượt giới hạn xử lý. Hãy dùng tệp nhỏ hơn 15 MB trước khi mã hóa." });
     }
 
     const result = await performSingleAudit({ content, docType, fileName, fileData, mimeType });
     return res.json(result);
   } catch (error: any) {
-    const fallbackResult = runLocalRuleAudit(req.body?.content || "", req.body?.docType);
-    return res.json(fallbackResult);
+    console.error("Lỗi API thẩm định văn bản.");
+    return res.status(503).json({ error: "Không thể hoàn tất lượt thẩm định do lỗi hệ thống. Vui lòng thử lại sau." });
   }
 });
 
 // API: Batch Audit Endpoint (Thẩm định đồng thời nhiều văn bản)
 app.post("/api/batch-audit-documents", async (req, res) => {
   try {
-    const { documents } = req.body;
+    const { documents } = req.body ?? {};
     if (!documents || !Array.isArray(documents) || documents.length === 0) {
       return res.status(400).json({ error: "Danh sách văn bản cần thẩm định không hợp lệ." });
+    }
+    if (documents.length > MAX_BATCH_DOCUMENTS) {
+      return res.status(413).json({ error: `Mỗi lượt chỉ xử lý tối đa ${MAX_BATCH_DOCUMENTS} văn bản để kiểm soát tài nguyên.` });
+    }
+    for (let index = 0; index < documents.length; index += 1) {
+      const item = documents[index];
+      if (!item || typeof item !== "object") {
+        return res.status(400).json({ error: `Văn bản thứ ${index + 1} không hợp lệ.` });
+      }
+      if (!isNonEmptyString(item.content)) {
+        return res.status(400).json({
+          error: `Văn bản thứ ${index + 1} chưa có nội dung văn bản đã trích xuất để thẩm định.`,
+        });
+      }
+      const contentError = validateDocumentText(item.content);
+      if (contentError) return res.status(413).json({ error: `Văn bản thứ ${index + 1}: ${contentError}` });
     }
 
     // Process documents with graceful fallback
@@ -740,20 +752,30 @@ app.post("/api/batch-audit-documents", async (req, res) => {
             docType: docItem.docType,
             fileName: docItem.name || docItem.fileName,
           });
+          // A returned local-rule result is not a successful AI audit.
+          if (audit?.source !== "gemini") {
+            return createLocalFallbackResponse(
+              docItem.id,
+              docItem.name || docItem.fileName,
+              audit,
+            );
+          }
+
           return {
             id: docItem.id,
             name: docItem.name || docItem.fileName,
             success: true,
+            source: "gemini",
+            sourceNotice: audit.sourceNotice,
             auditResult: audit,
           };
         } catch (itemErr: any) {
           const fallback = runLocalRuleAudit(docItem.content || "", docItem.docType);
-          return {
-            id: docItem.id,
-            name: docItem.name || docItem.fileName,
-            success: true,
-            auditResult: fallback,
-          };
+          return createLocalFallbackResponse(
+            docItem.id,
+            docItem.name || docItem.fileName,
+            fallback,
+          );
         }
       })
     );
@@ -764,174 +786,35 @@ app.post("/api/batch-audit-documents", async (req, res) => {
       results,
     });
   } catch (err: any) {
-    return res.status(500).json({ error: "Lỗi trong quá trình thẩm định hàng loạt: " + err.message });
+    // Do not expose internal exception details to API clients.
+    console.error("Lỗi API thẩm định hàng loạt.");
+    return res.status(503).json({ error: "Không thể hoàn tất lượt thẩm định hàng loạt do lỗi hệ thống. Vui lòng thử lại sau." });
   }
 });
 
-// Helper: Intelligent Legal Q&A Knowledge Engine
-function getIntelligentLegalAnswer(question: string): string {
-  const q = question.toLowerCase();
-
-  if (q.includes("17/2024") || (q.includes("thông tư 17") && q.includes("2024")) || q.includes("xếp loại") || q.includes("hạng a") || q.includes("hạng b") || q.includes("hạng c")) {
-    return `### 📜 Các điểm sửa đổi cốt lõi của Thông tư số 17/2024/TT-BNNPTNT (Hiệu lực từ 15/01/2025):
-
-Thông tư số 17/2024/TT-BNNPTNT sửa đổi, bổ sung toàn diện Thông tư số 38/2018/TT-BNNPTNT và Thông tư số 48/2013/TT-BNNPTNT với các cải cách lớn:
-
-1. **Bãi bỏ phân hạng A, B, C**:
-   - Chuyển sang chỉ còn **02 mức xếp loại: "Đạt" hoặc "Không đạt"** (Khoản 9 Điều 1 sửa đổi Điều 8 TT 38).
-   - Cơ sở xếp loại "Đạt" được cấp Giấy chứng nhận cơ sở đủ điều kiện ATTP có thời hạn hiệu lực **03 năm**.
-
-2. **Chủ cơ sở tự xác nhận kiến thức ATTP**:
-   - Bãi bỏ thủ tục cơ quan nhà nước tổ chức thi và cấp Giấy xác nhận kiến thức ATTP.
-   - Chủ cơ sở tự tổ chức tập huấn hoặc cử nhân viên tham gia tập huấn kiến thức ATTP và **tự lập, ký Giấy xác nhận tập huấn kiến thức ATTP** cho người trực tiếp SXKD.
-
-3. **Rút ngắn thời hạn khắc phục sai lỗi**:
-   - Thời hạn tối đa để cơ sở khắc phục các điểm không phù hợp (lỗi) được rút ngắn còn **tối đa không quá 30 ngày** (trước đây là 60 ngày).
-
-4. **Thời hạn thẩm định thực tế**:
-   - Cơ quan có thẩm quyền tổ chức đoàn thẩm định thực tế tại cơ sở trong thời hạn **15 ngày làm việc** kể từ ngày nhận đủ hồ sơ hợp lệ.
-
-5. **Cập nhật cơ quan Trung ương**:
-   - Thay đổi tên gọi và thẩm quyền từ Cục Quản lý Chất lượng Nông lâm sản và Thủy sản thành **Cục Chất lượng, Chế biến và Phát triển thị trường**.`;
-  }
-
-  if (q.includes("miễn") || q.includes("điều 12") || q.includes("không thuộc diện cấp")) {
-    return `### 📋 10 nhóm cơ sở được MIỄN cấp Giấy chứng nhận ATTP theo Điều 12 Nghị định số 15/2018/NĐ-CP:
-
-1. **Sản xuất ban đầu nhỏ lẻ** (trồng trọt, chăn nuôi, đánh bắt quy mô hộ gia đình, cá nhân).
-2. **Sản xuất, kinh doanh thực phẩm không có địa điểm cố định**.
-3. **Sơ chế nhỏ lẻ**.
-4. **Kinh doanh thực phẩm nhỏ lẻ** (hộ gia đình, cá nhân kinh doanh không thuộc diện đăng ký kinh doanh).
-5. **Kinh doanh thực phẩm bao gói sẵn** (chỉ bán hàng đã đóng gói kín nguyên đai nguyên kiện).
-6. **Sản xuất, kinh doanh dụng cụ, vật liệu bao gói, chứa đựng thực phẩm**.
-7. **Nhà hàng trong khách sạn**.
-8. **Bếp ăn tập thể** không có đăng ký ngành nghề kinh doanh thực phẩm.
-9. **Kinh doanh thức ăn đường phố**.
-10. **Cơ sở đã được cấp một trong các Giấy chứng nhận thực hành tốt còn hiệu lực**:
-    - **GMP** (Thực hành sản xuất tốt);
-    - **HACCP** (Hệ thống phân tích mối nguy và điểm kiểm soát tới hạn);
-    - **ISO 22000** (Hệ thống quản lý ATTP);
-    - **IFS** (Tiêu chuẩn thực phẩm quốc tế);
-    - **BRC** (Tiêu chuẩn toàn cầu về an toàn thực phẩm);
-    - **FSSC 22000** hoặc tương đương.
-
-*(Lưu ý: Các cơ sở nông lâm thủy sản thuộc đối tượng 1, 2, 3, 4, 9 thực hiện ký Bản cam kết sản xuất kinh doanh thực phẩm an toàn theo Thông tư số 17/2018/TT-BNNPTNT)*.`;
-  }
-
-  if (q.includes("nghị định 30") || q.includes("30/2020") || q.includes("thể thức") || q.includes("trích yếu") || q.includes("v/v") || q.includes("dấu câu")) {
-    return `### 📐 Quy định cốt lõi về Thể thức & Kỹ thuật trình bày văn bản theo Nghị định 30/2020/NĐ-CP:
-
-1. **Quy tắc Trích yếu văn bản (Mục II Phần I Phụ lục I)**:
-   - **Văn bản có tên loại** (Quyết định, Tờ trình, Kế hoạch, Thông báo...): Ghi tên loại in hoa đứng đậm, trích yếu in thường đứng đậm ngay phía dưới (bắt đầu bằng *"Về việc..."*). **TUYỆT ĐỐI KHÔNG DÙNG CHỮ VIẾT TẮT "V/v"**.
-   - **Công văn**: Trích yếu đặt tại ô 5b, in thường đứng, bắt đầu bằng cụm từ **"V/v"**.
-   - **Đường kẻ ngang**: Dưới trích yếu có đường kẻ nét liền mảnh, độ dài bằng **1/3 đến 1/2** độ dài của dòng chữ và đặt cân đối ở giữa.
-
-2. **Quy tắc Căn cứ ban hành**:
-   - Trình bày bằng chữ in thường, kiểu chữ nghiêng.
-   - Cuối mỗi căn cứ kết thúc bằng **dấu chấm phẩy (;)**, riêng căn cứ cuối cùng kết thúc bằng **dấu chấm (.)**.
-   - Viện dẫn lần đầu phải ghi đầy đủ tên loại, số, ký hiệu, ngày ban hành và tên cơ quan ban hành (không viết tắt như *Bộ NN&PTNT*).
-
-3. **Quy tắc Nơi nhận (Ô số 9b)**:
-   - Cuối mỗi dòng ghi cơ quan, đơn vị nhận kết thúc bằng **dấu chấm phẩy (;)**.
-   - Dòng cuối cùng ghi: \`- Lưu: VT, [Ký hiệu đơn vị soạn thảo] (số lượng bản lưu).\` và kết thúc bằng **dấu chấm (.)**.
-
-4. **Thẩm quyền ký & Mực ký**:
-   - Ghi quyền hạn ký: TM. (Thay mặt), KT. (Ký thay), Q. (Quyền), TL. (Thừa lệnh), TUQ. (Thừa ủy quyền).
-   - Chức vụ in hoa đứng đậm; họ và tên in thường đứng đậm.
-   - Mực ký: Bắt buộc dùng **mực màu xanh**, không dùng mực đỏ hay các màu mực khác.`;
-  }
-
-  if (q.includes("nhãn") || q.includes("111/2021") || q.includes("43/2017") || q.includes("phụ gia") || q.includes("bảo vệ sức khỏe") || q.includes("nhãn phụ")) {
-    return `### 🏷️ Quy định bắt buộc về Ghi nhãn hàng hóa (Nghị định 43/2017/NĐ-CP & Nghị định 111/2021/NĐ-CP):
-
-1. **Nội dung bắt buộc trên nhãn thực phẩm (Phụ lục I NĐ 111/2021)**:
-   - Tên hàng hóa (vị trí nổi bật, dễ đọc).
-   - Tên và địa chỉ của tổ chức, cá nhân chịu trách nhiệm về hàng hóa.
-   - **Xuất xứ hàng hóa**: Phải ghi rõ ràng cụm từ như *"Sản xuất tại"*, *"Chế tạo tại"*, *"Xuất xứ:"* kèm tên nước/vùng lãnh thổ (không viết tắt).
-   - Định lượng (khối lượng tịnh, thể tích thực).
-   - Ngày sản xuất (NSX) và Hạn sử dụng (HSD).
-   - Thành phần hoặc thành phần định lượng.
-   - Thông tin cảnh báo, hướng dẫn sử dụng và hướng dẫn bảo quản.
-
-2. **Cách ghi Phụ gia thực phẩm**:
-   - Phải ghi rõ: **Tên nhóm chức năng + Tên phụ gia** (hoặc mã quốc tế INS).
-   - Ví dụ: *"Chất điều vị (INS 621)"* hoặc *"Chất điều vị (Mononatri glutamat)"*.
-   - Với chất tạo ngọt, chất tạo màu, hương liệu phải ghi rõ loại tổng hợp hay tự nhiên.
-
-3. **Đối với Thực phẩm bảo vệ sức khỏe (TPBVSK)**:
-   - Bắt buộc ghi tên phân nhóm: **"Thực phẩm bảo vệ sức khỏe"**.
-   - Bắt buộc ghi dòng khuyến cáo với kích thước dễ nhìn: **"Thực phẩm này không phải là thuốc và không có tác dụng thay thế thuốc chữa bệnh"**.`;
-  }
-
-  if (q.includes("quảng cáo") || q.includes("181/2013") || q.includes("thuốc chữa bệnh")) {
-    return `### 📢 Quy định Quảng cáo Thực phẩm theo Nghị định 181/2013/NĐ-CP & Luật ATTP:
-
-1. **Điều kiện quảng cáo thực phẩm**:
-   - Phải có Giấy xác nhận nội dung quảng cáo do cơ quan y tế có thẩm quyền cấp trước khi phát hành.
-   - Nội dung phải chính xác, khớp với Bản tự công bố hoặc Giấy tiếp nhận đăng ký bản công bố sản phẩm.
-
-2. **Các hành vi nghiêm cấm**:
-   - Nghiêm cấm quảng cáo thực phẩm gây hiểu nhầm có tác dụng như thuốc chữa bệnh.
-   - Cấm sử dụng hình ảnh, uy tín, thư tín của cán bộ y tế, cơ sở y tế, danh hiệu bác sĩ, dược sĩ để quảng cáo thực phẩm.
-   - Cấm dùng từ ngữ khẳng định tuyệt đối như *"trị dứt điểm"*, *"chữa khỏi 100%"*, *"thay thế thuốc điều trị"*.
-
-3. **Khuyến cáo bắt buộc khi quảng cáo TPBVSK**:
-   - Phải đọc hoặc hiển thị rõ ràng thông điệp: **"Thực phẩm này không phải là thuốc và không có tác dụng thay thế thuốc chữa bệnh"** (thời lượng đọc ít nhất 3-5 giây trên truyền hình/radio).`;
-  }
-
-  if (q.includes("thu hồi") || q.includes("truy xuất") || q.includes("17/2021") || q.includes("24 giờ")) {
-    return `### 🔍 Quy trình Truy xuất nguồn gốc & Thu hồi thực phẩm theo Thông tư số 17/2021/TT-BNNPTNT:
-
-1. **Nguyên tắc truy xuất**:
-   - Áp dụng nguyên tắc **"Một bước trước - Một bước sau"** (nhận biết cơ sở cung cấp nguyên liệu đầu vào và cơ sở tiếp nhận sản phẩm đầu ra).
-
-2. **Thời hạn lưu trữ hồ sơ truy xuất**:
-   - Tối thiểu **06 tháng**: Đối với sản phẩm có hạn sử dụng dưới 06 tháng.
-   - Tối thiểu **02 năm**: Đối với sản phẩm có hạn sử dụng từ 06 tháng trở lên.
-   - Tối thiểu **12 tháng kể từ ngày thu hoạch**: Đối với sản phẩm tươi sống không ghi hạn sử dụng.
-
-3. **Quy trình thu hồi thực phẩm không bảo đảm an toàn**:
-   - Trong vòng **24 giờ** kể từ khi xác định sản phẩm không an toàn: Cơ sở phải thông báo tạm dừng lưu thông và thông báo kế hoạch thu hồi đến các bên phân phối và cơ quan thẩm quyền.
-   - Báo cáo kết quả thu hồi trong thời hạn quy định.
-
-4. **04 Hình thức xử lý sản phẩm thu hồi**:
-   - **Khắc phục lỗi ghi nhãn / lỗi kỹ thuật** (nếu có thể);
-   - **Chuyển mục đích sử dụng** (chế biến thức ăn chăn nuôi, làm phân bón...);
-   - **Tái xuất** (đối với hàng nhập khẩu);
-   - **Tiêu hủy** (đối với sản phẩm gây hại nghiêm trọng).`;
-  }
-
-  if (q.includes("địa giới") || q.includes("phú thọ") || q.includes("202/2025") || q.includes("1676/2025") || q.includes("xã") || q.includes("sáp nhập")) {
-    return `### 🗺️ Địa giới hành chính mới tỉnh Phú Thọ theo Nghị quyết 202/2025/QH15 & 1676/NQ-UBTVQH15:
-
-1. **Tổ chức cấp tỉnh**:
-   - Sắp xếp và điều chỉnh đơn vị hành chính tạo nên địa bàn tỉnh Phú Thọ mới hiện đại, tích hợp không gian phát triển nông nghiệp công nghệ cao và logistics thực phẩm.
-
-2. **148 Đơn vị hành chính cấp xã/phường sáp nhập mới**:
-   - Các xã tiêu biểu: **Xã Vĩnh An, Xã Tiên Lữ, Xã Hy Cương, Xã Lâm Thao, Xã Phùng Nguyên, Xã Trạm Thản, Xã Dân Chủ, Xã Phú Mỹ...**
-   
-3. **Yêu cầu đối với hồ sơ pháp lý & nhãn mác**:
-   - Toàn bộ hồ sơ đề nghị cấp Giấy chứng nhận ATTP, Biên bản thẩm định, Bản tự công bố và Nhãn hàng hóa phải ghi đúng tên đơn vị hành chính cấp xã, huyện, tỉnh mới theo Nghị quyết 1676/NQ-UBTVQH15, không dùng địa danh cũ đã bãi bỏ.`;
-  }
-
-  // General fallback
-  return `### 📚 Phản hồi Pháp lý & Nghiệp vụ An toàn Thực phẩm:
-
-Về câu hỏi của bạn liên quan đến: **"${question}"**
-
-Hệ thống thẩm định DocuGuard AI tổng hợp các căn cứ pháp lý áp dụng như sau:
-1. **Về Thể thức văn bản**: Tuân thủ nghiêm ngặt **Nghị định số 30/2020/NĐ-CP** (trích yếu không có "V/v" với văn bản có tên loại, căn cứ in nghiêng chấm phẩy, nơi nhận đúng dấu câu).
-2. **Về Thẩm quyền & Quy trình ATTP**: Áp dụng **Thông tư số 17/2024/TT-BNNPTNT** (hiệu lực từ 15/01/2025: xếp loại Đạt/Không đạt, chủ cơ sở tự tập huấn và xác nhận kiến thức ATTP, hạn khắc phục tối đa 30 ngày) và **Nghị định số 15/2018/NĐ-CP** (10 nhóm cơ sở miễn cấp GCN).
-3. **Về Nhãn hàng hóa & Quảng cáo**: Áp dụng **Nghị định số 111/2021/NĐ-CP, Nghị định 43/2017/NĐ-CP** và **Nghị định số 181/2013/NĐ-CP** (khuyến cáo bắt buộc của TPCN).
-4. **Về Địa giới hành chính**: Cập nhật chuẩn xác theo **Nghị quyết số 202/2025/QH15** và **Nghị quyết số 1676/NQ-UBTVQH15**.
-
-Bạn có thể chuyển sang tab **"Thẩm định văn bản"** để tải tệp trực tiếp hoặc đặt thêm các câu hỏi chi tiết về từng điều khoản!`;
+// Safe local fallback: do not present canned legal summaries as verified research.
+function getIntelligentLegalAnswer(_question: string): string {
+  return [
+    "### Chưa đủ căn cứ để xác nhận nội dung pháp lý",
+    "",
+    "Trợ lý AI hiện không khả dụng hoặc chưa trả về câu trả lời có thể sử dụng. Bộ dự phòng cục bộ không thực hiện tra cứu văn bản pháp luật trực tiếp, nên không đưa ra kết luận về điều khoản, hiệu lực, thời hạn hoặc thẩm quyền.",
+    "",
+    "Để tiếp tục, hãy cung cấp văn bản pháp luật hoặc đường dẫn đến nguồn chính thức cần đối chiếu. Cần kiểm tra văn bản gốc, văn bản sửa đổi/bãi bỏ, ngày hiệu lực và phạm vi áp dụng trước khi sử dụng kết quả.",
+    "",
+    "Mọi kết quả hỗ trợ chỉ có tính chất tham khảo; công chức có thẩm quyền phải kiểm tra và quyết định."
+  ].join("\n");
 }
 
 // API: Legal Assistant Chat
 app.post("/api/chat", async (req, res) => {
   try {
-    const { message } = req.body;
+    const { message } = req.body ?? {};
+    if (message !== undefined && message !== null && typeof message !== "string") {
+      return res.status(400).json({ error: "Câu hỏi phải là chuỗi ký tự." });
+    }
+    if (exceedsStringLimit(message, MAX_CHAT_CHARS)) {
+      return res.status(413).json({ error: `Câu hỏi vượt giới hạn ${MAX_CHAT_CHARS.toLocaleString("vi-VN")} ký tự.` });
+    }
     const ai = getAI();
 
     if (ai) {
@@ -945,7 +828,7 @@ app.post("/api/chat", async (req, res) => {
 
         const response = await chat.sendMessage({ message: message || "Xin chào" });
         if (response && response.text) {
-          return res.json({ reply: response.text });
+          return res.json({ reply: response.text, source: "gemini", notice: "Câu trả lời do mô hình AI tạo; cần đối chiếu văn bản pháp luật gốc, hiệu lực và phạm vi áp dụng trước khi sử dụng." });
         }
       } catch (geminiError: any) {
         // Fallback to intelligent legal Q&A engine
@@ -954,10 +837,10 @@ app.post("/api/chat", async (req, res) => {
 
     // High quality intelligent legal knowledge engine reply
     const replyText = getIntelligentLegalAnswer(message || "Xin chào");
-    return res.json({ reply: replyText });
+    return res.json({ reply: replyText, source: "local_fallback", notice: "Đây là câu trả lời từ bộ quy tắc cục bộ, không phải kết quả tra cứu pháp luật trực tiếp. Cần kiểm chứng với văn bản gốc hiện hành." });
   } catch (err: any) {
     const fallbackAnswer = getIntelligentLegalAnswer(req.body?.message || "Xin chào");
-    return res.json({ reply: fallbackAnswer });
+    return res.status(503).json({ error: "Trợ lý không thể xử lý câu hỏi lúc này. Vui lòng thử lại sau." });
   }
 });
 

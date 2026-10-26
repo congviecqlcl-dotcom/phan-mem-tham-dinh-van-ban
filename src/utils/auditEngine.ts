@@ -31,13 +31,13 @@ export function runClientAuditEngine(content: string, docType?: DocumentType | s
     issues.push({
       id: 'err-thethuc-vv-qd',
       category: 'the_thuc',
-      severity: 'error',
-      title: "Trích yếu văn bản có tên loại sử dụng sai chữ viết tắt 'V/v'",
+      severity: 'warning',
+      title: "Cần kiểm tra cách trình bày trích yếu với cụm 'V/v'",
       currentContent: 'QUYẾT ĐỊNH\nV/v ... (hoặc TỜ TRÌNH\nV/v ...)',
       expectedContent: 'QUYẾT ĐỊNH\nVề việc ... (in thường, đứng, đậm, có đường kẻ ngang 1/3-1/2 phía dưới)',
       legalBasis: 'Điểm b Khoản 5 Mục II Phần I & Mẫu 1.2 Phụ lục III Nghị định số 30/2020/NĐ-CP',
       explanation:
-        "Văn bản có tên loại (như Quyết định, Nghị quyết, Tờ trình) không dùng cụm từ viết tắt 'V/v'. Chữ 'V/v' chỉ áp dụng duy nhất cho Công văn (tại ô số 5b).",
+        "Mẫu nhận diện dựa trên xuống dòng và từ khóa nên có thể khớp với phần trích dẫn hoặc văn bản ghép. Hãy kiểm tra đúng vị trí tên loại/trích yếu và đối chiếu mẫu áp dụng trước khi xác nhận sai thể thức.",
       location: 'Phần Tiêu đề và Trích yếu văn bản',
     });
   }
@@ -53,13 +53,13 @@ export function runClientAuditEngine(content: string, docType?: DocumentType | s
     issues.push({
       id: 'err-thethuc-viet-tat-chuc-vu',
       category: 'the_thuc',
-      severity: 'error',
-      title: 'Viết tắt tùy tiện chức vụ, chức danh lãnh đạo và phòng ban',
+      severity: 'warning',
+      title: 'Cần kiểm tra ngữ cảnh của chữ viết tắt chức vụ, chức danh hoặc phòng ban',
       currentContent: 'PGĐ Sở, CCT, Phó CCT, Phòng TCCB, Phòng QLCL...',
       expectedContent: 'Phó Giám đốc Sở, Chi cục trưởng, Phó Chi cục trưởng, Phòng Tổ chức cán bộ, Phòng Quản lý chất lượng...',
       legalBasis: 'Khoản 10 Mục II Phần I Phụ lục I Nghị định số 30/2020/NĐ-CP & Quy chuẩn văn thư nhà nước',
       explanation:
-        'Trong văn bản hành chính (đặc biệt là phần Nơi nhận và nội dung), nghiêm cấm viết tắt tùy tiện các chức vụ, chức danh lãnh đạo và tên phòng ban. Chỉ được phép viết tắt các từ ngữ theo quy chuẩn pháp luật như TM., KT., TL., TUQ., Q., UBND, HĐND.',
+        'Từ viết tắt có thể xuất hiện trong trích dẫn, bảng biểu, tên đơn vị nội bộ hoặc ngữ cảnh khác. Cần kiểm tra vị trí sử dụng, quy ước được phép và loại văn bản trước khi kết luận đây là lỗi thể thức.',
       location: 'Phần Nơi nhận hoặc nội dung văn bản',
     });
   }
@@ -197,7 +197,7 @@ export function runClientAuditEngine(content: string, docType?: DocumentType | s
     });
   }
 
-  // 10. Kiểm tra thông tư hết hiệu lực hoặc chưa cập nhật TT 17/2024
+  // 10. Dấu hiệu viện dẫn văn bản cần kiểm tra với nguồn chính thức; không tự kết luận hiệu lực
   if (
     lower.includes('thông tư số 51/2014') ||
     lower.includes('thông tư số 45/2014') ||
@@ -208,18 +208,18 @@ export function runClientAuditEngine(content: string, docType?: DocumentType | s
     issues.push({
       id: 'err-hieu-luc-van-ban',
       category: 'can_cu_phap_ly',
-      severity: 'error',
-      title: 'Viện dẫn văn bản đã hết hiệu lực thi hành',
-      currentContent: 'Thông tư 51/2014 / 45/2014 / 32/2022/TT-BNNPTNT',
-      expectedContent: 'Thông tư số 17/2024/TT-BNNPTNT hoặc Thông tư số 17/2018/TT-BNNPTNT',
-      legalBasis: 'Điều 12 TT 17/2018/TT-BNNPTNT & Điều 3 TT 17/2024/TT-BNNPTNT',
+      severity: 'warning',
+      title: 'Cần xác minh hiệu lực và phạm vi áp dụng của văn bản được viện dẫn',
+      currentContent: 'Phát hiện số hiệu văn bản thuộc danh sách cần rà soát',
+      expectedContent: 'Đối chiếu văn bản gốc, điều khoản hiệu lực, văn bản sửa đổi/thay thế và phạm vi áp dụng trên nguồn chính thức',
+      legalBasis: 'Chưa xác minh tự động; cần đối chiếu cơ sở dữ liệu văn bản pháp luật chính thức',
       explanation:
-        'Các văn bản trên đã bị bãi bỏ/thay thế bởi Thông tư số 17/2018/TT-BNNPTNT, Thông tư số 38/2018/TT-BNNPTNT và Thông tư số 17/2024/TT-BNNPTNT.',
+        'Việc khớp từ khóa/số hiệu chỉ là dấu hiệu để rà soát, không đủ chứng minh văn bản đã hết hiệu lực hoặc đã được thay thế. Công chức cần kiểm tra văn bản gốc và tình trạng hiệu lực tại thời điểm áp dụng.',
       location: 'Phần Căn cứ ban hành',
     });
   }
 
-  // 11. Bãi bỏ xếp loại A, B, C theo TT 17/2024
+  // 11. Dấu hiệu đề cập phân loại A/B/C cần đối chiếu với văn bản hiện hành
   if (
     lower.includes('xếp loại a') ||
     lower.includes('xếp loại b') ||
@@ -230,18 +230,18 @@ export function runClientAuditEngine(content: string, docType?: DocumentType | s
     issues.push({
       id: 'err-xeploai-tt17',
       category: 'chuyen_mon_attp',
-      severity: 'error',
-      title: 'Sử dụng quy định xếp loại A, B, C đã bị bãi bỏ theo Thông tư 17/2024/TT-BNNPTNT',
-      currentContent: 'Xếp loại A / B / C cơ sở sản xuất kinh doanh ATTP',
-      expectedContent: 'Chỉ đánh giá 02 mức: "Đạt" hoặc "Không đạt"',
-      legalBasis: 'Khoản 2 & Khoản 5 Điều 1 Thông tư số 17/2024/TT-BNNPTNT (Hiệu lực từ 15/01/2025)',
+      severity: 'warning',
+      title: 'Cần xác minh căn cứ hiện hành về cách phân loại cơ sở',
+      currentContent: 'Phát hiện nội dung có nhắc đến xếp loại A/B/C',
+      expectedContent: 'Đối chiếu văn bản chính thức, điều khoản sửa đổi/bãi bỏ, ngày hiệu lực và phạm vi áp dụng đối với loại cơ sở cụ thể',
+      legalBasis: 'Chưa xác minh tự động; cần kiểm tra văn bản chính thức hiện hành',
       explanation:
-        'Thông tư 17/2024 đã bãi bỏ hoàn toàn việc xếp loại A, B, C của Thông tư 38/2018, chuyển sang cơ chế đánh giá 2 mức Đạt / Không đạt và rút ngắn thời hạn khắc phục lỗi tối đa 30 ngày.',
+        'Từ khóa “xếp loại A/B/C” có thể xuất hiện trong trích dẫn, tài liệu lịch sử hoặc ngữ cảnh khác. Chỉ riêng sự xuất hiện của từ khóa không chứng minh nội dung trái quy định hiện hành; cần xác minh căn cứ và ngữ cảnh trước khi kết luận.',
       location: 'Phần Kết luận thẩm định / Nội dung thông báo',
     });
   }
 
-  // 12. Nhãn thực phẩm chức năng thiếu cảnh báo bắt buộc
+  // 12. Dấu hiệu nhãn/TPCN cần kiểm tra trực tiếp trên nhãn và quy định hiện hành
   if (
     (lower.includes('thực phẩm bảo vệ sức khỏe') ||
       lower.includes('glucosamine') ||
@@ -253,20 +253,18 @@ export function runClientAuditEngine(content: string, docType?: DocumentType | s
     issues.push({
       id: 'err-nhan-canh-bao-tpcn',
       category: 'nhan_quang_cao',
-      severity: 'error',
-      title: 'Nhãn thực phẩm bảo vệ sức khỏe thiếu dòng cảnh báo bắt buộc theo quy định',
-      currentContent: 'Không có dòng chữ khuyến cáo theo luật',
-      expectedContent:
-        'Cụm từ: "Thực phẩm bảo vệ sức khỏe" và dòng khuyến cáo: "Thực phẩm này không phải là thuốc và không có tác dụng thay thế thuốc chữa bệnh"',
-      legalBasis:
-        'Khoản 2 Điều 44 Luật ATTP, Điểm a Khoản 3 Điều 18 NĐ 15/2018/NĐ-CP & Mục 3 Phụ lục I NĐ 111/2021/NĐ-CP',
+      severity: 'warning',
+      title: 'Cần kiểm tra trực tiếp nhãn và yêu cầu ghi nhãn áp dụng',
+      currentContent: 'Bộ quy tắc không tìm thấy cụm từ cảnh báo trong phần văn bản đã phân tích',
+      expectedContent: 'Đối chiếu ảnh/toàn bộ nhãn, loại sản phẩm, nội dung bắt buộc và quy định hiện hành áp dụng cho sản phẩm cụ thể',
+      legalBasis: 'Gợi ý căn cứ cần xác minh: Luật An toàn thực phẩm, Nghị định 15/2018/NĐ-CP và quy định ghi nhãn hiện hành',
       explanation:
-        'Mọi nhãn và tài liệu quảng cáo thực phẩm bảo vệ sức khỏe bắt buộc phải có dòng chữ khuyến cáo rõ ràng, chiều cao chữ tối thiểu 1.2mm, tương phản màu nền.',
+        'Không tìm thấy cụm từ trong văn bản trích xuất chưa chứng minh nhãn thực tế thiếu cảnh báo; nội dung có thể nằm trong hình ảnh, phần chưa trích xuất hoặc không thuộc trường hợp áp dụng. Cần kiểm tra nhãn đầy đủ và căn cứ hiện hành trước khi kết luận.',
       location: 'Nội dung bắt buộc ghi nhãn',
     });
   }
 
-  // 13. Quảng cáo TPCN gây hiểu nhầm là thuốc
+  // 13. Dấu hiệu ngôn từ quảng cáo cần xem xét trong ngữ cảnh
   if (
     lower.includes('trị dứt điểm') ||
     lower.includes('chữa khỏi hoàn toàn') ||
@@ -276,75 +274,27 @@ export function runClientAuditEngine(content: string, docType?: DocumentType | s
     issues.push({
       id: 'err-quang-cao-tri-benh',
       category: 'nhan_quang_cao',
-      severity: 'error',
-      title: 'Nội dung quảng cáo / công dụng gây hiểu nhầm thực phẩm là thuốc chữa bệnh',
-      currentContent: 'Trị dứt điểm, đặc trị, thay thế thuốc chữa bệnh...',
-      expectedContent: 'Hỗ trợ giảm triệu chứng, hỗ trợ tăng cường sức đề kháng...',
-      legalBasis:
-        'Khoản 4 Điều 5 Nghị định số 181/2013/NĐ-CP & Khoản 11 Điều 5 Luật ATTP số 55/2010/QH12',
+      severity: 'warning',
+      title: 'Cần xem xét ngữ cảnh của cụm từ quảng cáo có nguy cơ gây hiểu nhầm',
+      currentContent: 'Phát hiện cụm từ cần xem xét trong nội dung',
+      expectedContent: 'Đọc đoạn văn đầy đủ để xác định chủ thể phát ngôn, phủ định, trích dẫn, cảnh báo hoặc nội dung đang bị phản bác',
+      legalBasis: 'Cần đối chiếu quy định quảng cáo/ghi nhãn hiện hành và loại sản phẩm cụ thể',
       explanation:
-        'Nghiêm cấm quảng cáo, ghi nhãn thực phẩm gây hiểu nhầm là thuốc chữa bệnh hoặc có tác dụng điều trị bệnh dứt điểm.',
+        'Từ khóa có thể xuất hiện trong trích dẫn, câu phủ định, cảnh báo hoặc nội dung phản bác. Chỉ riêng sự xuất hiện của cụm từ không đủ chứng minh có hành vi quảng cáo vi phạm; cần xem xét ngữ cảnh và tài liệu nguồn.',
       location: 'Phần Công dụng / Tác dụng',
     });
   }
 
-  // Calculate scores
-  const totalWeight = 100;
-  const deduction = issues.reduce((acc, curr) => {
-    if (curr.severity === 'error') return acc + 18;
-    if (curr.severity === 'warning') return acc + 9;
-    return acc + 4;
-  }, 0);
+  // Do not calculate an arbitrary aggregate score: it has no validated legal or
+  // statistical interpretation. Keep the legacy field temporarily for API compatibility.
+  const overallScore = 0;
+  // A heuristic score must never be converted into a legal pass/fail status.
+  // Every automated result remains pending verification by a competent human.
+  const status = 'CAN_XAC_MINH';
 
-  const overallScore = Math.max(25, Math.min(100, totalWeight - deduction));
-  const status =
-    overallScore >= 85
-      ? 'DAT'
-      : overallScore >= 55
-      ? 'CAN_SUA_DOI'
-      : 'KHONG_DAT';
-
-  // Build clean fixed content with comprehensive abbreviation removal & capitalization fixes
-  const fixedDoc = content
-    .replace(/quyết\s*định\s*\n+v\/v\s*/gi, 'QUYẾT ĐỊNH\nVề việc ')
-    .replace(/tờ\s*trình\s*\n+v\/v\s*/gi, 'TỜ TRÌNH\nVề việc ')
-    .replace(/đảm bảo an toàn thực phẩm/gi, 'bảo đảm an toàn thực phẩm')
-    .replace(/đảm bảo/gi, 'bảo đảm')
-    // Fix improper abbreviations
-    .replace(/- Giám đốc, các PGĐ Sở[\.;]?/gi, '- Giám đốc Sở, các Phó Giám đốc Sở;')
-    .replace(/- Giám đốc, các PGĐ[\.;]?/gi, '- Giám đốc Sở, các Phó Giám đốc Sở;')
-    .replace(/các PGĐ Sở/gi, 'các Phó Giám đốc Sở')
-    .replace(/các PGĐ\b/gi, 'các Phó Giám đốc')
-    .replace(/- CCT, các Phó CCT[\.;]?/gi, '- Chi cục trưởng, các Phó Chi cục trưởng;')
-    .replace(/CCT, các Phó CCT/gi, 'Chi cục trưởng, các Phó Chi cục trưởng')
-    .replace(/Phó CCT\b/gi, 'Phó Chi cục trưởng')
-    .replace(/CCT\b/g, 'Chi cục trưởng')
-    .replace(/Phòng TCCB Sở[\.;]?/gi, 'Phòng Tổ chức cán bộ Sở;')
-    .replace(/Phòng TCCB\b/gi, 'Phòng Tổ chức cán bộ')
-    .replace(/Trưởng phòng TCCB/gi, 'Trưởng phòng Tổ chức cán bộ')
-    .replace(/Phòng QLCL\b/gi, 'Phòng Quản lý chất lượng')
-    .replace(/Bộ Nông nghiệp và PTNT/g, 'Bộ Nông nghiệp và Phát triển nông thôn')
-    .replace(/Bộ NN&PTNT/g, 'Bộ Nông nghiệp và Phát triển nông thôn')
-    .replace(/Bộ NN và PTNT/g, 'Bộ Nông nghiệp và Phát triển nông thôn')
-    .replace(/chế biến và PTTT/gi, 'chế biến và Phát triển thị trường')
-    .replace(/Chế biến và PTTT/gi, 'Chế biến và Phát triển thị trường')
-    .replace(/CBPTTT/g, 'CLCB')
-    .replace(/Căn cứ Quyết định 09/g, 'Căn cứ Quyết định số 09')
-    .replace(/- Lưu: VT, hồ sơ\./gi, '- Lưu: VT, CLCB (02 bản).')
-    .replace(/- Lưu: VT, CBPTTT\./gi, '- Lưu: VT, CLCB (02 bản).')
-    .replace(/- Lưu: VT\./gi, '- Lưu: VT, CLCB (02 bản).')
-    // Fix improper uppercase in agency names
-    .replace(/Bộ Nông Nghiệp Và Phát Triển Nông Thôn/g, 'Bộ Nông nghiệp và Phát triển nông thôn')
-    .replace(/Sở Nông Nghiệp Và Môi Trường/g, 'Sở Nông nghiệp và Môi trường')
-    .replace(/Ủy Ban Nhân Dân/g, 'Ủy ban nhân dân')
-    .replace(/Chi Cục Chất Lượng Chế Biến Và Phát Triển Thị Trường/g, 'Chi cục Chất lượng, Chế biến và Phát triển thị trường')
-    // Fix common improper mid-sentence capitalization
-    .replace(/ An Toàn Thực Phẩm/g, ' an toàn thực phẩm')
-    .replace(/ Cơ Sở Sản Xuất/g, ' cơ sở sản xuất')
-    .replace(/ Nông Lâm Thủy Sản/g, ' nông, lâm, thủy sản')
-    .replace(/ Ngày Cấp:/g, ' Ngày cấp:')
-    .replace(/ Mặt Hàng Kinh Doanh:/g, ' Mặt hàng kinh doanh:')
-    .replace(/ Mã Doanh Nghiệp:/g, ' Mã doanh nghiệp:');
+  // Safety: do not silently rewrite legal/administrative documents using broad regex substitutions.
+  // Preserve the original text until proposed edits can be reviewed individually by a human.
+  const fixedDoc = content;
 
   const nowStr = new Date().toLocaleDateString('vi-VN', {
     day: '2-digit',
@@ -360,25 +310,17 @@ export function runClientAuditEngine(content: string, docType?: DocumentType | s
     documentTypeDetected,
     summary:
       issues.length === 0
-        ? 'Văn bản hoàn toàn chuẩn chỉnh, tuân thủ đúng 100% thể thức Nghị định 30/2020/NĐ-CP (không viết tắt tùy tiện, viết hoa đúng chuẩn Phụ lục II) và các quy định ATTP chuyên ngành.'
-        : `Phát hiện ${issues.length} điểm cần hoàn thiện (${issues.filter((i) => i.severity === 'error').length} lỗi nghiêm trọng, ${issues.filter((i) => i.severity === 'warning').length} cảnh báo). Cần loại bỏ các từ viết tắt tùy tiện (như PGĐ, CCT, TCCB, PTTT) và chuẩn hóa lại quy tắc viết hoa theo Phụ lục II NĐ 30.`,
+        ? 'Bộ quy tắc kiểm tra cục bộ chưa phát hiện dấu hiệu thuộc các mẫu kiểm tra đã lập trình. Điều này không chứng minh văn bản tuân thủ đầy đủ pháp luật hoặc không có sai sót.'
+        : `Bộ quy tắc kiểm tra cục bộ ghi nhận ${issues.length} dấu hiệu cần rà soát (${issues.filter((i) => i.severity === 'error').length} dấu hiệu mức cao, ${issues.filter((i) => i.severity === 'warning').length} cảnh báo). Mỗi dấu hiệu cần được đối chiếu với văn bản gốc và quy định hiện hành trước khi kết luận.`,
     positivePoints: [
-      'Đã cập nhật đúng Thông tư số 17/2024/TT-BNNPTNT mới nhất của Bộ Nông nghiệp & PTNT.',
-      'Địa giới hành chính tuân thủ chuẩn xác theo Nghị quyết 202/2025/QH15 và Nghị quyết 1676/NQ-UBTVQH15.',
-      'Bố cục nội dung và thẩm quyền ban hành rõ ràng, đúng chức năng nhiệm vụ.',
+      'Đây là kết quả rà soát tự động theo các mẫu quy tắc đã lập trình, không phải xác nhận tuân thủ pháp luật.',
+      'Hệ thống chưa tự xác minh hiệu lực, phạm vi áp dụng hoặc sửa đổi mới nhất của mọi căn cứ pháp lý được nêu.',
+      'Công chức cần kiểm tra hồ sơ gốc, căn cứ pháp lý và bản dự thảo chỉnh sửa trước khi sử dụng.',
     ],
     issues,
     categoryScores: {
       the_thuc: {
         name: 'Thể thức văn bản (Nghị định 30/2020)',
-        score: Math.max(
-          0,
-          25 -
-            issues
-              .filter((i) => i.category === 'the_thuc')
-              .reduce((s: number, i) => s + (i.severity === 'error' ? 10 : 5), 0)
-        ),
-        maxScore: 25,
         totalIssues: issues.filter((i) => i.category === 'the_thuc').length,
         severityBreakdown: {
           error: issues.filter((i) => i.category === 'the_thuc' && i.severity === 'error').length,
@@ -388,14 +330,6 @@ export function runClientAuditEngine(content: string, docType?: DocumentType | s
       },
       can_cu_phap_ly: {
         name: 'Căn cứ pháp lý & Hiệu lực',
-        score: Math.max(
-          0,
-          25 -
-            issues
-              .filter((i) => i.category === 'can_cu_phap_ly')
-              .reduce((s: number, i) => s + (i.severity === 'error' ? 10 : 5), 0)
-        ),
-        maxScore: 25,
         totalIssues: issues.filter((i) => i.category === 'can_cu_phap_ly').length,
         severityBreakdown: {
           error: issues.filter((i) => i.category === 'can_cu_phap_ly' && i.severity === 'error').length,
@@ -405,14 +339,6 @@ export function runClientAuditEngine(content: string, docType?: DocumentType | s
       },
       chuyen_mon_attp: {
         name: 'Chuyên môn ATTP & Quy trình',
-        score: Math.max(
-          0,
-          25 -
-            issues
-              .filter((i) => i.category === 'chuyen_mon_attp')
-              .reduce((s: number, i) => s + (i.severity === 'error' ? 10 : 5), 0)
-        ),
-        maxScore: 25,
         totalIssues: issues.filter((i) => i.category === 'chuyen_mon_attp').length,
         severityBreakdown: {
           error: issues.filter((i) => i.category === 'chuyen_mon_attp' && i.severity === 'error').length,
@@ -422,14 +348,6 @@ export function runClientAuditEngine(content: string, docType?: DocumentType | s
       },
       nhan_quang_cao: {
         name: 'Nhãn hàng hóa & Quảng cáo',
-        score: Math.max(
-          0,
-          15 -
-            issues
-              .filter((i) => i.category === 'nhan_quang_cao')
-              .reduce((s: number, i) => s + (i.severity === 'error' ? 8 : 4), 0)
-        ),
-        maxScore: 15,
         totalIssues: issues.filter((i) => i.category === 'nhan_quang_cao').length,
         severityBreakdown: {
           error: issues.filter((i) => i.category === 'nhan_quang_cao' && i.severity === 'error').length,
@@ -439,14 +357,6 @@ export function runClientAuditEngine(content: string, docType?: DocumentType | s
       },
       dia_gioi_hanh_chinh: {
         name: 'Địa giới hành chính (NQ 202/2025)',
-        score: Math.max(
-          0,
-          10 -
-            issues
-              .filter((i) => i.category === 'dia_gioi_hanh_chinh')
-              .reduce((s: number, i) => s + (i.severity === 'error' ? 5 : 2), 0)
-        ),
-        maxScore: 10,
         totalIssues: issues.filter((i) => i.category === 'dia_gioi_hanh_chinh').length,
         severityBreakdown: {
           error: issues.filter((i) => i.category === 'dia_gioi_hanh_chinh' && i.severity === 'error').length,
