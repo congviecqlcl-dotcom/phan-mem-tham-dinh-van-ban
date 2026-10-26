@@ -185,3 +185,13 @@ Không nên thêm một token bí mật cố định vào mã trình duyệt đ�
 - Vẫn chưa xác minh được lớp xác thực/phân quyền ở nền tảng triển khai; không được suy luận từ việc chưa thấy middleware trong `server.ts` rằng toàn bộ hệ thống chắc chắn công khai hoặc chắc chắn được bảo vệ.
 - Các quy tắc pháp lý dùng từ khóa/regex vẫn cần được hạ xuống dạng dấu hiệu rà soát nếu chưa có nguồn chính thức và ngữ cảnh đủ để kết luận. Riêng quy tắc về hiệu lực văn bản và phân loại cơ sở theo A/B/C cần được kiểm chứng pháp lý trước khi dùng như kết luận.
 - Trạng thái an toàn vẫn là **chưa đủ điều kiện triển khai công khai** cho đến khi xác minh xác thực/phân quyền, giới hạn tần suất/chi phí, xử lý dữ liệu hồ sơ và căn cứ pháp lý.
+
+
+## Rà soát bảo vệ API — cập nhật 26/10/2026
+
+- CI tại commit `396a51a4a7fe48d135cdb1141563ddca9047482e` đã thành công: TypeScript check, unit tests và production build đều qua. Run: https://github.com/congviecqlcl-dotcom/phan-mem-tham-dinh-van-ban/actions/runs/40262813846.
+- Kiểm tra bổ sung `src/App.tsx` không thấy luồng đăng nhập hoặc kiểm soát vai trò ở cấp giao diện; `package.json` cũng không khai báo thư viện xác thực chuyên dụng. Đây là quan sát tĩnh giới hạn trong các tệp đã đọc, không chứng minh rằng nền tảng triển khai không có lớp bảo vệ bên ngoài.
+- Trong `server.ts`, các tuyến `/api/parse-document`, `/api/audit-document`, `/api/batch-audit-documents` và `/api/chat` vẫn được khai báo trực tiếp bằng `app.post`; chưa thấy middleware xác thực/phân quyền hoặc giới hạn tần suất ở cấp ứng dụng.
+- Không tự ý thêm một cơ chế đăng nhập mới vì chưa xác định được kiến trúc xác thực và môi trường triển khai có thẩm quyền cấu hình. Không nhúng bí mật vào mã trình duyệt; không dùng giới hạn tần suất chỉ lưu trong bộ nhớ tiến trình như biện pháp duy nhất cho triển khai nhiều instance/serverless.
+- Trước khi mở truy cập công khai, cần xác nhận bằng cấu hình/thử nghiệm: (1) người chưa đăng nhập bị từ chối ở API; (2) người dùng không thể truy cập dữ liệu/hoạt động của vai trò khác; (3) giới hạn tần suất và ngân sách AI được áp dụng phía máy chủ; (4) Preview được bảo vệ; (5) hồ sơ, nội dung yêu cầu và lỗi không bị ghi vào log ngoài chính sách đã phê duyệt.
+- Trạng thái: CI thành công không đồng nghĩa đã qua kiểm thử bảo mật. PR vẫn Draft, chưa merge vào `main`; không đưa hồ sơ nghiệp vụ thật vào môi trường chưa được xác minh.
