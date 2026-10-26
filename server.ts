@@ -6,6 +6,7 @@ import { createServer as createViteServer } from "vite";
 import { PDFParse } from "pdf-parse";
 import mammoth from "mammoth";
 import { createLocalFallbackResponse } from "./server/audit-fallback";
+import { requireAppRole } from "./server/auth";
 
 dotenv.config();
 
@@ -425,7 +426,7 @@ function runLocalRuleAudit(content: string, docType?: string) {
 }
 
 // API: Universal Document Parser (/api/parse-document)
-app.post("/api/parse-document", async (req, res) => {
+app.post("/api/parse-document", requireAppRole(["CONG_CHUC", "LANH_DAO", "QUAN_TRI"]), async (req, res) => {
   try {
     const { fileName, base64Data, mimeType } = req.body ?? {};
     if (!isNonEmptyString(base64Data)) {
@@ -688,7 +689,7 @@ YÊU CẦU ĐÁNH GIÁ:
 }
 
 // API: Document Audit Endpoint
-app.post("/api/audit-document", async (req, res) => {
+app.post("/api/audit-document", requireAppRole(["CONG_CHUC", "LANH_DAO", "QUAN_TRI"]), async (req, res) => {
   try {
     const { content, docType, fileName, fileData, mimeType } = req.body ?? {};
 
@@ -720,7 +721,7 @@ app.post("/api/audit-document", async (req, res) => {
 });
 
 // API: Batch Audit Endpoint (Thẩm định đồng thời nhiều văn bản)
-app.post("/api/batch-audit-documents", async (req, res) => {
+app.post("/api/batch-audit-documents", requireAppRole(["CONG_CHUC", "LANH_DAO", "QUAN_TRI"]), async (req, res) => {
   try {
     const { documents } = req.body ?? {};
     if (!documents || !Array.isArray(documents) || documents.length === 0) {
@@ -806,7 +807,7 @@ function getIntelligentLegalAnswer(_question: string): string {
 }
 
 // API: Legal Assistant Chat
-app.post("/api/chat", async (req, res) => {
+app.post("/api/chat", requireAppRole(["CONG_CHUC", "LANH_DAO", "QUAN_TRI"]), async (req, res) => {
   try {
     const { message } = req.body ?? {};
     if (message !== undefined && message !== null && typeof message !== "string") {
