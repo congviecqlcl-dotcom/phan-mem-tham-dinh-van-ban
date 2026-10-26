@@ -1,3 +1,4 @@
+import { authenticatedFetch } from '../utils/auth';
 import React, { useState, useRef, useEffect } from 'react';
 import { Send, Bot, User, Sparkles, Scale, Copy, Check, CornerDownLeft } from 'lucide-react';
 import { ChatMessage } from '../types';
@@ -64,7 +65,7 @@ Bạn có thể đặt bất kỳ câu hỏi nào về thẩm quyền, biểu m�
     try {
       let replyText = '';
       try {
-        const response = await fetch('/api/chat', {
+        const response = await authenticatedFetch('/api/chat', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
