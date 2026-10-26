@@ -94,10 +94,11 @@ export const DocumentAuditor: React.FC = () => {
   };
 
   // Extract text from a single file object
-  const extractTextFromFile = async (file: File): Promise<{ text: string; detectedType: DocumentType }> => {
+  const extractTextFromFile = async (file: File): Promise<{ text: string; detectedType: DocumentType; errorMessage?: string }> => {
     const lowerName = file.name.toLowerCase();
     let text = '';
     let detectedType: DocumentType = 'khac';
+    let extractionError: string | undefined;
 
     // 1. Client-side Mammoth for DOCX
     if (lowerName.endsWith('.docx')) {
@@ -142,17 +143,22 @@ export const DocumentAuditor: React.FC = () => {
             if (data.detectedType && data.detectedType !== 'khac') {
               detectedType = data.detectedType as DocumentType;
             }
+          } else {
+            extractionError = 'Không tìm thấy văn bản có thể trích xuất trong tệp.';
           }
+        } else {
+          const data = await response.json().catch(() => ({}));
+          extractionError = typeof data.error === 'string'
+            ? data.error
+            : 'Máy chủ không hỗ trợ hoặc không đọc được định dạng tệp này.';
         }
       } catch (serverErr) {
         console.warn('Server parser error:', serverErr);
       }
     }
 
-    // 4. Fallback text read
-    if (!text) {
-      text = await file.text().catch(() => '');
-    }
+    // Do not treat failed PDF/DOC/DOCX/RTF parsing as plain UTF-8 text.
+    // Unsupported or unreadable binary files remain empty and are marked as errors.
 
     // Auto-detect Document Type if not detected
     if (detectedType === 'khac' && text) {
@@ -174,7 +180,7 @@ export const DocumentAuditor: React.FC = () => {
       }
     }
 
-    return { text: text.trim(), detectedType };
+    return { text: text.trim(), detectedType, errorMessage: extractionError };
   };
 
   // Process multiple uploaded files in parallel
@@ -192,18 +198,33 @@ export const DocumentAuditor: React.FC = () => {
 
     for (const file of incomingFiles) {
       const fileId = `file-${Date.now()}-${Math.random().toString(36).substr(2, 6)}`;
-      const { text, detectedType } = await extractTextFromFile(file);
+      try {
+        const { text, detectedType, errorMessage } = await extractTextFromFile(file);
+        const hasText = Boolean(text && text.trim().length > 0);
 
-      newItems.push({
-        id: fileId,
-        name: file.name,
-        size: file.size,
-        content: text || '',
-        docType: detectedType,
-        status: text ? 'ready' : 'error',
-        errorMessage: text ? undefined : 'Không thể đọc nội dung văn bản.',
-        charCount: text ? text.length : 0,
-      });
+        newItems.push({
+          id: fileId,
+          name: file.name,
+          size: file.size,
+          content: hasText ? text : '',
+          docType: detectedType,
+          status: hasText ? 'ready' : 'error',
+          errorMessage: hasText ? undefined : (errorMessage || 'Không trích xuất được văn bản; tệp này sẽ không được đưa vào thẩm định.'),
+          charCount: hasText ? text.length : 0,
+        });
+      } catch (extractErr) {
+        console.warn(`Không thể xử lý tệp "${file.name}":`, extractErr);
+        newItems.push({
+          id: fileId,
+          name: file.name,
+          size: file.size,
+          content: '',
+          docType: 'khac',
+          status: 'error',
+          errorMessage: 'Đã xảy ra lỗi khi đọc tệp; tệp này sẽ không được đưa vào thẩm định.',
+          charCount: 0,
+        });
+      }
     }
 
     // Append to existing files or replace initial if initial was untouched
@@ -217,9 +238,15 @@ export const DocumentAuditor: React.FC = () => {
     }
 
     setIsExtracting(false);
+    const readyCount = newItems.filter((item) => item.status === 'ready').length;
+    const failedCount = newItems.length - readyCount;
     setExtractStatus({
-      type: 'success',
-      message: `Đã nạp thành công ${newItems.length} tệp văn bản. Nhấn "Thẩm định tất cả" để xử lý hàng loạt!`,
+      type: failedCount === 0 ? 'success' : readyCount === 0 ? 'error' : 'info',
+      message: failedCount === 0
+        ? `Đã trích xuất thành công ${readyCount}/${newItems.length} tệp. Nhấn "Thẩm định tất cả" để xử lý hàng loạt!`
+        : readyCount === 0
+          ? `Không trích xuất được nội dung của ${failedCount} tệp. Hãy kiểm tra định dạng; hệ thống hỗ trợ PDF, DOCX và TXT/MD/CSV/LOG.`
+          : `Đã trích xuất ${readyCount}/${newItems.length} tệp; ${failedCount} tệp lỗi và chưa được đưa vào thẩm định. Hãy kiểm tra định dạng hoặc nội dung các tệp lỗi.`,
     });
 
     if (fileInputRef.current) {
@@ -419,7 +446,11 @@ export const DocumentAuditor: React.FC = () => {
 
       // If server route didn't return or failed (static host like Vercel), use client-side audit engine
       if (!result || !result.issues) {
-        result = runClientAuditEngine(target.content, target.docType, target.name);
+        result = {
+          ...runClientAuditEngine(target.content, target.docType, target.name),
+          source: 'client_rule',
+          sourceNotice: 'Kết quả từ bộ quy tắc cục bộ chạy trên trình duyệt do API không trả về kết quả thành công. Đây không phải tra cứu pháp luật trực tiếp; cần kiểm chứng với văn bản gốc hiện hành.',
+        };
       }
 
       setFiles((prev) =>
@@ -431,7 +462,11 @@ export const DocumentAuditor: React.FC = () => {
     } catch (err: any) {
       console.error('Lỗi thẩm định:', err);
       // Fallback directly
-      const fallbackResult = runClientAuditEngine(target.content, target.docType, target.name);
+      const fallbackResult = {
+        ...runClientAuditEngine(target.content, target.docType, target.name),
+        source: 'client_rule' as const,
+        sourceNotice: 'Kết quả dự phòng từ bộ quy tắc chạy trên trình duyệt sau lỗi xử lý. Chưa được xác minh với văn bản pháp luật gốc hiện hành.',
+      };
       setFiles((prev) =>
         prev.map((f) =>
           f.id === target.id ? { ...f, status: 'completed', auditResult: fallbackResult } : f
@@ -487,7 +522,11 @@ export const DocumentAuditor: React.FC = () => {
             }
 
             if (!res || !res.issues) {
-              res = runClientAuditEngine(docItem.content, docItem.docType, docItem.name);
+              res = {
+                ...runClientAuditEngine(docItem.content, docItem.docType, docItem.name),
+                source: 'client_rule',
+                sourceNotice: 'Kết quả từ bộ quy tắc cục bộ chạy trên trình duyệt do API không trả về kết quả thành công. Đây không phải tra cứu pháp luật trực tiếp; cần kiểm chứng với văn bản gốc hiện hành.',
+              };
             }
 
             setFiles((prev) =>
@@ -496,7 +535,11 @@ export const DocumentAuditor: React.FC = () => {
               )
             );
           } catch (err: any) {
-            const fallbackRes = runClientAuditEngine(docItem.content, docItem.docType, docItem.name);
+            const fallbackRes = {
+              ...runClientAuditEngine(docItem.content, docItem.docType, docItem.name),
+              source: 'client_rule' as const,
+              sourceNotice: 'Kết quả dự phòng từ bộ quy tắc chạy trên trình duyệt sau lỗi xử lý. Chưa được xác minh với văn bản pháp luật gốc hiện hành.',
+            };
             setFiles((prev) =>
               prev.map((f) =>
                 f.id === docItem.id ? { ...f, status: 'completed', auditResult: fallbackRes } : f
@@ -524,8 +567,8 @@ export const DocumentAuditor: React.FC = () => {
     if (!activeFile?.auditResult?.fixedDocument) return;
     setIsExportingWord(true);
     try {
-      const targetName = activeFile.name ? activeFile.name.replace(/\.[^/.]+$/, '') : 'Van_ban_chuan_ND30';
-      await downloadFixedAsWord(activeFile.auditResult.fixedDocument, `${targetName}_chuan_ND30.docx`);
+      const targetName = activeFile.name ? activeFile.name.replace(/\.[^/.]+$/, '') : 'Van_ban_goc';
+      await downloadFixedAsWord(activeFile.auditResult.fixedDocument, `${targetName}_ban_goc_chua_sua.docx`);
     } catch (err) {
       console.error('Lỗi xuất Word:', err);
     } finally {
@@ -551,7 +594,7 @@ export const DocumentAuditor: React.FC = () => {
   const handleDownloadAllZip = async () => {
     setIsExportingZip(true);
     try {
-      await downloadAllFixedAsZip(files, `Bo_van_ban_chuan_hoa_ND30_${Date.now()}.zip`);
+      await downloadAllFixedAsZip(files, `Bo_van_ban_goc_chua_sua_${Date.now()}.zip`);
     } catch (err: any) {
       alert(err.message || 'Lỗi khi tải gói tệp ZIP.');
     } finally {
@@ -585,7 +628,7 @@ export const DocumentAuditor: React.FC = () => {
     const element = document.createElement('a');
     const file = new Blob([activeFile.auditResult.fixedDocument], { type: 'text/plain;charset=utf-8' });
     element.href = URL.createObjectURL(file);
-    element.download = `${activeFile.name.replace(/\.[^/.]+$/, '')}_chuan_ND30.txt`;
+    element.download = `${activeFile.name.replace(/\.[^/.]+$/, '')}_ban_goc_chua_sua.txt`;
     document.body.appendChild(element);
     element.click();
     document.body.removeChild(element);
@@ -600,12 +643,9 @@ export const DocumentAuditor: React.FC = () => {
 
   // Aggregated Stats for Batch
   const completedDocs = files.filter((f) => f.auditResult);
-  const passedDocs = completedDocs.filter((f) => f.auditResult?.status === 'DAT');
-  const warningDocs = completedDocs.filter((f) => f.auditResult?.status === 'CAN_SUA_DOI');
-  const failedDocs = completedDocs.filter((f) => f.auditResult?.status === 'KHONG_DAT');
-  const avgScore = completedDocs.length
-    ? Math.round(completedDocs.reduce((acc, curr) => acc + (curr.auditResult?.overallScore || 0), 0) / completedDocs.length)
-    : 0;
+  const needsHumanReviewDocs = completedDocs.filter((f) => f.auditResult?.status === 'CAN_XAC_MINH');
+  const docsWithFindings = completedDocs.filter((f) => (f.auditResult?.issues?.length || 0) > 0);
+  const docsWithHighSignals = completedDocs.filter((f) => f.auditResult?.issues?.some((issue) => issue.severity === 'error'));
   const totalIssuesAcrossAll = completedDocs.reduce(
     (acc, curr) => acc + (curr.auditResult?.issues?.length || 0),
     0
@@ -732,16 +772,8 @@ export const DocumentAuditor: React.FC = () => {
                 {file.status === 'auditing' ? (
                   <Loader2 className="w-3.5 h-3.5 text-emerald-400 animate-spin" />
                 ) : res ? (
-                  <span
-                    className={`w-5 h-5 rounded-full flex items-center justify-center font-bold text-[10px] ${
-                      res.overallScore >= 90
-                        ? 'bg-emerald-500 text-white'
-                        : res.overallScore >= 60
-                        ? 'bg-amber-500 text-white'
-                        : 'bg-rose-500 text-white'
-                    }`}
-                  >
-                    {res.overallScore}
+                  <span className="w-5 h-5 rounded-full flex items-center justify-center font-bold text-[10px] bg-amber-100 text-amber-900" title="Số dấu hiệu cần rà soát">
+                    {res.issues.length}
                   </span>
                 ) : (
                   <FileText className={`w-3.5 h-3.5 ${isActive ? 'text-emerald-400' : 'text-neutral-400'}`} />
@@ -753,8 +785,8 @@ export const DocumentAuditor: React.FC = () => {
                   </span>
                   <span className={`text-[10px] ${isActive ? 'text-neutral-300' : 'text-neutral-500'}`}>
                     {res ? (
-                      <span className={res.status === 'DAT' ? 'text-emerald-400' : res.status === 'CAN_SUA_DOI' ? 'text-amber-300' : 'text-rose-300'}>
-                        {res.status === 'DAT' ? 'Đạt chuẩn' : res.status === 'CAN_SUA_DOI' ? 'Cần sửa đổi' : 'Không đạt'} • {res.issues.length} lỗi
+                      <span className={'text-amber-300'}>
+                        {'Cần công chức xác minh'} • {res.issues.length} lỗi
                       </span>
                     ) : (
                       <span>{file.charCount ? `${file.charCount.toLocaleString('vi-VN')} ký tự` : 'Chờ thẩm định'}</span>
@@ -834,7 +866,7 @@ export const DocumentAuditor: React.FC = () => {
                 onClick={handleDownloadAllZip}
                 disabled={isExportingZip}
                 className="flex items-center gap-1.5 bg-blue-700 hover:bg-blue-800 disabled:bg-neutral-400 text-white font-medium py-2 px-3 rounded-xl text-xs transition shadow-2xs"
-                title="Tải toàn bộ các văn bản đã chuẩn hóa (.docx) và báo cáo chi tiết vào file ZIP"
+                title="Tải nội dung gốc chưa tự động sửa và báo cáo vào file ZIP"
               >
                 {isExportingZip ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <FolderArchive className="w-3.5 h-3.5" />}
                 <span>{isExportingZip ? 'Đang nén ZIP...' : `Tải tất cả file Word (.ZIP)`}</span>
@@ -864,20 +896,16 @@ export const DocumentAuditor: React.FC = () => {
               <div className="text-xs text-neutral-500 font-medium">Tổng số văn bản</div>
             </div>
             <div className="bg-emerald-50 p-4 rounded-2xl border border-emerald-200 shadow-2xs text-center space-y-1">
-              <div className="text-2xl font-bold text-emerald-800">{passedDocs.length}</div>
-              <div className="text-xs text-emerald-700 font-medium">Đạt chuẩn (≥90đ)</div>
+              <div className="text-2xl font-bold text-emerald-800">{needsHumanReviewDocs.length}</div>
+              <div className="text-xs text-emerald-700 font-medium">Cần công chức xác minh</div>
             </div>
             <div className="bg-amber-50 p-4 rounded-2xl border border-amber-200 shadow-2xs text-center space-y-1">
-              <div className="text-2xl font-bold text-amber-800">{warningDocs.length}</div>
-              <div className="text-xs text-amber-700 font-medium">Cần sửa đổi (60-89đ)</div>
+              <div className="text-2xl font-bold text-amber-800">{docsWithFindings.length}</div>
+              <div className="text-xs text-amber-700 font-medium">Văn bản có dấu hiệu cần xem xét</div>
             </div>
             <div className="bg-rose-50 p-4 rounded-2xl border border-rose-200 shadow-2xs text-center space-y-1">
-              <div className="text-2xl font-bold text-rose-800">{failedDocs.length}</div>
-              <div className="text-xs text-rose-700 font-medium">Không đạt (&lt;60đ)</div>
-            </div>
-            <div className="bg-blue-50 p-4 rounded-2xl border border-blue-200 shadow-2xs text-center space-y-1">
-              <div className="text-2xl font-bold text-blue-800">{avgScore}/100</div>
-              <div className="text-xs text-blue-700 font-medium">Điểm trung bình</div>
+              <div className="text-2xl font-bold text-rose-800">{docsWithHighSignals.length}</div>
+              <div className="text-xs text-rose-700 font-medium">Văn bản có dấu hiệu mức cao theo mẫu</div>
             </div>
             <div className="bg-purple-50 p-4 rounded-2xl border border-purple-200 shadow-2xs text-center space-y-1">
               <div className="text-2xl font-bold text-purple-800">{totalIssuesAcrossAll}</div>
@@ -894,7 +922,7 @@ export const DocumentAuditor: React.FC = () => {
                   Bảng tổng hợp kết quả thẩm định hàng loạt
                 </h3>
                 <p className="text-xs text-neutral-500 mt-0.5">
-                  Nhấp vào từng dòng để xem chi tiết sai sót và tải về văn bản đã sửa đổi theo Nghị định 30/2020.
+                  Nhấp vào từng dòng để xem dấu hiệu cần rà soát. Nội dung xuất ra hiện giữ nguyên văn bản gốc.
                 </p>
               </div>
 
@@ -925,7 +953,7 @@ export const DocumentAuditor: React.FC = () => {
                     <th className="py-3 px-4 w-12 text-center">STT</th>
                     <th className="py-3 px-4">Tên tệp văn bản</th>
                     <th className="py-3 px-4">Loại văn bản</th>
-                    <th className="py-3 px-4 text-center">Điểm số</th>
+                    <th className="py-3 px-4 text-center">Số dấu hiệu</th>
                     <th className="py-3 px-4 text-center">Xếp loại</th>
                     <th className="py-3 px-4">Chi tiết sai sót</th>
                     <th className="py-3 px-4 text-right">Thao tác</th>
@@ -961,37 +989,21 @@ export const DocumentAuditor: React.FC = () => {
                         </td>
                         <td className="py-3 px-4 text-center">
                           {res ? (
-                            <span
-                              className={`inline-block font-bold text-xs px-2.5 py-0.5 rounded-full ${
-                                res.overallScore >= 90
-                                  ? 'bg-emerald-100 text-emerald-800'
-                                  : res.overallScore >= 60
-                                  ? 'bg-amber-100 text-amber-800'
-                                  : 'bg-rose-100 text-rose-800'
-                              }`}
-                            >
-                              {res.overallScore}/100
+                            <span className="inline-block font-semibold text-xs px-2.5 py-0.5 rounded-full bg-amber-100 text-amber-900">
+                              {res.issues.length} dấu hiệu
                             </span>
                           ) : (
-                            <span className="text-neutral-400 italic">Chưa thẩm định</span>
+                            <span className="text-neutral-400 italic">Chưa rà soát</span>
                           )}
                         </td>
                         <td className="py-3 px-4 text-center">
                           {res ? (
                             <span
                               className={`font-semibold ${
-                                res.status === 'DAT'
-                                  ? 'text-emerald-700'
-                                  : res.status === 'CAN_SUA_DOI'
-                                  ? 'text-amber-700'
-                                  : 'text-rose-700'
+                                'text-amber-700'
                               }`}
                             >
-                              {res.status === 'DAT'
-                                ? 'ĐẠT CHUẨN'
-                                : res.status === 'CAN_SUA_DOI'
-                                ? 'CẦN SỬA ĐỔI'
-                                : 'KHÔNG ĐẠT'}
+                              {'CẦN CÔNG CHỨC XÁC MINH'}
                             </span>
                           ) : (
                             <span className="text-neutral-400">—</span>
@@ -1024,10 +1036,10 @@ export const DocumentAuditor: React.FC = () => {
                               <button
                                 onClick={async () => {
                                   const targetName = file.name ? file.name.replace(/\.[^/.]+$/, '') : 'Van_ban';
-                                  await downloadFixedAsWord(res.fixedDocument, `${targetName}_chuan_ND30.docx`);
+                                  await downloadFixedAsWord(res.fixedDocument, `${targetName}_ban_goc_chua_sua.docx`);
                                 }}
                                 className="p-1 rounded-lg bg-blue-50 hover:bg-blue-100 text-blue-700 transition"
-                                title="Tải file Word đã sửa"
+                                title="Tải bản văn bản gốc được giữ nguyên; chưa được tự động sửa hoặc xác nhận tuân thủ"
                               >
                                 <Download className="w-3.5 h-3.5" />
                               </button>
@@ -1259,7 +1271,7 @@ export const DocumentAuditor: React.FC = () => {
                   <div className="text-xs text-neutral-500 space-y-1 max-w-sm">
                     <div>✓ Thể thức văn bản & Cấm viết tắt tùy tiện (Nghị định 30/2020)</div>
                     <div>✓ Quy tắc viết hoa chuẩn xác (Phụ lục II NĐ 30/2020)</div>
-                    <div>✓ Quy chuẩn ATTP & Xếp loại Đạt/Không đạt (Thông tư 17/2024)</div>
+                    <div>✓ Bộ quy tắc sàng lọc cục bộ (cần kiểm chứng căn cứ pháp lý)</div>
                     <div>✓ Nhãn hàng hóa & Cảnh báo TPCN (Nghị định 111/2021 & 181/2013)</div>
                     <div>✓ Xác thực địa giới hành chính 2025-2026</div>
                   </div>
@@ -1269,20 +1281,19 @@ export const DocumentAuditor: React.FC = () => {
 
             {activeFile?.auditResult && !isAuditingSingle && (
               <div className="space-y-4">
+                {/* Automated signals are not legal conclusions. */}
+                <div role="note" className="rounded-xl border border-amber-300 bg-amber-50 p-4 text-sm text-amber-950 space-y-1">
+                  <div className="font-semibold">Nguồn và giới hạn kết quả</div>
+                  <p>{activeFile.auditResult.source === 'gemini' ? 'Nguồn xử lý: Gemini (mô hình AI).' : activeFile.auditResult.source === 'local_rule' ? 'Nguồn xử lý: bộ quy tắc cục bộ phía máy chủ.' : activeFile.auditResult.source === 'client_rule' ? 'Nguồn xử lý: bộ quy tắc cục bộ chạy trên trình duyệt.' : 'Chưa xác định được nguồn xử lý từ dữ liệu kết quả.'}</p>
+                  {activeFile.auditResult.sourceNotice && <p>{activeFile.auditResult.sourceNotice}</p>}
+                  <p>Các dấu hiệu do hệ thống phát hiện chỉ là gợi ý rà soát, không phải kết luận pháp lý hoặc quyết định thẩm định. Công chức cần kiểm tra từng phát hiện với hồ sơ gốc và văn bản pháp luật còn hiệu lực. Không có dấu hiệu được phát hiện không chứng minh văn bản tuân thủ đầy đủ pháp luật.</p>
+                </div>
                 {/* Summary Header Card */}
                 <div className="bg-white rounded-2xl border border-neutral-200 p-5 shadow-sm space-y-4">
                   <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-neutral-100 pb-4">
                     <div className="flex items-center gap-3">
-                      <div
-                        className={`w-12 h-12 rounded-2xl flex items-center justify-center font-bold text-lg ${
-                          activeFile.auditResult.overallScore >= 90
-                            ? 'bg-emerald-100 text-emerald-800 border border-emerald-300'
-                            : activeFile.auditResult.overallScore >= 60
-                            ? 'bg-amber-100 text-amber-800 border border-amber-300'
-                            : 'bg-rose-100 text-rose-800 border border-rose-300'
-                        }`}
-                      >
-                        {activeFile.auditResult.overallScore}
+                      <div className="w-12 h-12 rounded-2xl flex items-center justify-center font-bold text-lg bg-amber-100 text-amber-900 border border-amber-300" title="Số dấu hiệu cần rà soát">
+                        {activeFile.auditResult.issues.length}
                       </div>
                       <div>
                         <div className="flex items-center gap-2">
@@ -1291,18 +1302,10 @@ export const DocumentAuditor: React.FC = () => {
                           </h3>
                           <span
                             className={`px-2.5 py-0.5 rounded-full text-xs font-semibold ${
-                              activeFile.auditResult.status === 'DAT'
-                                ? 'bg-emerald-100 text-emerald-800'
-                                : activeFile.auditResult.status === 'CAN_SUA_DOI'
-                                ? 'bg-amber-100 text-amber-800'
-                                : 'bg-rose-100 text-rose-800'
+                              'bg-amber-100 text-amber-800'
                             }`}
                           >
-                            {activeFile.auditResult.status === 'DAT'
-                              ? 'ĐẠT CHUẨN'
-                              : activeFile.auditResult.status === 'CAN_SUA_DOI'
-                              ? 'CẦN SỬA ĐỔI'
-                              : 'KHÔNG ĐẠT'}
+                            {'CẦN CÔNG CHỨC XÁC MINH'}
                           </span>
                         </div>
                         <p className="text-xs text-neutral-500">
@@ -1317,7 +1320,7 @@ export const DocumentAuditor: React.FC = () => {
                         disabled={isExportingWord}
                         onClick={handleDownloadWordDoc}
                         className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-blue-700 hover:bg-blue-800 disabled:bg-neutral-400 text-white text-xs font-medium transition shadow-sm"
-                        title="Tải văn bản đã sửa thành file Word (.docx) chuẩn Nghị định 30/2020: Lề trái 3cm, lề phải/trên/dưới 2cm"
+                        title="Tải bản văn bản gốc được giữ nguyên dưới dạng Word; chưa được xác nhận là bản sửa đúng hoặc tuân thủ đầy đủ Nghị định 30/2020/NĐ-CP"
                       >
                         {isExportingWord ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <FileText className="w-3.5 h-3.5" />}
                         <span>{isExportingWord ? 'Đang tạo Word...' : 'Tải file Word (.docx)'}</span>
@@ -1328,7 +1331,7 @@ export const DocumentAuditor: React.FC = () => {
                         className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-neutral-900 text-white hover:bg-neutral-800 text-xs font-medium transition"
                       >
                         {copiedClean ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5" />}
-                        <span>{copiedClean ? 'Đã sao chép!' : 'Chép bản sửa chuẩn'}</span>
+                        <span>{copiedClean ? 'Đã sao chép!' : 'Chép văn bản gốc'}</span>
                       </button>
                     </div>
                   </div>
@@ -1385,7 +1388,7 @@ export const DocumentAuditor: React.FC = () => {
                       }`}
                     >
                       <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
-                      Văn bản chuẩn hóa 100%
+                      Nội dung văn bản gốc
                     </button>
                     <button
                       id="tab-scores-btn"
@@ -1562,10 +1565,10 @@ export const DocumentAuditor: React.FC = () => {
                       <div>
                         <h4 className="font-bold text-sm text-neutral-900 flex items-center gap-2">
                           <CheckCircle2 className="w-4 h-4 text-emerald-600" />
-                          Văn bản đã được chỉnh sửa chuẩn hóa 100%
+                          Nội dung gốc — chưa tự động chỉnh sửa
                         </h4>
                         <p className="text-xs text-neutral-500 mt-0.5">
-                          Đã khắc phục toàn bộ lỗi thể thức theo NĐ 30/2020 và chuẩn hóa thuật ngữ chuyên ngành.
+                          Hệ thống không tự sửa nội dung. Công chức cần đối chiếu từng phát hiện với hồ sơ và căn cứ hiện hành.
                         </p>
                       </div>
                       <div className="flex flex-wrap items-center gap-2">
@@ -1574,10 +1577,10 @@ export const DocumentAuditor: React.FC = () => {
                           disabled={isExportingWord}
                           onClick={handleDownloadWordDoc}
                           className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-blue-700 hover:bg-blue-800 disabled:bg-neutral-400 text-white text-xs font-semibold transition shadow-sm"
-                          title="Tải văn bản hoàn chỉnh dạng file Microsoft Word (.docx) chuẩn Nghị định 30/2020: Lề trái 3cm, lề phải 2cm, trên 2cm, dưới 2cm, Times New Roman"
+                          title="Tải nội dung văn bản gốc được giữ nguyên dưới dạng Word; định dạng tệp không đồng nghĩa với xác nhận tuân thủ Nghị định 30/2020/NĐ-CP"
                         >
                           {isExportingWord ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <FileText className="w-3.5 h-3.5" />}
-                          <span>{isExportingWord ? 'Đang tạo Word...' : 'Tải file Word (.DOCX) chuẩn NĐ 30'}</span>
+                          <span>{isExportingWord ? 'Đang tạo Word...' : 'Tải bản gốc (.DOCX)'}</span>
                         </button>
                         <button
                           id="btn-download-report-fixed-tab"
@@ -1654,32 +1657,19 @@ export const DocumentAuditor: React.FC = () => {
                 {activeResultTab === 'scores' && (
                   <div className="bg-white rounded-2xl border border-neutral-200 p-5 space-y-4 shadow-sm">
                     <h4 className="font-bold text-sm text-neutral-900">
-                      Bảng đánh giá mức độ tuân thủ theo 5 nhóm quy định
+                      Tổng hợp dấu hiệu theo nhóm kiểm tra
                     </h4>
 
                     <div className="space-y-4 pt-2">
                       {Object.entries(activeFile.auditResult.categoryScores || {}).map(([key, rawCat]) => {
                         const cat = rawCat as CategoryScore;
-                        const percentage = Math.round((cat.score / cat.maxScore) * 100);
                         return (
                           <div key={key} className="space-y-1.5 p-3.5 rounded-xl bg-neutral-50 border border-neutral-150">
                             <div className="flex items-center justify-between text-xs">
                               <span className="font-semibold text-neutral-900">{cat.name}</span>
                               <span className="font-bold text-neutral-700">
-                                {cat.score} / {cat.maxScore} điểm ({percentage}%)
+                                {cat.totalIssues} dấu hiệu
                               </span>
-                            </div>
-                            <div className="w-full bg-neutral-200 h-2 rounded-full overflow-hidden">
-                              <div
-                                className={`h-full rounded-full transition-all ${
-                                  percentage >= 80
-                                    ? 'bg-emerald-600'
-                                    : percentage >= 50
-                                    ? 'bg-amber-500'
-                                    : 'bg-rose-500'
-                                }`}
-                                style={{ width: `${percentage}%` }}
-                              />
                             </div>
                             <div className="flex items-center justify-between text-[11px] text-neutral-500 pt-1">
                               <span>Tổng số vấn đề phát hiện: {cat.totalIssues}</span>
@@ -1701,7 +1691,7 @@ export const DocumentAuditor: React.FC = () => {
                   <div className="bg-white rounded-2xl border border-neutral-200 p-5 space-y-4 shadow-sm">
                     <h4 className="font-bold text-sm text-neutral-900 flex items-center gap-2">
                       <CheckCircle2 className="w-4 h-4 text-emerald-600" />
-                      Các điểm đã thực hiện đúng và phù hợp quy chuẩn
+                      Các mục hệ thống chưa phát hiện dấu hiệu theo mẫu (không xác nhận tuân thủ)
                     </h4>
                     <div className="space-y-2.5">
                       {activeFile.auditResult.positivePoints.map((point, index) => (

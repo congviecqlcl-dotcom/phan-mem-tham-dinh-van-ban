@@ -19,7 +19,7 @@ export const ChatAssistant: React.FC = () => {
       sender: 'assistant',
       text: `Xin chào! Tôi là Trợ lý AI chuyên trách Thẩm định & Pháp lý An toàn thực phẩm.
 
-Tôi đã nắm vững toàn bộ **12 văn bản quy phạm pháp luật** mà bạn cung cấp:
+Tôi có thể hỗ trợ rà soát các nhóm văn bản dưới đây. Tuy nhiên, danh sách này không có nghĩa là tôi đã đọc đầy đủ bản gốc hoặc xác minh hiệu lực hiện hành của từng văn bản:
 - 📜 **Luật An toàn thực phẩm số 55/2010/QH12**
 - 📜 **Nghị định số 15/2018/NĐ-CP** (hướng dẫn thi hành Luật ATTP)
 - 📜 **Thông tư số 17/2024/TT-BNNPTNT** (sửa đổi TT 38 & TT 48 - hiệu lực 15/01/2025)
@@ -74,14 +74,23 @@ Bạn có thể đặt bất kỳ câu hỏi nào về thẩm quyền, biểu m�
 
         if (response.ok) {
           const data = await response.json();
-          replyText = data.reply;
+          const sourceNotice =
+            data.source === 'local_fallback'
+              ? '\n\n⚠️ LƯU Ý: Câu trả lời từ bộ quy tắc cục bộ, không phải tra cứu pháp luật trực tiếp. Hãy kiểm chứng với văn bản gốc hiện hành.'
+              : data.source === 'gemini'
+              ? '\n\n⚠️ LƯU Ý: Câu trả lời do AI tạo. Cần đối chiếu văn bản pháp luật gốc, hiệu lực và phạm vi áp dụng trước khi sử dụng.'
+              : '';
+          const apiNotice = data.notice ? '\n\n⚠️ ' + data.notice : '';
+          replyText = (data.reply || '') + sourceNotice + apiNotice;
         }
       } catch (netErr) {
         console.warn('Network chat error, using local legal engine:', netErr);
       }
 
       if (!replyText) {
-        replyText = getLocalChatResponse(query);
+        replyText =
+          getLocalChatResponse(query) +
+          '\n\n⚠️ LƯU Ý: Đây là câu trả lời dự phòng cục bộ do kết nối hoặc máy chủ không trả về kết quả. Chưa được xác minh với văn bản pháp luật gốc hiện hành.';
       }
 
       const botMessage: ChatMessage = {
@@ -188,7 +197,7 @@ Bạn có thể đặt bất kỳ câu hỏi nào về thẩm quyền, biểu m�
               </div>
               <div className="bg-neutral-50 border border-neutral-200 rounded-2xl rounded-tl-none p-4 text-xs text-neutral-500 flex items-center gap-2">
                 <div className="w-2 h-2 rounded-full bg-emerald-600 animate-ping" />
-                <span>Trợ lý đang tra cứu điều khoản pháp luật...</span>
+                <span>Trợ lý đang phân tích câu hỏi...</span>
               </div>
             </div>
           )}
