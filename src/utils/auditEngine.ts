@@ -31,13 +31,13 @@ export function runClientAuditEngine(content: string, docType?: DocumentType | s
     issues.push({
       id: 'err-thethuc-vv-qd',
       category: 'the_thuc',
-      severity: 'error',
-      title: "Trích yếu văn bản có tên loại sử dụng sai chữ viết tắt 'V/v'",
+      severity: 'warning',
+      title: "Cần kiểm tra cách trình bày trích yếu với cụm 'V/v'",
       currentContent: 'QUYẾT ĐỊNH\nV/v ... (hoặc TỜ TRÌNH\nV/v ...)',
       expectedContent: 'QUYẾT ĐỊNH\nVề việc ... (in thường, đứng, đậm, có đường kẻ ngang 1/3-1/2 phía dưới)',
       legalBasis: 'Điểm b Khoản 5 Mục II Phần I & Mẫu 1.2 Phụ lục III Nghị định số 30/2020/NĐ-CP',
       explanation:
-        "Văn bản có tên loại (như Quyết định, Nghị quyết, Tờ trình) không dùng cụm từ viết tắt 'V/v'. Chữ 'V/v' chỉ áp dụng duy nhất cho Công văn (tại ô số 5b).",
+        "Mẫu nhận diện dựa trên xuống dòng và từ khóa nên có thể khớp với phần trích dẫn hoặc văn bản ghép. Hãy kiểm tra đúng vị trí tên loại/trích yếu và đối chiếu mẫu áp dụng trước khi xác nhận sai thể thức.",
       location: 'Phần Tiêu đề và Trích yếu văn bản',
     });
   }
@@ -53,13 +53,13 @@ export function runClientAuditEngine(content: string, docType?: DocumentType | s
     issues.push({
       id: 'err-thethuc-viet-tat-chuc-vu',
       category: 'the_thuc',
-      severity: 'error',
-      title: 'Viết tắt tùy tiện chức vụ, chức danh lãnh đạo và phòng ban',
+      severity: 'warning',
+      title: 'Cần kiểm tra ngữ cảnh của chữ viết tắt chức vụ, chức danh hoặc phòng ban',
       currentContent: 'PGĐ Sở, CCT, Phó CCT, Phòng TCCB, Phòng QLCL...',
       expectedContent: 'Phó Giám đốc Sở, Chi cục trưởng, Phó Chi cục trưởng, Phòng Tổ chức cán bộ, Phòng Quản lý chất lượng...',
       legalBasis: 'Khoản 10 Mục II Phần I Phụ lục I Nghị định số 30/2020/NĐ-CP & Quy chuẩn văn thư nhà nước',
       explanation:
-        'Trong văn bản hành chính (đặc biệt là phần Nơi nhận và nội dung), nghiêm cấm viết tắt tùy tiện các chức vụ, chức danh lãnh đạo và tên phòng ban. Chỉ được phép viết tắt các từ ngữ theo quy chuẩn pháp luật như TM., KT., TL., TUQ., Q., UBND, HĐND.',
+        'Từ viết tắt có thể xuất hiện trong trích dẫn, bảng biểu, tên đơn vị nội bộ hoặc ngữ cảnh khác. Cần kiểm tra vị trí sử dụng, quy ước được phép và loại văn bản trước khi kết luận đây là lỗi thể thức.',
       location: 'Phần Nơi nhận hoặc nội dung văn bản',
     });
   }
