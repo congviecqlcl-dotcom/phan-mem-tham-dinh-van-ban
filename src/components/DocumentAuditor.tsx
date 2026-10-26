@@ -1,3 +1,4 @@
+import { authenticatedFetch } from '../utils/auth';
 import React, { useState, useRef, useEffect } from 'react';
 import {
   UploadCloud,
@@ -126,7 +127,7 @@ export const DocumentAuditor: React.FC = () => {
     if (!text || lowerName.endsWith('.pdf') || lowerName.endsWith('.doc') || lowerName.endsWith('.rtf')) {
       try {
         const base64Data = await fileToBase64(file);
-        const response = await fetch('/api/parse-document', {
+        const response = await authenticatedFetch('/api/parse-document', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
@@ -427,7 +428,7 @@ export const DocumentAuditor: React.FC = () => {
     try {
       let result: AuditResult | null = null;
       try {
-        const response = await fetch('/api/audit-document', {
+        const response = await authenticatedFetch('/api/audit-document', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
@@ -504,7 +505,7 @@ export const DocumentAuditor: React.FC = () => {
           try {
             let res: AuditResult | null = null;
             try {
-              const response = await fetch('/api/audit-document', {
+              const response = await authenticatedFetch('/api/audit-document', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
