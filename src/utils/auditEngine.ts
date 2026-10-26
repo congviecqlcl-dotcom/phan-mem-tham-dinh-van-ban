@@ -259,7 +259,7 @@ export function runClientAuditEngine(content: string, docType?: DocumentType | s
       expectedContent: 'Đối chiếu ảnh/toàn bộ nhãn, loại sản phẩm, nội dung bắt buộc và quy định hiện hành áp dụng cho sản phẩm cụ thể',
       legalBasis: 'Gợi ý căn cứ cần xác minh: Luật An toàn thực phẩm, Nghị định 15/2018/NĐ-CP và quy định ghi nhãn hiện hành',
       explanation:
-        'Không tìm thấy cụm từ trong văn bản trích xuất chưa chứng minh nhãn thực tế thiếu cảnh báo; nội dung có thể nằm trong hình ảnh, phần chưa trích xuất hoặc không thuộc trường hợp áp dụng. Cần kiểm tra nhãn đầy đủ và căn cứ hiện hành trước khi kết luận.'
+        'Không tìm thấy cụm từ trong văn bản trích xuất chưa chứng minh nhãn thực tế thiếu cảnh báo; nội dung có thể nằm trong hình ảnh, phần chưa trích xuất hoặc không thuộc trường hợp áp dụng. Cần kiểm tra nhãn đầy đủ và căn cứ hiện hành trước khi kết luận.',
       location: 'Nội dung bắt buộc ghi nhãn',
     });
   }
@@ -280,7 +280,7 @@ export function runClientAuditEngine(content: string, docType?: DocumentType | s
       expectedContent: 'Đọc đoạn văn đầy đủ để xác định chủ thể phát ngôn, phủ định, trích dẫn, cảnh báo hoặc nội dung đang bị phản bác',
       legalBasis: 'Cần đối chiếu quy định quảng cáo/ghi nhãn hiện hành và loại sản phẩm cụ thể',
       explanation:
-        'Từ khóa có thể xuất hiện trong trích dẫn, câu phủ định, cảnh báo hoặc nội dung phản bác. Chỉ riêng sự xuất hiện của cụm từ không đủ chứng minh có hành vi quảng cáo vi phạm; cần xem xét ngữ cảnh và tài liệu nguồn.'
+        'Từ khóa có thể xuất hiện trong trích dẫn, câu phủ định, cảnh báo hoặc nội dung phản bác. Chỉ riêng sự xuất hiện của cụm từ không đủ chứng minh có hành vi quảng cáo vi phạm; cần xem xét ngữ cảnh và tài liệu nguồn.',
       location: 'Phần Công dụng / Tác dụng',
     });
   }
