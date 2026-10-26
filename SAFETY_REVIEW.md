@@ -23,7 +23,7 @@ Phạm vi: rà soát tĩnh một phần mã trên nhánh thử nghiệm `safety-
 - Kết quả từ Gemini hiện cũng bị ghi đè trường `fixedDocument` bằng đúng nội dung đầu vào; nội dung AI viết lại chưa được đưa ra làm bản “đã sửa” trước khi có quy trình xem diff và người dùng duyệt.
 - Đã bỏ thông điệp dự phòng tuyên bố “tuân thủ đúng 100%” và thay bằng giới hạn của bộ quy tắc sàng lọc.
 - **Rủi ro bảo mật nghiêm trọng còn mở:** trong các route được kiểm tra, chưa thấy middleware xác thực/phân quyền cho `/api/parse-document`, `/api/audit-document`, `/api/batch-audit-documents` và `/api/chat`. Đây là phát hiện từ mã đã đọc, chưa xác minh lớp bảo vệ ngoài ứng dụng. Không triển khai công khai hoặc gửi hồ sơ nghiệp vụ thật qua các route này cho đến khi xác minh và xử lý xác thực, phân quyền, giới hạn tần suất, kích thước yêu cầu và kiểm soát chi phí.
-- Các route vẫn dùng giới hạn body 50 MB; chưa kiểm thử chống lạm dụng hoặc đo tài nguyên.
+- Cấu hình hiện tại trong `server.ts` dùng `express.json({ limit: "20mb" })` và `express.urlencoded({ limit: "20mb" })`; không còn đúng nếu mô tả là 50 MB. Chưa kiểm thử chống lạm dụng hoặc đo tài nguyên.
 
 ## Rủi ro còn tồn tại — chưa được xử lý xong
 
@@ -47,8 +47,8 @@ Phạm vi: rà soát tĩnh một phần mã trên nhánh thử nghiệm `safety-
 
 ## Trạng thái kiểm thử
 
-- Đã ghi thay đổi mã trên nhánh thử nghiệm, chưa nhập vào `main`.
-- Chưa chạy build, lint hoặc kiểm thử hồi quy trong môi trường thực thi.
+- Các thay đổi mã trên nhánh thử nghiệm đã được CI kiểm tra tại commit `f5146c391fee4c399ae98fd842dae622a038f96f`: kiểm tra TypeScript, unit tests và production build đều thành công. Đây không thay thế kiểm thử bảo mật, kiểm thử tải hoặc rà soát pháp lý.
+- Các thay đổi chưa nhập vào `main`.
 - Chưa xác minh toàn bộ căn cứ pháp luật.
 - Chưa xác minh đầy đủ xác thực, phân quyền, lưu trữ và cấu hình triển khai.
 - Chưa triển khai công khai.
@@ -177,3 +177,11 @@ Không nên thêm một token bí mật cố định vào mã trình duyệt đ�
 - Chưa tự ý thêm cơ chế xác thực vào nhánh vì cần xác định cơ chế đăng nhập và cách triển khai thực tế trước khi chọn giải pháp; thêm một cổng xác thực không tương thích có thể làm hỏng luồng sử dụng hiện tại. Giới hạn tần suất trong bộ nhớ tiến trình, nếu triển khai đơn lẻ, cũng không đủ làm biện pháp chống lạm dụng đáng tin cậy cho môi trường serverless.
 - Các điều kiện chặn vẫn giữ nguyên: chưa xác minh lớp bảo vệ nền tảng; chưa có xác thực/phân quyền được xác nhận ở cấp ứng dụng; chưa có giới hạn tần suất/kiểm soát ngân sách AI được xác nhận; chưa kiểm toán lưu trữ, log và quyền truy cập hồ sơ; các viện dẫn pháp luật viết cứng chưa được xác minh độc lập theo nguồn chính thức.
 - Trạng thái: PR vẫn là Draft, chưa merge vào `main`, chưa triển khai công khai. Không dùng hồ sơ nghiệp vụ thật cho đến khi các điều kiện chặn được xử lý và xác minh.
+
+
+## Ghi chú rà soát lần tiếp theo (26/10/2026)
+
+- Đã đối chiếu lại phần mô tả giới hạn đầu vào với `server.ts`; giới hạn body là 20 MB, Base64 là 15.000.000 ký tự, mỗi văn bản tối đa 250.000 ký tự, tối đa 5 văn bản/lượt batch và câu hỏi chat tối đa 10.000 ký tự.
+- Vẫn chưa xác minh được lớp xác thực/phân quyền ở nền tảng triển khai; không được suy luận từ việc chưa thấy middleware trong `server.ts` rằng toàn bộ hệ thống chắc chắn công khai hoặc chắc chắn được bảo vệ.
+- Các quy tắc pháp lý dùng từ khóa/regex vẫn cần được hạ xuống dạng dấu hiệu rà soát nếu chưa có nguồn chính thức và ngữ cảnh đủ để kết luận. Riêng quy tắc về hiệu lực văn bản và phân loại cơ sở theo A/B/C cần được kiểm chứng pháp lý trước khi dùng như kết luận.
+- Trạng thái an toàn vẫn là **chưa đủ điều kiện triển khai công khai** cho đến khi xác minh xác thực/phân quyền, giới hạn tần suất/chi phí, xử lý dữ liệu hồ sơ và căn cứ pháp lý.
