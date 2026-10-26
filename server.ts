@@ -560,7 +560,7 @@ ${content || ""}
 
 YÊU CẦU ĐÁNH GIÁ:
 1. Đánh giá tính chính xác về Thể thức & Kỹ thuật trình bày theo Nghị định 30/2020/NĐ-CP (Quốc hiệu, Tiêu ngữ, Tên cơ quan, Số & Ký hiệu, Trích yếu có bị lỗi 'V/v' không, đường kẻ ngang dưới trích yếu, căn cứ in nghiêng và dấu chấm phẩy, quyền hạn ký TM./KT./Q./TL./TUQ., họ tên đứng đậm, nơi nhận dấu chấm phẩy và dòng Lưu, TUYỆT ĐỐI KHÔNG VIẾT TẮT PGĐ, GĐ, PCT, CT, CCT, TP, TCCB, PTTT theo Phụ lục I, TUÂN THỦ quy tắc viết hoa Phụ lục II).
-2. Kiểm tra Căn cứ pháp lý & Hiệu lực (Thông tư 17/2024 có hiệu lực 15/01/2025 đã bỏ phân loại A/B/C sang Đạt/Không đạt, bãi bỏ GCN kiến thức ATTP chuyển chủ cơ sở tự xác nhận, thời hạn khắc phục 30 ngày, các văn bản hết hiệu lực như TT 51/2014, TT 45/2014, TT 32/2022...).
+2. Kiểm tra Căn cứ pháp lý & Hiệu lực: coi các số hiệu và chủ đề như TT 17/2024, phân loại A/B/C, giấy chứng nhận kiến thức ATTP, thời hạn khắc phục và các thông tư được nhắc đến là nội dung cần tra cứu/đối chiếu; không mặc định rằng văn bản đã bị bãi bỏ, được thay thế hoặc áp dụng cho hồ sơ này nếu chưa có nguồn chính thức, điều khoản liên quan, ngày hiệu lực và phạm vi áp dụng.
 3. Kiểm tra Chuyên môn ATTP, Thẩm quyền quản lý, Ghi nhãn hàng hóa (NĐ 111/2021), Quảng cáo (NĐ 181/2013).
 4. Kiểm tra Địa giới hành chính theo Nghị quyết 202/2025/QH15 & Nghị quyết 1676/NQ-UBTVQH15 (xã Vĩnh An, Tiên Lữ, Hy Cương, Lâm Thao... tỉnh Phú Thọ mới).
 5. Không tự viết lại toàn văn trong trường fixedDocument. Máy chủ sẽ giữ nguyên nội dung đầu vào cho đến khi có quy trình so sánh từng thay đổi và người dùng duyệt rõ ràng. Chỉ nêu từng dấu hiệu cần rà soát trong issues; không tuyên bố đã sửa đúng hoặc tuân thủ đầy đủ.
