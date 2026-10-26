@@ -6,9 +6,6 @@ export interface AuthenticatedRequest extends Request {
   authenticatedUser?: { id: string; roles: AppRole[] };
 }
 
-const SUPABASE_URL = process.env.SUPABASE_URL?.replace(/\/$/, "");
-const SUPABASE_ANON_KEY = process.env.SUPABASE_ANON_KEY;
-
 function authUnavailable(res: Response) {
   return res.status(503).json({
     error: "Dịch vụ xác thực chưa được cấu hình đầy đủ. Vui lòng liên hệ quản trị hệ thống.",
@@ -22,7 +19,9 @@ function authUnavailable(res: Response) {
  */
 export function requireAppRole(allowedRoles: AppRole[]) {
   return async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
-    if (!SUPABASE_URL || !SUPABASE_ANON_KEY) return authUnavailable(res);
+    const supabaseUrl = process.env.SUPABASE_URL?.replace(/\/$/, "");
+    const supabaseAnonKey = process.env.SUPABASE_ANON_KEY;
+    if (!supabaseUrl || !supabaseAnonKey) return authUnavailable(res);
 
     const authorization = req.header("authorization") || "";
     const match = authorization.match(/^Bearer\s+(.+)$/i);
@@ -32,8 +31,8 @@ export function requireAppRole(allowedRoles: AppRole[]) {
 
     try {
       const token = match[1];
-      const userResponse = await fetch(`${SUPABASE_URL}/auth/v1/user`, {
-        headers: { apikey: SUPABASE_ANON_KEY, Authorization: `Bearer ${token}` },
+      const userResponse = await fetch(`${supabaseUrl}/auth/v1/user`, {
+        headers: { apikey: supabaseAnonKey, Authorization: `Bearer ${token}` },
         signal: AbortSignal.timeout(5000),
       });
       if (!userResponse.ok) {
@@ -45,12 +44,12 @@ export function requireAppRole(allowedRoles: AppRole[]) {
         return res.status(401).json({ error: "Không xác định được tài khoản đăng nhập." });
       }
 
-      const headers = { apikey: SUPABASE_ANON_KEY, Authorization: `Bearer ${token}` };
+      const headers = { apikey: supabaseAnonKey, Authorization: `Bearer ${token}` };
       const [accountResponse, rolesResponse] = await Promise.all([
-        fetch(`${SUPABASE_URL}/rest/v1/app_users?user_id=eq.${encodeURIComponent(user.id)}&select=user_id,is_active&limit=1`, {
+        fetch(`${supabaseUrl}/rest/v1/app_users?user_id=eq.${encodeURIComponent(user.id)}&select=user_id,is_active&limit=1`, {
           headers, signal: AbortSignal.timeout(5000),
         }),
-        fetch(`${SUPABASE_URL}/rest/v1/user_roles?user_id=eq.${encodeURIComponent(user.id)}&select=role_code`, {
+        fetch(`${supabaseUrl}/rest/v1/user_roles?user_id=eq.${encodeURIComponent(user.id)}&select=role_code`, {
           headers, signal: AbortSignal.timeout(5000),
         }),
       ]);
