@@ -214,7 +214,7 @@ export function runClientAuditEngine(content: string, docType?: DocumentType | s
       expectedContent: 'Đối chiếu văn bản gốc, điều khoản hiệu lực, văn bản sửa đổi/thay thế và phạm vi áp dụng trên nguồn chính thức',
       legalBasis: 'Chưa xác minh tự động; cần đối chiếu cơ sở dữ liệu văn bản pháp luật chính thức',
       explanation:
-        'Việc khớp từ khóa/số hiệu chỉ là dấu hiệu để rà soát, không đủ chứng minh văn bản đã hết hiệu lực hoặc đã được thay thế. Công chức cần kiểm tra văn bản gốc và tình trạng hiệu lực tại thời điểm áp dụng.'
+        'Việc khớp từ khóa/số hiệu chỉ là dấu hiệu để rà soát, không đủ chứng minh văn bản đã hết hiệu lực hoặc đã được thay thế. Công chức cần kiểm tra văn bản gốc và tình trạng hiệu lực tại thời điểm áp dụng.',
       location: 'Phần Căn cứ ban hành',
     });
   }
@@ -236,7 +236,7 @@ export function runClientAuditEngine(content: string, docType?: DocumentType | s
       expectedContent: 'Đối chiếu văn bản chính thức, điều khoản sửa đổi/bãi bỏ, ngày hiệu lực và phạm vi áp dụng đối với loại cơ sở cụ thể',
       legalBasis: 'Chưa xác minh tự động; cần kiểm tra văn bản chính thức hiện hành',
       explanation:
-        'Từ khóa “xếp loại A/B/C” có thể xuất hiện trong trích dẫn, tài liệu lịch sử hoặc ngữ cảnh khác. Chỉ riêng sự xuất hiện của từ khóa không chứng minh nội dung trái quy định hiện hành; cần xác minh căn cứ và ngữ cảnh trước khi kết luận.'
+        'Từ khóa “xếp loại A/B/C” có thể xuất hiện trong trích dẫn, tài liệu lịch sử hoặc ngữ cảnh khác. Chỉ riêng sự xuất hiện của từ khóa không chứng minh nội dung trái quy định hiện hành; cần xác minh căn cứ và ngữ cảnh trước khi kết luận.',
       location: 'Phần Kết luận thẩm định / Nội dung thông báo',
     });
   }
