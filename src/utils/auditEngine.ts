@@ -197,7 +197,7 @@ export function runClientAuditEngine(content: string, docType?: DocumentType | s
     });
   }
 
-  // 10. Kiểm tra thông tư hết hiệu lực hoặc chưa cập nhật TT 17/2024
+  // 10. Dấu hiệu viện dẫn văn bản cần kiểm tra với nguồn chính thức; không tự kết luận hiệu lực
   if (
     lower.includes('thông tư số 51/2014') ||
     lower.includes('thông tư số 45/2014') ||
@@ -208,18 +208,18 @@ export function runClientAuditEngine(content: string, docType?: DocumentType | s
     issues.push({
       id: 'err-hieu-luc-van-ban',
       category: 'can_cu_phap_ly',
-      severity: 'error',
-      title: 'Viện dẫn văn bản đã hết hiệu lực thi hành',
-      currentContent: 'Thông tư 51/2014 / 45/2014 / 32/2022/TT-BNNPTNT',
-      expectedContent: 'Thông tư số 17/2024/TT-BNNPTNT hoặc Thông tư số 17/2018/TT-BNNPTNT',
-      legalBasis: 'Điều 12 TT 17/2018/TT-BNNPTNT & Điều 3 TT 17/2024/TT-BNNPTNT',
+      severity: 'warning',
+      title: 'Cần xác minh hiệu lực và phạm vi áp dụng của văn bản được viện dẫn',
+      currentContent: 'Phát hiện số hiệu văn bản thuộc danh sách cần rà soát',
+      expectedContent: 'Đối chiếu văn bản gốc, điều khoản hiệu lực, văn bản sửa đổi/thay thế và phạm vi áp dụng trên nguồn chính thức',
+      legalBasis: 'Chưa xác minh tự động; cần đối chiếu cơ sở dữ liệu văn bản pháp luật chính thức',
       explanation:
-        'Các văn bản trên đã bị bãi bỏ/thay thế bởi Thông tư số 17/2018/TT-BNNPTNT, Thông tư số 38/2018/TT-BNNPTNT và Thông tư số 17/2024/TT-BNNPTNT.',
+        'Việc khớp từ khóa/số hiệu chỉ là dấu hiệu để rà soát, không đủ chứng minh văn bản đã hết hiệu lực hoặc đã được thay thế. Công chức cần kiểm tra văn bản gốc và tình trạng hiệu lực tại thời điểm áp dụng.'
       location: 'Phần Căn cứ ban hành',
     });
   }
 
-  // 11. Bãi bỏ xếp loại A, B, C theo TT 17/2024
+  // 11. Dấu hiệu đề cập phân loại A/B/C cần đối chiếu với văn bản hiện hành
   if (
     lower.includes('xếp loại a') ||
     lower.includes('xếp loại b') ||
@@ -230,13 +230,13 @@ export function runClientAuditEngine(content: string, docType?: DocumentType | s
     issues.push({
       id: 'err-xeploai-tt17',
       category: 'chuyen_mon_attp',
-      severity: 'error',
-      title: 'Sử dụng quy định xếp loại A, B, C đã bị bãi bỏ theo Thông tư 17/2024/TT-BNNPTNT',
-      currentContent: 'Xếp loại A / B / C cơ sở sản xuất kinh doanh ATTP',
-      expectedContent: 'Chỉ đánh giá 02 mức: "Đạt" hoặc "Không đạt"',
-      legalBasis: 'Khoản 2 & Khoản 5 Điều 1 Thông tư số 17/2024/TT-BNNPTNT (Hiệu lực từ 15/01/2025)',
+      severity: 'warning',
+      title: 'Cần xác minh căn cứ hiện hành về cách phân loại cơ sở',
+      currentContent: 'Phát hiện nội dung có nhắc đến xếp loại A/B/C',
+      expectedContent: 'Đối chiếu văn bản chính thức, điều khoản sửa đổi/bãi bỏ, ngày hiệu lực và phạm vi áp dụng đối với loại cơ sở cụ thể',
+      legalBasis: 'Chưa xác minh tự động; cần kiểm tra văn bản chính thức hiện hành',
       explanation:
-        'Thông tư 17/2024 đã bãi bỏ hoàn toàn việc xếp loại A, B, C của Thông tư 38/2018, chuyển sang cơ chế đánh giá 2 mức Đạt / Không đạt và rút ngắn thời hạn khắc phục lỗi tối đa 30 ngày.',
+        'Từ khóa “xếp loại A/B/C” có thể xuất hiện trong trích dẫn, tài liệu lịch sử hoặc ngữ cảnh khác. Chỉ riêng sự xuất hiện của từ khóa không chứng minh nội dung trái quy định hiện hành; cần xác minh căn cứ và ngữ cảnh trước khi kết luận.'
       location: 'Phần Kết luận thẩm định / Nội dung thông báo',
     });
   }
