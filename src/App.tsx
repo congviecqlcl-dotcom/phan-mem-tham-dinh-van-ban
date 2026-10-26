@@ -17,7 +17,10 @@ export default function App() {
     validateCurrentSession().then((valid) => {
       if (mounted) { setAuthenticated(valid); setCheckingSession(false); }
     });
-    return () => { mounted = false; };
+    if (checkingSession) return <div className="min-h-screen flex items-center justify-center bg-neutral-100 text-sm text-neutral-600">Đang kiểm tra phiên đăng nhập...</div>;
+  if (!authenticated || !getAccessToken()) return <LoginScreen onSignedIn={() => setAuthenticated(true)} />;
+
+  return () => { mounted = false; };
   }, []);
 
   const handleSignOut = () => { signOut(); setAuthenticated(false); setActiveTab('auditor'); };
