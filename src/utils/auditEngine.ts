@@ -241,7 +241,7 @@ export function runClientAuditEngine(content: string, docType?: DocumentType | s
     });
   }
 
-  // 12. Nhãn thực phẩm chức năng thiếu cảnh báo bắt buộc
+  // 12. Dấu hiệu nhãn/TPCN cần kiểm tra trực tiếp trên nhãn và quy định hiện hành
   if (
     (lower.includes('thực phẩm bảo vệ sức khỏe') ||
       lower.includes('glucosamine') ||
@@ -253,20 +253,18 @@ export function runClientAuditEngine(content: string, docType?: DocumentType | s
     issues.push({
       id: 'err-nhan-canh-bao-tpcn',
       category: 'nhan_quang_cao',
-      severity: 'error',
-      title: 'Nhãn thực phẩm bảo vệ sức khỏe thiếu dòng cảnh báo bắt buộc theo quy định',
-      currentContent: 'Không có dòng chữ khuyến cáo theo luật',
-      expectedContent:
-        'Cụm từ: "Thực phẩm bảo vệ sức khỏe" và dòng khuyến cáo: "Thực phẩm này không phải là thuốc và không có tác dụng thay thế thuốc chữa bệnh"',
-      legalBasis:
-        'Khoản 2 Điều 44 Luật ATTP, Điểm a Khoản 3 Điều 18 NĐ 15/2018/NĐ-CP & Mục 3 Phụ lục I NĐ 111/2021/NĐ-CP',
+      severity: 'warning',
+      title: 'Cần kiểm tra trực tiếp nhãn và yêu cầu ghi nhãn áp dụng',
+      currentContent: 'Bộ quy tắc không tìm thấy cụm từ cảnh báo trong phần văn bản đã phân tích',
+      expectedContent: 'Đối chiếu ảnh/toàn bộ nhãn, loại sản phẩm, nội dung bắt buộc và quy định hiện hành áp dụng cho sản phẩm cụ thể',
+      legalBasis: 'Gợi ý căn cứ cần xác minh: Luật An toàn thực phẩm, Nghị định 15/2018/NĐ-CP và quy định ghi nhãn hiện hành',
       explanation:
-        'Mọi nhãn và tài liệu quảng cáo thực phẩm bảo vệ sức khỏe bắt buộc phải có dòng chữ khuyến cáo rõ ràng, chiều cao chữ tối thiểu 1.2mm, tương phản màu nền.',
+        'Không tìm thấy cụm từ trong văn bản trích xuất chưa chứng minh nhãn thực tế thiếu cảnh báo; nội dung có thể nằm trong hình ảnh, phần chưa trích xuất hoặc không thuộc trường hợp áp dụng. Cần kiểm tra nhãn đầy đủ và căn cứ hiện hành trước khi kết luận.'
       location: 'Nội dung bắt buộc ghi nhãn',
     });
   }
 
-  // 13. Quảng cáo TPCN gây hiểu nhầm là thuốc
+  // 13. Dấu hiệu ngôn từ quảng cáo cần xem xét trong ngữ cảnh
   if (
     lower.includes('trị dứt điểm') ||
     lower.includes('chữa khỏi hoàn toàn') ||
@@ -276,14 +274,13 @@ export function runClientAuditEngine(content: string, docType?: DocumentType | s
     issues.push({
       id: 'err-quang-cao-tri-benh',
       category: 'nhan_quang_cao',
-      severity: 'error',
-      title: 'Nội dung quảng cáo / công dụng gây hiểu nhầm thực phẩm là thuốc chữa bệnh',
-      currentContent: 'Trị dứt điểm, đặc trị, thay thế thuốc chữa bệnh...',
-      expectedContent: 'Hỗ trợ giảm triệu chứng, hỗ trợ tăng cường sức đề kháng...',
-      legalBasis:
-        'Khoản 4 Điều 5 Nghị định số 181/2013/NĐ-CP & Khoản 11 Điều 5 Luật ATTP số 55/2010/QH12',
+      severity: 'warning',
+      title: 'Cần xem xét ngữ cảnh của cụm từ quảng cáo có nguy cơ gây hiểu nhầm',
+      currentContent: 'Phát hiện cụm từ cần xem xét trong nội dung',
+      expectedContent: 'Đọc đoạn văn đầy đủ để xác định chủ thể phát ngôn, phủ định, trích dẫn, cảnh báo hoặc nội dung đang bị phản bác',
+      legalBasis: 'Cần đối chiếu quy định quảng cáo/ghi nhãn hiện hành và loại sản phẩm cụ thể',
       explanation:
-        'Nghiêm cấm quảng cáo, ghi nhãn thực phẩm gây hiểu nhầm là thuốc chữa bệnh hoặc có tác dụng điều trị bệnh dứt điểm.',
+        'Từ khóa có thể xuất hiện trong trích dẫn, câu phủ định, cảnh báo hoặc nội dung phản bác. Chỉ riêng sự xuất hiện của cụm từ không đủ chứng minh có hành vi quảng cáo vi phạm; cần xem xét ngữ cảnh và tài liệu nguồn.'
       location: 'Phần Công dụng / Tác dụng',
     });
   }
