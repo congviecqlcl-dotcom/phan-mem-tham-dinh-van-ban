@@ -61,7 +61,7 @@ export async function requestPasswordReset(email: string): Promise<void> {
   const { url, anonKey } = requireAuthConfig();
   const redirectTo = window.location.origin;
   const { verifier, challenge } = await createPkcePair();
-  sessionStorage.setItem(PKCE_VERIFIER_KEY, verifier);
+  localStorage.setItem(PKCE_VERIFIER_KEY, verifier);
   const response = await fetch(`${url}/auth/v1/recover?redirect_to=${encodeURIComponent(redirectTo)}`, {
     method: "POST",
     headers: { "Content-Type": "application/json", apikey: anonKey },
@@ -88,7 +88,7 @@ export async function resolveRecoveryAccessToken(): Promise<string | null> {
     const code = url.searchParams.get("code");
     if (!code) return null;
 
-    const verifier = sessionStorage.getItem(PKCE_VERIFIER_KEY);
+    const verifier = localStorage.getItem(PKCE_VERIFIER_KEY);
     if (!verifier) {
       throw new Error("Không tìm thấy thông tin xác minh của liên kết đặt lại mật khẩu. Hãy yêu cầu gửi liên kết mới trên cùng trình duyệt.");
     }
@@ -101,7 +101,7 @@ export async function resolveRecoveryAccessToken(): Promise<string | null> {
     });
     const data = await response.json().catch(() => ({}));
     if (!response.ok || typeof data.access_token !== "string") {
-      sessionStorage.removeItem(PKCE_VERIFIER_KEY);
+      localStorage.removeItem(PKCE_VERIFIER_KEY);
       throw new Error("Liên kết đặt lại mật khẩu không hợp lệ hoặc đã hết hạn. Hãy yêu cầu gửi liên kết mới.");
     }
 
