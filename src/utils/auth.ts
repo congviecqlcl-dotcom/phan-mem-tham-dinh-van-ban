@@ -42,13 +42,30 @@ export async function signInWithPassword(email: string, password: string): Promi
   sessionStorage.setItem(SESSION_KEY, JSON.stringify(data as AuthSession));
 }
 
+const PKCE_VERIFIER_KEY = "docuguard.auth.pkce.verifier";
+
+function toBase64Url(bytes: Uint8Array): string {
+  let binary = "";
+  bytes.forEach((byte) => { binary += String.fromCharCode(byte); });
+  return btoa(binary).replace(/\\+/g, "-").replace(/\\//g, "_").replace(/=+$/, "");
+}
+
+async function createPkcePair(): Promise<{ verifier: string; challenge: string }> {
+  const random = crypto.getRandomValues(new Uint8Array(32));
+  const verifier = toBase64Url(random);
+  const digest = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(verifier));
+  return { verifier, challenge: toBase64Url(new Uint8Array(digest)) };
+}
+
 export async function requestPasswordReset(email: string): Promise<void> {
   const { url, anonKey } = requireAuthConfig();
   const redirectTo = window.location.origin;
+  const { verifier, challenge } = await createPkcePair();
+  sessionStorage.setItem(PKCE_VERIFIER_KEY, verifier);
   const response = await fetch(`${url}/auth/v1/recover?redirect_to=${encodeURIComponent(redirectTo)}`, {
     method: "POST",
     headers: { "Content-Type": "application/json", apikey: anonKey },
-    body: JSON.stringify({ email }),
+    body: JSON.stringify({ email, code_challenge: challenge, code_challenge_method: "s256" }),
   });
   if (!response.ok) {
     const data = await response.json().catch(() => ({}));
@@ -60,13 +77,41 @@ export async function requestPasswordReset(email: string): Promise<void> {
   }
 }
 
-export function getRecoveryAccessToken(): string | null {
+export async function resolveRecoveryAccessToken(): Promise<string | null> {
   try {
     const hash = new URLSearchParams(window.location.hash.replace(/^#/, ""));
-    if (hash.get("type") !== "recovery") return null;
-    return hash.get("access_token");
-  } catch {
-    return null;
+    if (hash.get("type") === "recovery" && hash.get("access_token")) {
+      return hash.get("access_token");
+    }
+
+    const url = new URL(window.location.href);
+    const code = url.searchParams.get("code");
+    if (!code) return null;
+
+    const verifier = sessionStorage.getItem(PKCE_VERIFIER_KEY);
+    if (!verifier) {
+      throw new Error("Không tìm thấy thông tin xác minh của liên kết đặt lại mật khẩu. Hãy yêu cầu gửi liên kết mới trên cùng trình duyệt.");
+    }
+
+    const { url: supabaseUrl, anonKey } = requireAuthConfig();
+    const response = await fetch(`${supabaseUrl}/auth/v1/token?grant_type=pkce`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json", apikey: anonKey },
+      body: JSON.stringify({ auth_code: code, code_verifier: verifier }),
+    });
+    const data = await response.json().catch(() => ({}));
+    if (!response.ok || typeof data.access_token !== "string") {
+      sessionStorage.removeItem(PKCE_VERIFIER_KEY);
+      throw new Error("Liên kết đặt lại mật khẩu không hợp lệ hoặc đã hết hạn. Hãy yêu cầu gửi liên kết mới.");
+    }
+
+    sessionStorage.setItem(SESSION_KEY, JSON.stringify(data as AuthSession));
+    sessionStorage.removeItem(PKCE_VERIFIER_KEY);
+    url.searchParams.delete("code");
+    window.history.replaceState(null, document.title, url.pathname + url.search + url.hash);
+    return data.access_token;
+  } catch (error) {
+    throw error;
   }
 }
 
