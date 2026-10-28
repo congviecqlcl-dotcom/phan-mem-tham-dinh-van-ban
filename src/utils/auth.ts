@@ -47,7 +47,7 @@ const PKCE_VERIFIER_KEY = "docuguard.auth.pkce.verifier";
 function toBase64Url(bytes: Uint8Array): string {
   let binary = "";
   bytes.forEach((byte) => { binary += String.fromCharCode(byte); });
-  return btoa(binary).replace(/\\+/g, "-").replace(/\\//g, "_").replace(/=+$/, "");
+  return btoa(binary).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
 }
 
 async function createPkcePair(): Promise<{ verifier: string; challenge: string }> {
