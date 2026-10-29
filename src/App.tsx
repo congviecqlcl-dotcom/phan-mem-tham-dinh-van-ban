@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import { Navbar, ActiveTab } from './components/Navbar';
 import { DocumentAuditor } from './components/DocumentAuditor';
 import { ChatAssistant } from './components/ChatAssistant';
@@ -23,6 +23,8 @@ export default function App() {
     return () => { mounted = false; };
   }, []);
 
+  const handleSignedIn = useCallback(() => setAuthenticated(true), []);
+
   const handleSignOut = () => {
     signOut();
     setAuthenticated(false);
@@ -33,7 +35,7 @@ export default function App() {
     return <div className="min-h-screen flex items-center justify-center bg-neutral-100 text-sm text-neutral-600">Đang kiểm tra phiên đăng nhập...</div>;
   }
   if (!authenticated || !getAccessToken()) {
-    return <LoginScreen onSignedIn={() => setAuthenticated(true)} />;
+    return <LoginScreen onSignedIn={handleSignedIn} />;
   }
 
   return (
