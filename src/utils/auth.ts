@@ -105,11 +105,22 @@ export type AuthCallbackResult = { kind: "login" | "recovery"; token: string };
 
 export async function resolveAuthCallback(): Promise<AuthCallbackResult | null> {
   const hash = new URLSearchParams(window.location.hash.replace(/^#/, ""));
-  if (hash.get("type") === "recovery" && hash.get("access_token")) {
-    return { kind: "recovery", token: hash.get("access_token")! };
+  const url = new URL(window.location.href);
+
+  // Supabase may return recovery credentials in the URL fragment (implicit flow)
+  // or in the query string depending on the project's Auth configuration.
+  const recoveryType = hash.get("type") === "recovery" || url.searchParams.get("type") === "recovery";
+  const recoveryToken = hash.get("access_token") || url.searchParams.get("access_token");
+  if (recoveryType && recoveryToken) {
+    return { kind: "recovery", token: recoveryToken };
   }
 
-  const url = new URL(window.location.href);
+  // Surface callback errors instead of silently falling back to the login form.
+  const callbackError = url.searchParams.get("error_description") || url.searchParams.get("error");
+  if (callbackError) {
+    throw new Error("Liên kết khôi phục không hoàn tất hoặc đã hết hạn. Hãy yêu cầu quản trị viên gửi lại sau khi kiểm tra cấu hình chuyển hướng.");
+  }
+
   const code = url.searchParams.get("code");
   if (!code) return null;
 
