@@ -109,8 +109,31 @@ export async function resolveAuthCallback(): Promise<AuthCallbackResult | null> 
 
   // Supabase may return recovery credentials in the URL fragment (implicit flow)
   // or in the query string depending on the project's Auth configuration.
-  const recoveryType = hash.get("type") === "recovery" || url.searchParams.get("type") === "recovery";
+  const callbackType = hash.get("type") || url.searchParams.get("type");
+  const recoveryType = callbackType === "recovery";
   const recoveryToken = hash.get("access_token") || url.searchParams.get("access_token");
+  const tokenHash = url.searchParams.get("token_hash");
+
+  // Support Supabase recovery links that carry a token hash instead of a PKCE code.
+  // This is useful for recovery emails initiated from the Supabase dashboard.
+  if (recoveryType && tokenHash) {
+    const { url: supabaseUrl, anonKey } = requireAuthConfig();
+    const response = await fetch(`${supabaseUrl}/auth/v1/verify`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json", apikey: anonKey },
+      body: JSON.stringify({ token_hash: tokenHash, type: "recovery" }),
+    });
+    const data = await response.json().catch(() => ({}));
+    if (!response.ok || typeof data.access_token !== "string") {
+      throw new Error("Liên kết đặt lại mật khẩu không hợp lệ hoặc đã hết hạn. Hãy yêu cầu quản trị viên gửi lại liên kết.");
+    }
+    sessionStorage.setItem(SESSION_KEY, JSON.stringify(data as AuthSession));
+    url.searchParams.delete("token_hash");
+    url.searchParams.delete("type");
+    window.history.replaceState(null, document.title, url.pathname + url.search + url.hash);
+    return { kind: "recovery", token: data.access_token };
+  }
+
   if (recoveryType && recoveryToken) {
     return { kind: "recovery", token: recoveryToken };
   }
