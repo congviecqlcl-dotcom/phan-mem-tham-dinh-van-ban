@@ -27,22 +27,38 @@ export function getAuthConfig() {
   return { url: supabaseUrl, anonKey: supabaseAnonKey };
 }
 
-export async function signInWithPassword(email: string, password: string): Promise<void> {
+const PKCE_VERIFIER_KEY = "docuguard.auth.pkce.verifier";
+const PKCE_FLOW_KEY = "docuguard.auth.pkce.flow";
+
+export async function requestEmailMagicLink(email: string): Promise<void> {
   const { url, anonKey } = requireAuthConfig();
-  const response = await fetch(`${url}/auth/v1/token?grant_type=password`, {
+  const redirectTo = window.location.origin;
+  const { verifier, challenge } = await createPkcePair();
+  localStorage.setItem(PKCE_VERIFIER_KEY, verifier);
+  localStorage.setItem(PKCE_FLOW_KEY, "login");
+
+  const response = await fetch(`${url}/auth/v1/otp?redirect_to=${encodeURIComponent(redirectTo)}`, {
     method: "POST",
     headers: { "Content-Type": "application/json", apikey: anonKey },
-    body: JSON.stringify({ email, password }),
+    body: JSON.stringify({
+      email,
+      create_user: false,
+      code_challenge: challenge,
+      code_challenge_method: "s256",
+    }),
   });
-  const data = await response.json().catch(() => ({}));
-  if (!response.ok || typeof data.access_token !== "string") {
-    // Keep the message generic so the UI does not disclose account existence.
-    throw new Error("Đăng nhập không thành công. Hãy kiểm tra email, mật khẩu hoặc dùng chức năng quên mật khẩu.");
-  }
-  sessionStorage.setItem(SESSION_KEY, JSON.stringify(data as AuthSession));
-}
 
-const PKCE_VERIFIER_KEY = "docuguard.auth.pkce.verifier";
+  if (!response.ok) {
+    localStorage.removeItem(PKCE_VERIFIER_KEY);
+    localStorage.removeItem(PKCE_FLOW_KEY);
+    const data = await response.json().catch(() => ({}));
+    const detail = typeof data.message === "string" ? data.message : typeof data.msg === "string" ? data.msg : "";
+    if (detail.toLowerCase().includes("redirect") || detail.toLowerCase().includes("allow list")) {
+      throw new Error("Địa chỉ Preview chưa được cho phép nhận liên kết đăng nhập. Quản trị viên cần kiểm tra URL Configuration trong Supabase Auth.");
+    }
+    throw new Error("Chưa gửi được liên kết đăng nhập. Hãy kiểm tra email hoặc thử lại sau; chỉ tài khoản đã được quản trị viên tạo mới đăng nhập được.");
+  }
+}
 
 function toBase64Url(bytes: Uint8Array): string {
   let binary = "";
@@ -62,6 +78,7 @@ export async function requestPasswordReset(email: string): Promise<void> {
   const redirectTo = window.location.origin;
   const { verifier, challenge } = await createPkcePair();
   localStorage.setItem(PKCE_VERIFIER_KEY, verifier);
+  localStorage.setItem(PKCE_FLOW_KEY, "recovery");
   const response = await fetch(`${url}/auth/v1/recover?redirect_to=${encodeURIComponent(redirectTo)}`, {
     method: "POST",
     headers: { "Content-Type": "application/json", apikey: anonKey },
@@ -77,42 +94,44 @@ export async function requestPasswordReset(email: string): Promise<void> {
   }
 }
 
-export async function resolveRecoveryAccessToken(): Promise<string | null> {
-  try {
-    const hash = new URLSearchParams(window.location.hash.replace(/^#/, ""));
-    if (hash.get("type") === "recovery" && hash.get("access_token")) {
-      return hash.get("access_token");
-    }
+export type AuthCallbackResult = { kind: "login" | "recovery"; token: string };
 
-    const url = new URL(window.location.href);
-    const code = url.searchParams.get("code");
-    if (!code) return null;
-
-    const verifier = localStorage.getItem(PKCE_VERIFIER_KEY);
-    if (!verifier) {
-      throw new Error("Không tìm thấy thông tin xác minh của liên kết đặt lại mật khẩu. Hãy yêu cầu gửi liên kết mới trên cùng trình duyệt.");
-    }
-
-    const { url: supabaseUrl, anonKey } = requireAuthConfig();
-    const response = await fetch(`${supabaseUrl}/auth/v1/token?grant_type=pkce`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json", apikey: anonKey },
-      body: JSON.stringify({ auth_code: code, code_verifier: verifier }),
-    });
-    const data = await response.json().catch(() => ({}));
-    if (!response.ok || typeof data.access_token !== "string") {
-      localStorage.removeItem(PKCE_VERIFIER_KEY);
-      throw new Error("Liên kết đặt lại mật khẩu không hợp lệ hoặc đã hết hạn. Hãy yêu cầu gửi liên kết mới.");
-    }
-
-    sessionStorage.setItem(SESSION_KEY, JSON.stringify(data as AuthSession));
-    sessionStorage.removeItem(PKCE_VERIFIER_KEY);
-    url.searchParams.delete("code");
-    window.history.replaceState(null, document.title, url.pathname + url.search + url.hash);
-    return data.access_token;
-  } catch (error) {
-    throw error;
+export async function resolveAuthCallback(): Promise<AuthCallbackResult | null> {
+  const hash = new URLSearchParams(window.location.hash.replace(/^#/, ""));
+  if (hash.get("type") === "recovery" && hash.get("access_token")) {
+    return { kind: "recovery", token: hash.get("access_token")! };
   }
+
+  const url = new URL(window.location.href);
+  const code = url.searchParams.get("code");
+  if (!code) return null;
+
+  const verifier = localStorage.getItem(PKCE_VERIFIER_KEY);
+  if (!verifier) {
+    throw new Error("Không tìm thấy thông tin xác minh của liên kết email. Hãy yêu cầu gửi liên kết mới và mở trên cùng trình duyệt.");
+  }
+
+  const flow = localStorage.getItem(PKCE_FLOW_KEY) || "recovery";
+  const { url: supabaseUrl, anonKey } = requireAuthConfig();
+  const response = await fetch(`${supabaseUrl}/auth/v1/token?grant_type=pkce`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json", apikey: anonKey },
+    body: JSON.stringify({ auth_code: code, code_verifier: verifier }),
+  });
+  const data = await response.json().catch(() => ({}));
+  if (!response.ok || typeof data.access_token !== "string") {
+    localStorage.removeItem(PKCE_VERIFIER_KEY);
+    localStorage.removeItem(PKCE_FLOW_KEY);
+    throw new Error("Liên kết email không hợp lệ hoặc đã hết hạn. Hãy yêu cầu gửi liên kết mới.");
+  }
+
+  sessionStorage.setItem(SESSION_KEY, JSON.stringify(data as AuthSession));
+  localStorage.removeItem(PKCE_VERIFIER_KEY);
+  localStorage.removeItem(PKCE_FLOW_KEY);
+  url.searchParams.delete("code");
+  window.history.replaceState(null, document.title, url.pathname + url.search + url.hash);
+
+  return { kind: flow === "login" ? "login" : "recovery", token: data.access_token };
 }
 
 export async function updatePasswordWithRecoveryToken(token: string, password: string): Promise<void> {
@@ -141,15 +160,43 @@ export async function validateCurrentSession(): Promise<boolean> {
   const token = getAccessToken();
   if (!token || !supabaseUrl || !supabaseAnonKey) return false;
   try {
-    const response = await fetch(`${supabaseUrl}/auth/v1/user`, {
-      headers: { apikey: supabaseAnonKey, Authorization: `Bearer ${token}` },
-    });
-    if (response.ok) return true;
+    const headers = { apikey: supabaseAnonKey, Authorization: `Bearer ${token}` };
+    const userResponse = await fetch(`${supabaseUrl}/auth/v1/user`, { headers });
+    if (!userResponse.ok) {
+      signOut();
+      return false;
+    }
+
+    const user = await userResponse.json() as { id?: unknown };
+    if (typeof user.id !== "string" || !/^[0-9a-f]{8}-[0-9a-f-]{27}$/i.test(user.id)) {
+      signOut();
+      return false;
+    }
+
+    const [accountResponse, rolesResponse] = await Promise.all([
+      fetch(`${supabaseUrl}/rest/v1/app_users?user_id=eq.${encodeURIComponent(user.id)}&select=user_id,is_active&limit=1`, { headers }),
+      fetch(`${supabaseUrl}/rest/v1/user_roles?user_id=eq.${encodeURIComponent(user.id)}&select=role_code`, { headers }),
+    ]);
+    if (!accountResponse.ok || !rolesResponse.ok) {
+      signOut();
+      return false;
+    }
+
+    const accounts = await accountResponse.json() as Array<{ user_id: string; is_active: boolean }>;
+    const roleRows = await rolesResponse.json() as Array<{ role_code: string }>;
+    const hasValidRole = roleRows.some((row) =>
+      row.role_code === "CONG_CHUC" || row.role_code === "LANH_DAO" || row.role_code === "QUAN_TRI",
+    );
+    if (accounts.length !== 1 || accounts[0].is_active !== true || !hasValidRole) {
+      signOut();
+      return false;
+    }
+    return true;
   } catch {
     // A failed validation must not grant access to protected UI.
+    signOut();
+    return false;
   }
-  signOut();
-  return false;
 }
 
 export function signOut(): void {
