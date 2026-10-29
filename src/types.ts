@@ -33,8 +33,6 @@ export interface AuditIssue {
 
 export interface CategoryScore {
   name: string;
-  score: number;
-  maxScore: number;
   totalIssues: number;
   severityBreakdown: {
     error: number;
@@ -44,8 +42,10 @@ export interface CategoryScore {
 }
 
 export interface AuditResult {
-  overallScore: number; // 0 - 100
-  status: 'DAT' | 'CAN_SUA_DOI' | 'KHONG_DAT';
+  overallScore: number; // Legacy compatibility field; not a compliance score (currently 0)
+  source?: 'gemini' | 'local_rule' | 'client_rule';
+  sourceNotice?: string;
+  status: 'CAN_XAC_MINH';
   documentTypeDetected: string;
   summary: string;
   positivePoints: string[];
