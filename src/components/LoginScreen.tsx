@@ -17,10 +17,15 @@ export const LoginScreen: React.FC<Props> = ({ onSignedIn }) => {
   const [error, setError] = useState("");
   const [notice, setNotice] = useState("");
   const [recoveryToken, setRecoveryToken] = useState<string | null>(null);
-  const [resolvingCallback, setResolvingCallback] = useState(
-    () => new URLSearchParams(window.location.search).has("code") ||
-      new URLSearchParams(window.location.hash.replace(/^#/, "")).get("type") === "recovery",
-  );
+  const [resolvingCallback, setResolvingCallback] = useState(() => {
+    const query = new URLSearchParams(window.location.search);
+    const hash = new URLSearchParams(window.location.hash.replace(/^#/, ""));
+    return query.has("code") ||
+      query.get("type") === "recovery" ||
+      query.has("access_token") ||
+      hash.get("type") === "recovery" ||
+      hash.has("access_token");
+  });
 
   useEffect(() => {
     let active = true;
