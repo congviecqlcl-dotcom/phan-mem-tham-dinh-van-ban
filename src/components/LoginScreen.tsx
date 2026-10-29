@@ -3,6 +3,7 @@ import { Mail, LoaderCircle } from "lucide-react";
 import {
   resolveAuthCallback,
   requestEmailMagicLink,
+  requestPasswordReset,
   updatePasswordWithRecoveryToken,
   validateCurrentSession,
 } from "../utils/auth";
@@ -17,6 +18,7 @@ export const LoginScreen: React.FC<Props> = ({ onSignedIn }) => {
   const [error, setError] = useState("");
   const [notice, setNotice] = useState("");
   const [recoveryToken, setRecoveryToken] = useState<string | null>(null);
+  const [requestMode, setRequestMode] = useState<"login" | "recovery">("login");
   const [resolvingCallback, setResolvingCallback] = useState(() => {
     const query = new URLSearchParams(window.location.search);
     const hash = new URLSearchParams(window.location.hash.replace(/^#/, ""));
@@ -70,6 +72,9 @@ export const LoginScreen: React.FC<Props> = ({ onSignedIn }) => {
         setPassword("");
         setConfirmPassword("");
         setNotice("Đã cập nhật mật khẩu. Đăng nhập thông thường vẫn thực hiện bằng liên kết gửi qua email.");
+      } else if (requestMode === "recovery") {
+        await requestPasswordReset(email.trim());
+        setNotice("Nếu email thuộc tài khoản đã được quản trị viên cấp, liên kết đặt lại mật khẩu sẽ được gửi đến hộp thư. Hãy mở liên kết bằng chính trình duyệt này và kiểm tra cả thư rác.");
       } else {
         await requestEmailMagicLink(email.trim());
         setNotice("Nếu email thuộc tài khoản đã được quản trị viên cấp, liên kết đăng nhập sẽ được gửi đến hộp thư. Hãy kiểm tra cả thư rác.");
@@ -153,7 +158,18 @@ export const LoginScreen: React.FC<Props> = ({ onSignedIn }) => {
             className="flex w-full items-center justify-center gap-2 rounded-xl bg-emerald-700 px-4 py-2.5 text-sm font-semibold text-white hover:bg-emerald-800 disabled:opacity-60"
           >
             {busy && <LoaderCircle className="h-4 w-4 animate-spin" />}
-            {busy ? "Đang xử lý..." : recoveryToken ? "Cập nhật mật khẩu" : "Gửi liên kết đăng nhập"}
+            {busy ? "Đang xử lý..." : recoveryToken ? "Cập nhật mật khẩu" : requestMode === "recovery" ? "Gửi liên kết đặt lại mật khẩu" : "Gửi liên kết đăng nhập"}
+          </button>
+        )}
+
+        {!resolvingCallback && !recoveryToken && (
+          <button
+            type="button"
+            disabled={busy}
+            onClick={() => { setRequestMode((mode) => mode === "login" ? "recovery" : "login"); setError(""); setNotice(""); }}
+            className="w-full text-sm font-medium text-emerald-800 underline underline-offset-2 disabled:opacity-60"
+          >
+            {requestMode === "recovery" ? "Quay lại đăng nhập bằng liên kết email" : "Quên mật khẩu? Đặt lại mật khẩu"}
           </button>
         )}
       </form>
