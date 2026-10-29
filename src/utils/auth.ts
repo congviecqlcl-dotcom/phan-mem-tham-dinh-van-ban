@@ -53,10 +53,17 @@ export async function requestEmailMagicLink(email: string): Promise<void> {
     localStorage.removeItem(PKCE_FLOW_KEY);
     const data = await response.json().catch(() => ({}));
     const detail = typeof data.message === "string" ? data.message : typeof data.msg === "string" ? data.msg : "";
-    if (detail.toLowerCase().includes("redirect") || detail.toLowerCase().includes("allow list")) {
+    const normalizedDetail = detail.toLowerCase();
+    if (response.status === 429 || normalizedDetail.includes("rate limit") || normalizedDetail.includes("too many")) {
+      throw new Error("Supabase đang giới hạn số email gửi. Vui lòng tạm dừng yêu cầu và thử lại sau; không bấm gửi liên tục.");
+    }
+    if (normalizedDetail.includes("redirect") || normalizedDetail.includes("allow list")) {
       throw new Error("Địa chỉ Preview chưa được cho phép nhận liên kết đăng nhập. Quản trị viên cần kiểm tra URL Configuration trong Supabase Auth.");
     }
-    throw new Error("Chưa gửi được liên kết đăng nhập. Hãy kiểm tra email hoặc thử lại sau; chỉ tài khoản đã được quản trị viên tạo mới đăng nhập được.");
+    if (response.status === 400 && (normalizedDetail.includes("user not found") || normalizedDetail.includes("signup") || normalizedDetail.includes("not allowed"))) {
+      throw new Error("Không tìm thấy tài khoản được cấp quyền hoặc tài khoản chưa được tạo trong Supabase Auth. Vui lòng liên hệ quản trị viên.");
+    }
+    throw new Error("Supabase chưa gửi được liên kết đăng nhập. Hãy kiểm tra cấu hình Auth và log lỗi; chỉ tài khoản đã được quản trị viên tạo mới đăng nhập được.");
   }
 }
 
