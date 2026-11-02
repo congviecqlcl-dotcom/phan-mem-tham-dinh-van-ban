@@ -84,44 +84,36 @@ export async function requestPasswordReset(email: string): Promise<void> {
   const { url, anonKey } = requireAuthConfig();
   if (!email.trim()) throw new Error("Vui lòng nhập email trước khi yêu cầu đặt lại mật khẩu.");
 
+  // Use Supabase's implicit recovery redirect for this flow. The recovery
+  // access token is returned in the URL fragment after Supabase verifies the
+  // one-time email token, so the link can be opened in a different browser
+  // from the one that requested it. PKCE would require the original verifier
+  // to exist in that browser's localStorage.
   const redirectTo = window.location.origin;
-  const { verifier, challenge } = await createPkcePair();
+  localStorage.removeItem(PKCE_VERIFIER_KEY);
+  localStorage.removeItem(PKCE_FLOW_KEY);
 
-  try {
-    localStorage.setItem(PKCE_VERIFIER_KEY, verifier);
-    localStorage.setItem(PKCE_FLOW_KEY, "recovery");
+  const response = await fetch(`${url}/auth/v1/recover?redirect_to=${encodeURIComponent(redirectTo)}`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json", apikey: anonKey },
+    body: JSON.stringify({ email: email.trim() }),
+  });
 
-    const response = await fetch(`${url}/auth/v1/recover?redirect_to=${encodeURIComponent(redirectTo)}`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json", apikey: anonKey },
-      body: JSON.stringify({ email: email.trim(), code_challenge: challenge, code_challenge_method: "s256" }),
-    });
+  if (!response.ok) {
+    const data = await response.json().catch(() => ({}));
+    const detail = typeof data.message === "string" ? data.message : typeof data.msg === "string" ? data.msg : "";
+    const normalizedDetail = detail.toLowerCase();
 
-    if (!response.ok) {
-      const data = await response.json().catch(() => ({}));
-      const detail = typeof data.message === "string" ? data.message : typeof data.msg === "string" ? data.msg : "";
-      const normalizedDetail = detail.toLowerCase();
-
-      localStorage.removeItem(PKCE_VERIFIER_KEY);
-      localStorage.removeItem(PKCE_FLOW_KEY);
-
-      if (response.status === 429 || normalizedDetail.includes("rate limit") || normalizedDetail.includes("too many")) {
-        throw new Error("Supabase đang giới hạn số email gửi. Vui lòng dừng yêu cầu và thử lại sau; không bấm gửi liên tục.");
-      }
-      if (normalizedDetail.includes("redirect") || normalizedDetail.includes("allow list")) {
-        throw new Error("Địa chỉ Preview chưa được cho phép nhận liên kết đặt lại mật khẩu. Quản trị viên cần kiểm tra Supabase Auth > URL Configuration.");
-      }
-      if (response.status === 400 && (normalizedDetail.includes("user not found") || normalizedDetail.includes("signup") || normalizedDetail.includes("not allowed"))) {
-        throw new Error("Không thể xử lý yêu cầu cho tài khoản này. Hãy kiểm tra tài khoản trong Supabase Auth.");
-      }
-      throw new Error("Supabase chưa gửi được email đặt lại mật khẩu. Hãy kiểm tra cấu hình Auth và nhật ký lỗi.");
+    if (response.status === 429 || normalizedDetail.includes("rate limit") || normalizedDetail.includes("too many")) {
+      throw new Error("Supabase đang giới hạn số email gửi. Vui lòng dừng yêu cầu và thử lại sau; không bấm gửi liên tục.");
     }
-  } catch (error) {
-    // Clear a verifier only when the request failed; keep it after success for the callback.
-    localStorage.removeItem(PKCE_VERIFIER_KEY);
-    localStorage.removeItem(PKCE_FLOW_KEY);
-    if (error instanceof Error) throw error;
-    throw new Error("Không thể kết nối để gửi email đặt lại mật khẩu. Hãy kiểm tra mạng và thử lại sau.");
+    if (normalizedDetail.includes("redirect") || normalizedDetail.includes("allow list")) {
+      throw new Error("Địa chỉ Preview chưa được cho phép nhận liên kết đặt lại mật khẩu. Quản trị viên cần kiểm tra Supabase Auth > URL Configuration.");
+    }
+    if (response.status === 400 && (normalizedDetail.includes("user not found") || normalizedDetail.includes("signup") || normalizedDetail.includes("not allowed"))) {
+      throw new Error("Không thể xử lý yêu cầu cho tài khoản này. Hãy kiểm tra tài khoản trong Supabase Auth.");
+    }
+    throw new Error("Supabase chưa gửi được email đặt lại mật khẩu. Hãy kiểm tra cấu hình Auth và nhật ký lỗi.");
   }
 }
 
