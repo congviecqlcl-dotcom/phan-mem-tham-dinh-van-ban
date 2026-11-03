@@ -868,20 +868,11 @@ app.get("/api/admin/users", requireAppRole(["QUAN_TRI"]), async (req: Authentica
 
   try {
     const headers = { apikey: serviceRoleKey, Authorization: `Bearer ${serviceRoleKey}` };
-    const [authResponse, appUsersResponse, rolesResponse] = await Promise.all([
-      fetch(`${supabaseUrl}/auth/v1/admin/users?page=${pageValue}&per_page=${perPageValue}`, {
-        headers, signal: AbortSignal.timeout(8000),
-      }),
-      fetch(`${supabaseUrl}/rest/v1/app_users?select=user_id,display_name,is_active,created_at&order=created_at.desc`, {
-        headers: { ...headers, "Accept-Profile": "public" }, signal: AbortSignal.timeout(8000),
-      }),
-      fetch(`${supabaseUrl}/rest/v1/user_roles?select=user_id,role_code`, {
-        headers: { ...headers, "Accept-Profile": "public" }, signal: AbortSignal.timeout(8000),
-      }),
-    ]);
-
-    if (!authResponse.ok || !appUsersResponse.ok || !rolesResponse.ok) {
-      console.error("Không thể tải danh sách tài khoản quản trị từ Supabase.");
+    const authResponse = await fetch(`${supabaseUrl}/auth/v1/admin/users?page=${pageValue}&per_page=${perPageValue}`, {
+      headers, signal: AbortSignal.timeout(8000),
+    });
+    if (!authResponse.ok) {
+      console.error("Không thể tải danh sách tài khoản Auth từ Supabase.");
       return res.status(503).json({ error: "Không thể tải danh sách tài khoản lúc này." });
     }
 
@@ -889,12 +880,36 @@ app.get("/api/admin/users", requireAppRole(["QUAN_TRI"]), async (req: Authentica
       id?: string; email?: string; created_at?: string; last_sign_in_at?: string | null;
       email_confirmed_at?: string | null; banned_until?: string | null;
     }> };
-    const appUsers = await appUsersResponse.json() as Array<{
-      user_id: string; display_name: string | null; is_active: boolean; created_at: string;
-    }>;
-    const roleRows = await rolesResponse.json() as Array<{ user_id: string; role_code: string }>;
-    if (!Array.isArray(authPayload.users) || !Array.isArray(appUsers) || !Array.isArray(roleRows)) {
-      return res.status(503).json({ error: "Dữ liệu tài khoản trả về không đúng cấu trúc." });
+    if (!Array.isArray(authPayload.users)) {
+      return res.status(503).json({ error: "Danh sách tài khoản Auth trả về không đúng cấu trúc." });
+    }
+
+    // Only fetch application profiles and roles for the Auth users on this page.
+    // This avoids PostgREST's row cap silently omitting accounts on larger deployments.
+    const pageUserIds = authPayload.users
+      .map((user) => user.id)
+      .filter((id): id is string => typeof id === "string" && /^[0-9a-f]{8}-[0-9a-f-]{27}$/i.test(id));
+    let appUsers: Array<{ user_id: string; display_name: string | null; is_active: boolean; created_at: string }> = [];
+    let roleRows: Array<{ user_id: string; role_code: string }> = [];
+    if (pageUserIds.length) {
+      const userFilter = `in.(${pageUserIds.join(",")})`;
+      const [appUsersResponse, rolesResponse] = await Promise.all([
+        fetch(`${supabaseUrl}/rest/v1/app_users?user_id=${encodeURIComponent(userFilter)}&select=user_id,display_name,is_active,created_at`, {
+          headers: { ...headers, "Accept-Profile": "public" }, signal: AbortSignal.timeout(8000),
+        }),
+        fetch(`${supabaseUrl}/rest/v1/user_roles?user_id=${encodeURIComponent(userFilter)}&select=user_id,role_code`, {
+          headers: { ...headers, "Accept-Profile": "public" }, signal: AbortSignal.timeout(8000),
+        }),
+      ]);
+      if (!appUsersResponse.ok || !rolesResponse.ok) {
+        console.error("Không thể tải hồ sơ hoặc vai trò tài khoản quản trị từ Supabase.");
+        return res.status(503).json({ error: "Không thể tải danh sách tài khoản lúc này." });
+      }
+      appUsers = await appUsersResponse.json() as typeof appUsers;
+      roleRows = await rolesResponse.json() as typeof roleRows;
+      if (!Array.isArray(appUsers) || !Array.isArray(roleRows)) {
+        return res.status(503).json({ error: "Dữ liệu hồ sơ hoặc vai trò trả về không đúng cấu trúc." });
+      }
     }
 
     const accountById = new Map(appUsers.map((account) => [account.user_id, account]));
