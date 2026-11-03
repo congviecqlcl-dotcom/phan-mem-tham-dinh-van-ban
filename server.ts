@@ -6,7 +6,7 @@ import { createServer as createViteServer } from "vite";
 import { PDFParse } from "pdf-parse";
 import mammoth from "mammoth";
 import { createLocalFallbackResponse } from "./server/audit-fallback";
-import { requireAppRole } from "./server/auth";
+import { requireAppRole, type AuthenticatedRequest } from "./server/auth";
 
 dotenv.config();
 
@@ -842,6 +842,87 @@ app.post("/api/chat", requireAppRole(["CONG_CHUC", "LANH_DAO", "QUAN_TRI"]), asy
   } catch (err: any) {
     const fallbackAnswer = getIntelligentLegalAnswer(req.body?.message || "Xin chào");
     return res.status(503).json({ error: "Trợ lý không thể xử lý câu hỏi lúc này. Vui lòng thử lại sau." });
+  }
+});
+
+// API quản trị: danh sách tài khoản chỉ đọc. Không trả dữ liệu metadata thô từ Auth.
+app.get("/api/admin/users", requireAppRole(["QUAN_TRI"]), async (req: AuthenticatedRequest, res) => {
+  const supabaseUrl = process.env.SUPABASE_URL?.replace(/\/$/, "");
+  const anonKey = process.env.SUPABASE_ANON_KEY;
+  const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+  if (!supabaseUrl || !anonKey || !serviceRoleKey) {
+    return res.status(503).json({ error: "Chức năng quản trị chưa được cấu hình đầy đủ ở máy chủ." });
+  }
+
+  const pageValue = Number(req.query.page ?? 1);
+  const perPageValue = Number(req.query.per_page ?? 50);
+  if (!Number.isInteger(pageValue) || pageValue < 1 || pageValue > 1000 ||
+      !Number.isInteger(perPageValue) || perPageValue < 1 || perPageValue > 100) {
+    return res.status(400).json({ error: "Tham số phân trang không hợp lệ." });
+  }
+
+  try {
+    const headers = { apikey: serviceRoleKey, Authorization: `Bearer ${serviceRoleKey}` };
+    const [authResponse, appUsersResponse, rolesResponse] = await Promise.all([
+      fetch(`${supabaseUrl}/auth/v1/admin/users?page=${pageValue}&per_page=${perPageValue}`, {
+        headers, signal: AbortSignal.timeout(8000),
+      }),
+      fetch(`${supabaseUrl}/rest/v1/app_users?select=user_id,display_name,is_active,created_at&order=created_at.desc`, {
+        headers: { ...headers, "Accept-Profile": "public" }, signal: AbortSignal.timeout(8000),
+      }),
+      fetch(`${supabaseUrl}/rest/v1/user_roles?select=user_id,role_code`, {
+        headers: { ...headers, "Accept-Profile": "public" }, signal: AbortSignal.timeout(8000),
+      }),
+    ]);
+
+    if (!authResponse.ok || !appUsersResponse.ok || !rolesResponse.ok) {
+      console.error("Không thể tải danh sách tài khoản quản trị từ Supabase.");
+      return res.status(503).json({ error: "Không thể tải danh sách tài khoản lúc này." });
+    }
+
+    const authPayload = await authResponse.json() as { users?: Array<{
+      id?: string; email?: string; created_at?: string; last_sign_in_at?: string | null;
+      email_confirmed_at?: string | null; banned_until?: string | null;
+    }> };
+    const appUsers = await appUsersResponse.json() as Array<{
+      user_id: string; display_name: string | null; is_active: boolean; created_at: string;
+    }>;
+    const roleRows = await rolesResponse.json() as Array<{ user_id: string; role_code: string }>;
+    if (!Array.isArray(authPayload.users) || !Array.isArray(appUsers) || !Array.isArray(roleRows)) {
+      return res.status(503).json({ error: "Dữ liệu tài khoản trả về không đúng cấu trúc." });
+    }
+
+    const accountById = new Map(appUsers.map((account) => [account.user_id, account]));
+    const rolesById = new Map<string, string[]>();
+    for (const row of roleRows) {
+      const values = rolesById.get(row.user_id) ?? [];
+      if (["CONG_CHUC", "LANH_DAO", "QUAN_TRI"].includes(row.role_code)) values.push(row.role_code);
+      rolesById.set(row.user_id, values);
+    }
+
+    const users = authPayload.users
+      .filter((user): user is typeof user & { id: string } => typeof user.id === "string")
+      .map((user) => {
+        const account = accountById.get(user.id);
+        return {
+          user_id: user.id,
+          email: typeof user.email === "string" ? user.email : null,
+          auth_created_at: user.created_at ?? null,
+          last_sign_in_at: user.last_sign_in_at ?? null,
+          email_confirmed_at: user.email_confirmed_at ?? null,
+          banned_until: user.banned_until ?? null,
+          display_name: account?.display_name ?? null,
+          app_active: account?.is_active ?? null,
+          app_created_at: account?.created_at ?? null,
+          roles: rolesById.get(user.id) ?? [],
+          sync_status: !account ? "THIEU_HO_SO_UNG_DUNG" : (rolesById.get(user.id) ?? []).length === 0 ? "THIEU_VAI_TRO" : "DONG_BO",
+        };
+      });
+
+    return res.json({ page: pageValue, per_page: perPageValue, users });
+  } catch {
+    console.error("Lỗi kết nối khi tải danh sách tài khoản quản trị.");
+    return res.status(503).json({ error: "Dịch vụ quản trị tạm thời không phản hồi." });
   }
 });
 
