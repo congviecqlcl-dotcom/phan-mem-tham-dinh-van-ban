@@ -1,6 +1,6 @@
 const SESSION_KEY = "docuguard.auth.session";
 
-type AuthSession = { access_token: string; refresh_token?: string; expires_at?: number };
+type AuthSession = { access_token: string; refresh_token?: string; expires_at?: number; user?: { user_metadata?: Record<string, unknown> } };
 const supabaseUrl = (import.meta.env.VITE_SUPABASE_URL as string | undefined)?.replace(/\/$/, "");
 const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY as string | undefined;
 
@@ -9,6 +9,66 @@ function requireAuthConfig(): { url: string; anonKey: string } {
     throw new Error("Chưa cấu hình kết nối xác thực. Quản trị viên cần thiết lập VITE_SUPABASE_URL và VITE_SUPABASE_ANON_KEY.");
   }
   return { url: supabaseUrl, anonKey: supabaseAnonKey };
+}
+
+export function requiresInitialPasswordChange(): boolean {
+  try {
+    const raw = sessionStorage.getItem(SESSION_KEY);
+    if (!raw) return false;
+    const session = JSON.parse(raw) as AuthSession;
+    return session.user?.user_metadata?.must_change_password === true;
+  } catch {
+    return false;
+  }
+}
+
+export async function signInWithPassword(email: string, password: string): Promise<void> {
+  const { url, anonKey } = requireAuthConfig();
+  const response = await fetch(`${url}/auth/v1/token?grant_type=password`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json", apikey: anonKey },
+    body: JSON.stringify({ email: email.trim(), password }),
+  });
+  const data = await response.json().catch(() => ({}));
+  if (!response.ok || typeof data.access_token !== "string") {
+    if (response.status === 400 || response.status === 401) {
+      throw new Error("Email hoặc mật khẩu không chính xác. Vui lòng kiểm tra và thử lại.");
+    }
+    if (response.status === 429) throw new Error("Bạn đã đăng nhập sai hoặc gửi yêu cầu quá nhiều lần. Vui lòng chờ trước khi thử lại.");
+    throw new Error("Chưa đăng nhập được. Vui lòng thử lại sau hoặc liên hệ quản trị viên.");
+  }
+  sessionStorage.setItem(SESSION_KEY, JSON.stringify(data as AuthSession));
+}
+
+export async function changeCurrentPassword(currentPassword: string, newPassword: string): Promise<void> {
+  const { url, anonKey } = requireAuthConfig();
+  const token = getAccessToken();
+  if (!token) throw new Error("Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.");
+  if (newPassword.length < 12) throw new Error("Mật khẩu mới phải có ít nhất 12 ký tự.");
+  if (newPassword === currentPassword) throw new Error("Mật khẩu mới phải khác mật khẩu hiện tại.");
+  const response = await fetch(`${url}/auth/v1/user`, {
+    method: "PUT",
+    headers: { "Content-Type": "application/json", apikey: anonKey, Authorization: `Bearer ${token}` },
+    body: JSON.stringify({
+      password: newPassword,
+      data: { must_change_password: false },
+    }),
+  });
+  const data = await response.json().catch(() => ({}));
+  if (!response.ok) {
+    const detail = typeof data.message === "string" ? data.message : "";
+    throw new Error(detail.toLowerCase().includes("password") ? "Mật khẩu mới không đáp ứng chính sách bảo mật." : "Không cập nhật được mật khẩu. Vui lòng đăng nhập lại và thử lại.");
+  }
+  const refreshed = await fetch(`${url}/auth/v1/user`, {
+    headers: { apikey: anonKey, Authorization: `Bearer ${token}` },
+  });
+  if (refreshed.ok) {
+    const user = await refreshed.json();
+    const raw = sessionStorage.getItem(SESSION_KEY);
+    const session = raw ? JSON.parse(raw) as AuthSession : { access_token: token };
+    session.user = user;
+    sessionStorage.setItem(SESSION_KEY, JSON.stringify(session));
+  }
 }
 
 export function getAccessToken(): string | null {
