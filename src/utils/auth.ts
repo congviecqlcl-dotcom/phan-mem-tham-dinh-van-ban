@@ -214,10 +214,19 @@ export async function resolveAuthCallback(): Promise<AuthCallbackResult | null> 
     return { kind: "recovery", token: recoveryToken };
   }
 
-  // Surface callback errors instead of silently falling back to the login form.
-  const callbackError = url.searchParams.get("error_description") || url.searchParams.get("error");
+  // Supabase can return callback errors in either the query string or URL fragment.
+  // Recovery errors in the fragment must be surfaced instead of silently showing the login form.
+  const callbackError =
+    hash.get("error_description") ||
+    hash.get("error") ||
+    url.searchParams.get("error_description") ||
+    url.searchParams.get("error");
   if (callbackError) {
-    throw new Error("Liên kết khôi phục không hoàn tất hoặc đã hết hạn. Hãy yêu cầu quản trị viên gửi lại sau khi kiểm tra cấu hình chuyển hướng.");
+    const normalizedError = callbackError.toLowerCase();
+    if (normalizedError.includes("otp_expired") || normalizedError.includes("expired")) {
+      throw new Error("Liên kết đặt lại mật khẩu đã hết hạn hoặc đã được sử dụng. Hãy yêu cầu gửi một email khôi phục mới và mở liên kết mới nhất ngay sau khi nhận được.");
+    }
+    throw new Error("Supabase không xác nhận được liên kết email. Vui lòng yêu cầu gửi liên kết mới; nếu lỗi tiếp diễn, quản trị viên cần kiểm tra cấu hình URL chuyển hướng và nhật ký xác thực.");
   }
 
   const code = url.searchParams.get("code");
