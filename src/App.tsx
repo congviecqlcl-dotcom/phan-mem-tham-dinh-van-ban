@@ -4,11 +4,13 @@ import { DocumentAuditor } from './components/DocumentAuditor';
 import { ChatAssistant } from './components/ChatAssistant';
 import { LegalExplorer } from './components/LegalExplorer';
 import { TemplateGenerator } from './components/TemplateGenerator';
+import { AdminUsers } from './components/AdminUsers';
 import { LoginScreen } from './components/LoginScreen';
-import { getAccessToken, signOut, validateCurrentSession, changeCurrentPassword } from './utils/auth';
+import { getAccessToken, signOut, validateCurrentSession, changeCurrentPassword, authenticatedFetch } from './utils/auth';
 
 export default function App() {
   const [activeTab, setActiveTab] = useState<ActiveTab>('auditor');
+  const [isAdmin, setIsAdmin] = useState(false);
   const [authenticated, setAuthenticated] = useState(false);
   const [checkingSession, setCheckingSession] = useState(true);
   const [showPasswordForm, setShowPasswordForm] = useState(false);
@@ -21,11 +23,19 @@ export default function App() {
 
   useEffect(() => {
     let mounted = true;
-    validateCurrentSession().then((valid) => {
-      if (mounted) {
-        setAuthenticated(valid);
-        setCheckingSession(false);
+    validateCurrentSession().then(async (valid) => {
+      if (!mounted) return;
+      setAuthenticated(valid);
+      if (valid) {
+        try {
+          const response = await authenticatedFetch("/api/session");
+          const payload = await response.json().catch(() => ({}));
+          if (mounted && response.ok) setIsAdmin(Array.isArray(payload.roles) && payload.roles.includes("QUAN_TRI"));
+        } catch {
+          if (mounted) setIsAdmin(false);
+        }
       }
+      if (mounted) setCheckingSession(false);
     });
     return () => { mounted = false; };
   }, []);
@@ -47,6 +57,7 @@ export default function App() {
   const handleSignOut = () => {
     signOut();
     setAuthenticated(false);
+    setIsAdmin(false);
     setActiveTab('auditor');
   };
 
@@ -72,12 +83,13 @@ export default function App() {
         {passwordMessage && <p role="status" className="rounded bg-emerald-50 p-2 text-sm text-emerald-700">{passwordMessage}</p>}
         <button disabled={savingPassword} className="rounded-lg bg-emerald-700 px-4 py-2 font-semibold text-white disabled:opacity-60">{savingPassword ? "Đang cập nhật..." : "Cập nhật mật khẩu"}</button>
       </form>}
-      <Navbar activeTab={activeTab} setActiveTab={setActiveTab} />
+      <Navbar activeTab={activeTab} setActiveTab={setActiveTab} canManageUsers={isAdmin} />
       <main className="flex-1 max-w-7xl w-full mx-auto p-4 sm:p-6 lg:p-8">
         {activeTab === 'auditor' && <DocumentAuditor />}
         {activeTab === 'chat' && <ChatAssistant />}
         {activeTab === 'library' && <LegalExplorer />}
         {activeTab === 'templates' && <TemplateGenerator />}
+        {activeTab === 'admin' && isAdmin && <AdminUsers />}
       </main>
       <footer className="bg-white border-t border-neutral-200 py-6 text-xs text-neutral-500">
         <div className="max-w-7xl mx-auto px-4 flex flex-col md:flex-row items-center justify-between gap-4">
