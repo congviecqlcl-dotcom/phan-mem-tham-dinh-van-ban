@@ -845,6 +845,11 @@ app.post("/api/chat", requireAppRole(["CONG_CHUC", "LANH_DAO", "QUAN_TRI"]), asy
   }
 });
 
+// API trả vai trò phiên hiện tại; giao diện chỉ dùng để điều hướng, API vẫn tự kiểm tra quyền.
+app.get("/api/session", requireAppRole(["CONG_CHUC", "LANH_DAO", "QUAN_TRI"]), (req: AuthenticatedRequest, res) => {
+  return res.json({ roles: req.authenticatedUser?.roles ?? [] });
+});
+
 // API quản trị: danh sách tài khoản chỉ đọc. Không trả dữ liệu metadata thô từ Auth.
 app.get("/api/admin/users", requireAppRole(["QUAN_TRI"]), async (req: AuthenticatedRequest, res) => {
   const supabaseUrl = process.env.SUPABASE_URL?.replace(/\/$/, "");
