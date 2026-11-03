@@ -260,7 +260,7 @@ export async function updatePasswordWithRecoveryToken(token: string, password: s
       apikey: anonKey,
       Authorization: `Bearer ${token}`,
     },
-    body: JSON.stringify({ password }),
+    body: JSON.stringify({ password, data: { must_change_password: false } }),
   });
   if (!response.ok) {
     const data = await response.json().catch(() => ({}));
