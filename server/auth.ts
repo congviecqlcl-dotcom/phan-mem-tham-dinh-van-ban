@@ -29,6 +29,7 @@ export function requireAppRole(allowedRoles: AppRole[]) {
       return res.status(401).json({ error: "Bạn cần đăng nhập để sử dụng chức năng này." });
     }
 
+    let diagnosticStep = "auth_user";
     try {
       const token = match[1];
       const userResponse = await fetch(`${supabaseUrl}/auth/v1/user`, {
@@ -36,6 +37,7 @@ export function requireAppRole(allowedRoles: AppRole[]) {
         signal: AbortSignal.timeout(5000),
       });
       if (!userResponse.ok) {
+        console.error(`Xác minh Supabase thất bại tại ${diagnosticStep}: HTTP ${userResponse.status}.`);
         return res.status(401).json({ error: "Phiên đăng nhập không hợp lệ hoặc đã hết hạn. Vui lòng đăng nhập lại." });
       }
 
@@ -45,6 +47,7 @@ export function requireAppRole(allowedRoles: AppRole[]) {
       }
 
       const headers = { apikey: supabaseAnonKey, Authorization: `Bearer ${token}` };
+      diagnosticStep = "profile_and_roles";
       const [accountResponse, rolesResponse] = await Promise.all([
         fetch(`${supabaseUrl}/rest/v1/app_users?user_id=eq.${encodeURIComponent(user.id)}&select=user_id,is_active&limit=1`, {
           headers, signal: AbortSignal.timeout(5000),
@@ -55,7 +58,7 @@ export function requireAppRole(allowedRoles: AppRole[]) {
       ]);
 
       if (!accountResponse.ok || !rolesResponse.ok) {
-        console.error("Không thể xác minh trạng thái hoặc vai trò tài khoản qua Supabase.");
+        console.error(`Truy vấn Supabase thất bại: app_users HTTP ${accountResponse.status}; user_roles HTTP ${rolesResponse.status}.`);
         return res.status(503).json({ error: "Không thể xác minh quyền truy cập lúc này. Vui lòng thử lại sau." });
       }
 
@@ -74,8 +77,9 @@ export function requireAppRole(allowedRoles: AppRole[]) {
 
       req.authenticatedUser = { id: user.id, roles: validRoles };
       return next();
-    } catch {
-      console.error("Dịch vụ xác thực Supabase không phản hồi hoặc xảy ra lỗi kết nối.");
+    } catch (error) {
+      const errorName = error instanceof Error ? error.name : "UnknownError";
+      console.error(`Kết nối Supabase thất bại tại ${diagnosticStep}: ${errorName}.`);
       return res.status(503).json({ error: "Không thể xác minh quyền truy cập lúc này. Vui lòng thử lại sau." });
     }
   };
