@@ -971,4 +971,10 @@ async function startServer() {
   });
 }
 
-startServer();
+// Vercel serves this Express application through api/[...route].ts.
+// Keep the standalone listener only for local development / non-Vercel hosting.
+if (!process.env.VERCEL) {
+  startServer();
+}
+
+export default app;
