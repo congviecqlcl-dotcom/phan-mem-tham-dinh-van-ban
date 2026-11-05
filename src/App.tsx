@@ -11,6 +11,8 @@ import { getAccessToken, signOut, validateCurrentSession, changeCurrentPassword,
 export default function App() {
   const [activeTab, setActiveTab] = useState<ActiveTab>('auditor');
   const [isAdmin, setIsAdmin] = useState(false);
+  const [roleLoadError, setRoleLoadError] = useState('');
+  const [loadingRoles, setLoadingRoles] = useState(false);
   const [authenticated, setAuthenticated] = useState(false);
   const [checkingSession, setCheckingSession] = useState(true);
   const [showPasswordForm, setShowPasswordForm] = useState(false);
@@ -21,26 +23,51 @@ export default function App() {
   const [passwordError, setPasswordError] = useState('');
   const [savingPassword, setSavingPassword] = useState(false);
 
+  const loadSessionRoles = useCallback(async () => {
+    setLoadingRoles(true);
+    setRoleLoadError('');
+    try {
+      const response = await authenticatedFetch("/api/session");
+      const payload = await response.json().catch(() => ({}));
+      if (!response.ok) {
+        setIsAdmin(false);
+        setRoleLoadError(typeof payload.error === 'string' ? payload.error : `Không tải được quyền truy cập (HTTP ${response.status}).`);
+        return;
+      }
+      if (!Array.isArray(payload.roles)) {
+        setIsAdmin(false);
+        setRoleLoadError('Máy chủ trả về dữ liệu vai trò không đúng định dạng.');
+        return;
+      }
+      setIsAdmin(payload.roles.includes("QUAN_TRI"));
+    } catch {
+      setIsAdmin(false);
+      setRoleLoadError('Không kết nối được máy chủ để kiểm tra quyền. Vui lòng thử lại.');
+    } finally {
+      setLoadingRoles(false);
+    }
+  }, []);
+
   useEffect(() => {
     let mounted = true;
     validateCurrentSession().then(async (valid) => {
       if (!mounted) return;
       setAuthenticated(valid);
-      if (valid) {
-        try {
-          const response = await authenticatedFetch("/api/session");
-          const payload = await response.json().catch(() => ({}));
-          if (mounted && response.ok) setIsAdmin(Array.isArray(payload.roles) && payload.roles.includes("QUAN_TRI"));
-        } catch {
-          if (mounted) setIsAdmin(false);
-        }
-      }
+      if (valid) await loadSessionRoles();
       if (mounted) setCheckingSession(false);
+    }).catch(() => {
+      if (mounted) {
+        setAuthenticated(false);
+        setCheckingSession(false);
+      }
     });
     return () => { mounted = false; };
-  }, []);
+  }, [loadSessionRoles]);
 
-  const handleSignedIn = useCallback(() => setAuthenticated(true), []);
+  const handleSignedIn = useCallback(async () => {
+    setAuthenticated(true);
+    await loadSessionRoles();
+  }, [loadSessionRoles]);
 
   const handlePasswordChange = async (event: React.FormEvent) => {
     event.preventDefault();
@@ -83,6 +110,7 @@ export default function App() {
         {passwordMessage && <p role="status" className="rounded bg-emerald-50 p-2 text-sm text-emerald-700">{passwordMessage}</p>}
         <button disabled={savingPassword} className="rounded-lg bg-emerald-700 px-4 py-2 font-semibold text-white disabled:opacity-60">{savingPassword ? "Đang cập nhật..." : "Cập nhật mật khẩu"}</button>
       </form>}
+      {roleLoadError && <div role="alert" className="mx-auto mt-3 w-full max-w-7xl px-4 sm:px-6 lg:px-8"><div className="flex flex-wrap items-center justify-between gap-3 rounded-lg border border-amber-300 bg-amber-50 p-3 text-sm text-amber-900"><span><strong>Chưa xác minh được quyền quản trị:</strong> {roleLoadError}</span><button type="button" onClick={loadSessionRoles} disabled={loadingRoles} className="rounded-md border border-amber-500 px-3 py-1.5 font-semibold disabled:opacity-60">{loadingRoles ? 'Đang kiểm tra...' : 'Thử kiểm tra lại'}</button></div></div>}
       <Navbar activeTab={activeTab} setActiveTab={setActiveTab} canManageUsers={isAdmin} />
       <main className="flex-1 max-w-7xl w-full mx-auto p-4 sm:p-6 lg:p-8">
         {activeTab === 'auditor' && <DocumentAuditor />}
