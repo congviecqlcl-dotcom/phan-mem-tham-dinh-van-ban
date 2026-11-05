@@ -1,7 +1,6 @@
-import app from "../server.ts";
+import app from "../dist/server.cjs";
 
-// Route all /api/* requests through the existing Express application.
-// Use an explicit TypeScript extension so Vercel's Node.js ESM runtime
-// does not attempt to resolve "../server" as a directory.
-// Authentication and authorization remain enforced by server/auth.ts.
+// Vercel bundles this function separately from the Vite source tree.
+// Load the compiled Express application produced by the build script;
+// keep the existing authentication and authorization middleware intact.
 export default app;
