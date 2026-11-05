@@ -3,7 +3,6 @@ import path from "path";
 import dotenv from "dotenv";
 import { GoogleGenAI, Type } from "@google/genai";
 import { createServer as createViteServer } from "vite";
-import { PDFParse } from "pdf-parse";
 import mammoth from "mammoth";
 import { createLocalFallbackResponse } from "./server/audit-fallback";
 import { requireAppRole, type AuthenticatedRequest } from "./server/auth";
@@ -470,6 +469,7 @@ app.post("/api/parse-document", requireAppRole(["CONG_CHUC", "LANH_DAO", "QUAN_T
 
     if (isPdf) {
       try {
+        const { PDFParse } = await import("pdf-parse");
         const parser = new PDFParse({ data: buffer });
         const textResult = await parser.getText();
         extractedText = textResult?.text || "";
