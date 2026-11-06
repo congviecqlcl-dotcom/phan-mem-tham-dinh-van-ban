@@ -9,7 +9,7 @@ type Dossier = {
   facilityType: string; procedure: string; createdAt: string; documents: DossierDocument[]; checklist: ChecklistItem[];
 };
 
-const DEFAULT_CHECKLIST: Omit<ChecklistItem, 'id'>[] = [
+const DEFAULT_CHECKLIST: Omit<ChecklistItem, 'id' | 'documentIds'>[] = [
   { group: 'Thông tin và pháp lý cơ sở', label: 'Tài liệu xác định thông tin, tư cách pháp lý của cơ sở', required: true },
   { group: 'Địa điểm và mặt bằng', label: 'Tài liệu về địa điểm, mặt bằng và bố trí khu vực hoạt động', required: true },
   { group: 'Nhân sự', label: 'Tài liệu về người trực tiếp sản xuất, kinh doanh và phân công trách nhiệm', required: true },
@@ -25,7 +25,8 @@ function getCurrentUserId(): string {
   const token = getAccessToken();
   if (!token) throw new Error('Phiên đăng nhập không hợp lệ.');
   const payload = token.split('.')[1];
-  const decoded = JSON.parse(atob(payload.replace(/-/g, '+').replace(/_/g, '/')));
+  const base64 = payload.replace(/-/g, '+').replace(/_/g, '/');
+  const decoded = JSON.parse(atob(base64 + '='.repeat((4 - base64.length % 4) % 4)));
   if (typeof decoded.sub !== 'string') throw new Error('Không xác định được tài khoản đăng nhập.');
   return decoded.sub;
 }
