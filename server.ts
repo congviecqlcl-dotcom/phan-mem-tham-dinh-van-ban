@@ -878,6 +878,8 @@ app.post("/api/chat", requireAppRole(["CONG_CHUC", "LANH_DAO", "QUAN_TRI"]), asy
     if (exceedsStringLimit(message, MAX_CHAT_CHARS)) {
       return res.status(413).json({ error: `Câu hỏi vượt giới hạn ${MAX_CHAT_CHARS.toLocaleString("vi-VN")} ký tự.` });
     }
+    // Log only request metadata; never log the user's question, tokens, or dossier content.
+    console.info("[Chat API] request accepted", { messageLength: typeof message === "string" ? message.length : 0 });
     const ai = getAI();
 
     if (ai) {
