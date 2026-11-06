@@ -432,13 +432,14 @@ app.post("/api/parse-document", requireAppRole(["CONG_CHUC", "LANH_DAO", "QUAN_T
     if (isNonEmptyString(storagePath)) {
       // Accept only object paths inside this private bucket; never accept arbitrary URLs.
       const segments = storagePath.split('/');
-      if (segments.length < 2 || segments.length > 4 || segments.some((part: string) => !part || part === '.' || part === '..' || part.includes('\\\\'))) {
+      if (segments.length < 2 || segments.length > 4 || segments.some((part: string) => !part || part === "." || part === ".." || part.includes(String.fromCharCode(92)))) {
         return res.status(400).json({ error: "Đường dẫn tài liệu không hợp lệ." });
       }
       const authorization = req.header("authorization") || "";
-      const supabaseUrl = process.env.SUPABASE_URL?.replace(/\\/$/, "");
+      const rawSupabaseUrl = process.env.SUPABASE_URL || "";
+      const supabaseUrl = rawSupabaseUrl.endsWith("/") ? rawSupabaseUrl.slice(0, -1) : rawSupabaseUrl;
       const supabaseAnonKey = process.env.SUPABASE_ANON_KEY;
-      if (!supabaseUrl || !supabaseAnonKey || !/^Bearer\\s+.+$/i.test(authorization)) {
+      if (!supabaseUrl || !supabaseAnonKey || authorization.slice(0, 7).toLowerCase() !== "bearer ") {
         return res.status(503).json({ error: "Chưa cấu hình kết nối kho lưu trữ." });
       }
       const objectUrl = supabaseUrl + "/storage/v1/object/attp-dossiers-private/" + segments.map(encodeURIComponent).join("/");
