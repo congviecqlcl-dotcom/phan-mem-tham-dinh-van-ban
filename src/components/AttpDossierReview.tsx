@@ -62,29 +62,8 @@ export const AttpDossierReview: React.FC = () => {
     let cancelled = false;
     const load = async () => {
       try {
-        const [dossierRows, documentRows, checklistRows, linkRows] = await Promise.all([
-          dossierApi('attp_dossiers', 'GET', undefined, '?select=*&order=created_at.desc'),
-          dossierApi('attp_dossier_documents', 'GET', undefined, '?select=*&is_removed=eq.false&order=created_at.asc'),
-          dossierApi('attp_dossier_checklist_items', 'GET', undefined, '?select=*&order=sort_order.asc'),
-          dossierApi('attp_dossier_document_links', 'GET', undefined, '?select=*'),
-        ]);
+        const mapped = await reloadDossiers();
         if (cancelled) return;
-        const mapped: Dossier[] = (dossierRows || []).map((row: any) => ({
-          id: row.id, code: row.code, facilityName: row.facility_name, representative: row.representative || '',
-          address: row.address, facilityType: row.facility_type, procedure: row.procedure,
-          createdAt: new Date(row.created_at).toLocaleString('vi-VN'),
-          documents: (documentRows || []).filter((doc: any) => doc.dossier_id === row.id).map((doc: any) => ({
-            id: doc.id, name: doc.file_name, size: Number(doc.size_bytes), type: doc.mime_type || 'Không xác định',
-            storagePath: doc.storage_path, text: doc.extracted_text || '',
-            parseStatus: doc.parse_status === 'EXTRACTED' ? 'extracted' : doc.parse_status === 'NEEDS_OCR' ? 'needs_ocr' : doc.parse_status === 'UNSUPPORTED' ? 'unsupported' : 'error',
-            parseMessage: doc.parse_message || 'Tệp đã lưu.', addedAt: new Date(doc.created_at).toLocaleString('vi-VN'),
-          })),
-          checklist: (checklistRows || []).filter((item: any) => item.dossier_id === row.id).map((item: any) => ({
-            id: item.id, group: item.group_label, label: item.requirement_label, required: item.is_required,
-            documentIds: (linkRows || []).filter((link: any) => link.checklist_item_id === item.id).map((link: any) => link.document_id),
-          })),
-        }));
-        setDossiers(mapped);
         setSelectedId(current => mapped.some(d => d.id === current) ? current : (mapped[0]?.id || ''));
         setNotice('Đã tải ' + mapped.length + ' hồ sơ từ cơ sở dữ liệu. Tài liệu được lưu trong kho riêng tư.');
       } catch (error) {
