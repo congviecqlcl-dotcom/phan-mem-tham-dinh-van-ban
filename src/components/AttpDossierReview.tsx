@@ -157,8 +157,9 @@ export const AttpDossierReview: React.FC = () => {
           parseMessage = 'Định dạng chưa được hỗ trợ trong phân hệ hồ sơ.';
         } else {
           if (file.size > 25 * 1024 * 1024) throw new Error('Tệp vượt giới hạn 25 MB của kho lưu trữ.');
-          const safeName = file.name.normalize('NFKC').replace(/[^a-zA-Z0-9._-]+/g, '_').slice(-120) || 'tai-lieu';
-          storagePath = selected.id + '/' + uid() + '-' + safeName;
+          const extension = file.name.match(/\.[^.]+$/)?.[0] || '';
+          const safeName = uid() + extension.toLowerCase();
+          storagePath = selected.id + '/' + safeName;
           const storageBaseUrl = url.endsWith('/') ? url.slice(0, -1) : url;
           const uploadUrl = storageBaseUrl + '/storage/v1/object/attp-dossiers-private/' + storagePath.split('/').map(encodeURIComponent).join('/');
           const uploadResponse = await fetch(uploadUrl, {
