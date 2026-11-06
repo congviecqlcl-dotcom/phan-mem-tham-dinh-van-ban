@@ -73,15 +73,18 @@ Bạn có thể đặt bất kỳ câu hỏi nào về thẩm quyền, biểu m�
           }),
         });
 
-        if (response.ok) {
-          const data = await response.json();
+        const data = await response.json().catch(() => ({}));
+        if (!response.ok) {
+          const serverMessage = typeof data.error === 'string' ? data.error : 'Máy chủ không xử lý được yêu cầu.';
+          replyText = `⚠️ Không gọi được dịch vụ trợ lý (HTTP ${response.status}). ${serverMessage}\\n\\nKhông sử dụng phản hồi này làm căn cứ pháp lý. Mã lỗi HTTP được hiển thị để quản trị viên xác định nguyên nhân.`;
+        } else {
           const sourceNotice =
             data.source === 'local_fallback'
-              ? '\n\n⚠️ LƯU Ý: Câu trả lời từ bộ quy tắc cục bộ, không phải tra cứu pháp luật trực tiếp. Hãy kiểm chứng với văn bản gốc hiện hành.'
+              ? '\\n\\n⚠️ LƯU Ý: Câu trả lời từ bộ quy tắc cục bộ, không phải tra cứu pháp luật trực tiếp. Hãy kiểm chứng với văn bản gốc hiện hành.'
               : data.source === 'gemini'
-              ? '\n\n⚠️ LƯU Ý: Câu trả lời do AI tạo. Cần đối chiếu văn bản pháp luật gốc, hiệu lực và phạm vi áp dụng trước khi sử dụng.'
+              ? '\\n\\n⚠️ LƯU Ý: Câu trả lời do AI tạo. Cần đối chiếu văn bản pháp luật gốc, hiệu lực và phạm vi áp dụng trước khi sử dụng.'
               : '';
-          const apiNotice = data.notice ? '\n\n⚠️ ' + data.notice : '';
+          const apiNotice = data.notice ? '\\n\\n⚠️ ' + data.notice : '';
           replyText = (data.reply || '') + sourceNotice + apiNotice;
         }
       } catch (netErr) {
