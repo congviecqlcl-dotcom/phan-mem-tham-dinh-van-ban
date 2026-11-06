@@ -427,21 +427,51 @@ function runLocalRuleAudit(content: string, docType?: string) {
 // API: Universal Document Parser (/api/parse-document)
 app.post("/api/parse-document", requireAppRole(["CONG_CHUC", "LANH_DAO", "QUAN_TRI"]), async (req, res) => {
   try {
-    const { fileName, base64Data, mimeType } = req.body ?? {};
-    if (!isNonEmptyString(base64Data)) {
-      return res.status(400).json({ error: "Chưa nhận được dữ liệu tệp văn bản hợp lệ." });
-    }
-    if (base64Data.length > MAX_BASE64_CHARS) {
-      return res.status(413).json({ error: "Tệp vượt giới hạn xử lý. Hãy dùng tệp nhỏ hơn 15 MB trước khi mã hóa." });
-    }
-
-    const cleanBase64 = base64Data.replace(/^data:.*?;base64,/, "");
-    if (!isStrictBase64(cleanBase64)) {
-      return res.status(400).json({ error: "Dữ liệu tệp mã hóa không hợp lệ. Hãy tải lại tệp gốc và thử lại." });
-    }
-    const buffer = Buffer.from(cleanBase64, "base64");
-    if (buffer.length === 0 || buffer.length > 11_250_000) {
-      return res.status(413).json({ error: "Kích thước tệp sau giải mã không hợp lệ hoặc vượt giới hạn xử lý." });
+    const { fileName, base64Data, mimeType, storagePath } = req.body ?? {};
+    let buffer: Buffer;
+    if (isNonEmptyString(storagePath)) {
+      // Accept only object paths inside this private bucket; never accept arbitrary URLs.
+      const segments = storagePath.split('/');
+      if (segments.length < 2 || segments.length > 4 || segments.some((part: string) => !part || part === "." || part === ".." || part.includes(String.fromCharCode(92)))) {
+        return res.status(400).json({ error: "Đường dẫn tài liệu không hợp lệ." });
+      }
+      const authorization = req.header("authorization") || "";
+      const rawSupabaseUrl = process.env.SUPABASE_URL || "";
+      const supabaseUrl = rawSupabaseUrl.endsWith("/") ? rawSupabaseUrl.slice(0, -1) : rawSupabaseUrl;
+      const supabaseAnonKey = process.env.SUPABASE_ANON_KEY;
+      if (!supabaseUrl || !supabaseAnonKey || authorization.slice(0, 7).toLowerCase() !== "bearer ") {
+        return res.status(503).json({ error: "Chưa cấu hình kết nối kho lưu trữ." });
+      }
+      const objectUrl = supabaseUrl + "/storage/v1/object/attp-dossiers-private/" + segments.map(encodeURIComponent).join("/");
+      const objectResponse = await fetch(objectUrl, {
+        headers: { apikey: supabaseAnonKey, Authorization: authorization },
+        signal: AbortSignal.timeout(20000),
+      });
+      if (!objectResponse.ok) {
+        return res.status(objectResponse.status === 404 ? 404 : objectResponse.status === 403 ? 403 : 502).json({
+          error: objectResponse.status === 403 ? "Bạn không có quyền đọc tài liệu này." : "Không lấy được tài liệu từ kho lưu trữ để trích xuất.",
+        });
+      }
+      const arrayBuffer = await objectResponse.arrayBuffer();
+      if (arrayBuffer.byteLength === 0 || arrayBuffer.byteLength > 25 * 1024 * 1024) {
+        return res.status(413).json({ error: "Tệp rỗng hoặc vượt giới hạn xử lý 25 MB." });
+      }
+      buffer = Buffer.from(arrayBuffer);
+    } else {
+      if (!isNonEmptyString(base64Data)) {
+        return res.status(400).json({ error: "Chưa nhận được dữ liệu tệp văn bản hợp lệ." });
+      }
+      if (base64Data.length > MAX_BASE64_CHARS) {
+        return res.status(413).json({ error: "Tệp vượt giới hạn xử lý. Hãy tải tệp trực tiếp lên kho lưu trữ." });
+      }
+      const cleanBase64 = base64Data.replace(/^data:.*?;base64,/, "");
+      if (!isStrictBase64(cleanBase64)) {
+        return res.status(400).json({ error: "Dữ liệu tệp mã hóa không hợp lệ. Hãy tải lại tệp gốc và thử lại." });
+      }
+      buffer = Buffer.from(cleanBase64, "base64");
+      if (buffer.length === 0 || buffer.length > 25 * 1024 * 1024) {
+        return res.status(413).json({ error: "Kích thước tệp sau giải mã không hợp lệ hoặc vượt giới hạn xử lý." });
+      }
     }
     const lowerName = typeof fileName === "string" ? fileName.toLowerCase() : "";
     const hasExtension = /\.[a-z0-9]+$/i.test(lowerName);
@@ -544,7 +574,7 @@ async function performSingleAudit(params: {
 
   if (ai && content && content.length > 20) {
     // List of models to try in priority order
-    const modelsToTry = ["gemini-3.7-flash", "gemini-3.1-flash-lite"];
+    const modelsToTry = ["gemini-3.8-flash", "gemini-3.1-flash-lite"];
 
     for (const modelName of modelsToTry) {
       try {
@@ -806,6 +836,38 @@ function getIntelligentLegalAnswer(_question: string): string {
   ].join("\n");
 }
 
+// API: kiểm tra cấu hình và khả năng kết nối Gemini; không tiết lộ khóa.
+app.get("/api/ai-status", requireAppRole(["CONG_CHUC", "LANH_DAO", "QUAN_TRI"]), async (_req, res) => {
+  if (!process.env.GEMINI_API_KEY) {
+    return res.status(503).json({ configured: false, connected: false, code: "MISSING_API_KEY", message: "Chưa cấu hình khóa Gemini cho môi trường này." });
+  }
+  try {
+    const ai = getAI();
+    if (!ai) {
+      return res.status(503).json({ configured: false, connected: false, code: "CLIENT_INIT_FAILED", message: "Không khởi tạo được ứng dụng Gemini." });
+    }
+    const response = await ai.models.generateContent({
+      model: "gemini-3.8-flash",
+      contents: "Trả lời đúng một từ: OK",
+      config: { maxOutputTokens: 8 },
+    });
+    if (!response?.text) {
+      return res.status(502).json({ configured: true, connected: false, code: "EMPTY_RESPONSE", message: "Gemini không trả về nội dung." });
+    }
+    return res.json({ configured: true, connected: true, model: "gemini-3.8-flash", message: "Kết nối Gemini thành công." });
+  } catch (err: any) {
+    const status = Number(err?.status ?? err?.statusCode ?? err?.response?.status ?? 0);
+    const message = String(err?.message ?? "");
+    const code = status === 401 || status === 403 ? "AUTH_OR_PERMISSION"
+      : status === 429 ? "QUOTA_OR_RATE_LIMIT"
+      : status === 404 ? "MODEL_NOT_FOUND"
+      : status >= 500 ? "PROVIDER_ERROR"
+      : "GEMINI_REQUEST_FAILED";
+    console.error("Gemini connectivity test failed", { status, code, message: message.slice(0, 300) });
+    return res.status(502).json({ configured: true, connected: false, code, status: status || null, message: "Gemini chưa phản hồi thành công. Kiểm tra log máy chủ theo mã lỗi." });
+  }
+});
+
 // API: Legal Assistant Chat
 app.post("/api/chat", requireAppRole(["CONG_CHUC", "LANH_DAO", "QUAN_TRI"]), async (req, res) => {
   try {
@@ -816,12 +878,14 @@ app.post("/api/chat", requireAppRole(["CONG_CHUC", "LANH_DAO", "QUAN_TRI"]), asy
     if (exceedsStringLimit(message, MAX_CHAT_CHARS)) {
       return res.status(413).json({ error: `Câu hỏi vượt giới hạn ${MAX_CHAT_CHARS.toLocaleString("vi-VN")} ký tự.` });
     }
+    // Log only request metadata; never log the user's question, tokens, or dossier content.
+    console.info("[Chat API] request accepted", { messageLength: typeof message === "string" ? message.length : 0 });
     const ai = getAI();
 
     if (ai) {
       try {
         const chat = ai.chats.create({
-          model: "gemini-3.7-flash",
+          model: "gemini-3.8-flash",
           config: {
             systemInstruction: `${LEGAL_SYSTEM_PROMPT}\n\nBạn trả lời ngắn gọn, rành mạch, súc tích, luôn trích dẫn chính xác tên văn bản và Điều/Khoản tương ứng. Hãy hỗ trợ người dùng giải đáp chuyên sâu về an toàn thực phẩm, soạn thảo văn bản hành chính theo NĐ 30, nhãn mác hàng hóa theo NĐ 111, phân công quản lý và kiểm tra thẩm định.`,
           },
@@ -832,7 +896,12 @@ app.post("/api/chat", requireAppRole(["CONG_CHUC", "LANH_DAO", "QUAN_TRI"]), asy
           return res.json({ reply: response.text, source: "gemini", notice: "Câu trả lời do mô hình AI tạo; cần đối chiếu văn bản pháp luật gốc, hiệu lực và phạm vi áp dụng trước khi sử dụng." });
         }
       } catch (geminiError: any) {
-        // Fallback to intelligent legal Q&A engine
+        const status = Number(geminiError?.status ?? geminiError?.statusCode ?? geminiError?.response?.status ?? 0);
+        console.error("Gemini chat request failed", {
+          status,
+          message: String(geminiError?.message ?? "").slice(0, 300),
+        });
+        // Chuyển sang bộ dự phòng; nguyên nhân được ghi rút gọn vào log máy chủ.
       }
     }
 
