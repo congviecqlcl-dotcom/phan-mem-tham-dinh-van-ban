@@ -574,7 +574,7 @@ async function performSingleAudit(params: {
 
   if (ai && content && content.length > 20) {
     // List of models to try in priority order
-    const modelsToTry = ["gemini-3.7-flash", "gemini-3.1-flash-lite"];
+    const modelsToTry = ["gemini-3.8-flash", "gemini-3.1-flash-lite"];
 
     for (const modelName of modelsToTry) {
       try {
@@ -847,14 +847,14 @@ app.get("/api/ai-status", requireAppRole(["CONG_CHUC", "LANH_DAO", "QUAN_TRI"]),
       return res.status(503).json({ configured: false, connected: false, code: "CLIENT_INIT_FAILED", message: "Không khởi tạo được ứng dụng Gemini." });
     }
     const response = await ai.models.generateContent({
-      model: "gemini-3.7-flash",
+      model: "gemini-3.8-flash",
       contents: "Trả lời đúng một từ: OK",
-      config: { maxOutputTokens: 8, temperature: 0 },
+      config: { maxOutputTokens: 8 },
     });
     if (!response?.text) {
       return res.status(502).json({ configured: true, connected: false, code: "EMPTY_RESPONSE", message: "Gemini không trả về nội dung." });
     }
-    return res.json({ configured: true, connected: true, model: "gemini-3.7-flash", message: "Kết nối Gemini thành công." });
+    return res.json({ configured: true, connected: true, model: "gemini-3.8-flash", message: "Kết nối Gemini thành công." });
   } catch (err: any) {
     const status = Number(err?.status ?? err?.statusCode ?? err?.response?.status ?? 0);
     const message = String(err?.message ?? "");
@@ -883,7 +883,7 @@ app.post("/api/chat", requireAppRole(["CONG_CHUC", "LANH_DAO", "QUAN_TRI"]), asy
     if (ai) {
       try {
         const chat = ai.chats.create({
-          model: "gemini-3.7-flash",
+          model: "gemini-3.8-flash",
           config: {
             systemInstruction: `${LEGAL_SYSTEM_PROMPT}\n\nBạn trả lời ngắn gọn, rành mạch, súc tích, luôn trích dẫn chính xác tên văn bản và Điều/Khoản tương ứng. Hãy hỗ trợ người dùng giải đáp chuyên sâu về an toàn thực phẩm, soạn thảo văn bản hành chính theo NĐ 30, nhãn mác hàng hóa theo NĐ 111, phân công quản lý và kiểm tra thẩm định.`,
           },
