@@ -1,8 +1,8 @@
 import React, { useMemo, useRef, useState } from 'react';
-import mammoth from 'mammoth';
+import { authenticatedFetch } from '../utils/auth';
 import { FilePlus2, FolderOpen, ClipboardCheck, AlertTriangle, Trash2, Plus, Search, FileText } from 'lucide-react';
 
-type DossierDocument = { id: string; name: string; size: number; type: string; text: string; addedAt: string };
+type DossierDocument = { id: string; name: string; size: number; type: string; text: string; parseStatus: 'extracted' | 'needs_ocr' | 'unsupported' | 'error'; parseMessage: string; addedAt: string };
 type ChecklistItem = { id: string; label: string; group: string; required: boolean; documentId?: string };
 type Dossier = {
   id: string; code: string; facilityName: string; representative: string; address: string;
@@ -61,23 +61,63 @@ export const AttpDossierReview: React.FC = () => {
     setNotice('Đã tạo hồ sơ làm việc. Danh mục tài liệu mặc định là khung rà soát nghiệp vụ, chưa thay thế danh mục pháp lý áp dụng cho từng thủ tục.');
   };
 
+  const fileToDataUrl = (file: File): Promise<string> => new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(String(reader.result || ''));
+    reader.onerror = reject;
+    reader.readAsDataURL(file);
+  });
+
   const addFiles = async (files: FileList | null) => {
     if (!selected || !files?.length) return;
     const additions: DossierDocument[] = [];
     for (const file of Array.from(files)) {
       let text = '';
+      let parseStatus: DossierDocument['parseStatus'] = 'error';
+      let parseMessage = 'Chưa đọc được nội dung.';
       const lower = file.name.toLowerCase();
       try {
-        if (lower.endsWith('.txt') || lower.endsWith('.md') || lower.endsWith('.csv')) text = await file.text();
-        else if (lower.endsWith('.docx')) {
-          const result = await mammoth.extractRawText({ arrayBuffer: await file.arrayBuffer() });
-          text = result.value || '';
+        if (/\\.(txt|md|csv)$/i.test(lower)) {
+          text = await file.text();
+          parseStatus = text.trim() ? 'extracted' : 'error';
+          parseMessage = text.trim() ? 'Đã đọc văn bản thuần.' : 'Tệp không có nội dung văn bản.';
+        } else if (/\\.(pdf|docx)$/i.test(lower)) {
+          if (file.size > 11_250_000) {
+            parseStatus = 'unsupported';
+            parseMessage = 'Tệp vượt giới hạn xử lý hiện tại 11,25 MB.';
+          } else {
+            const response = await authenticatedFetch('/api/parse-document', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ fileName: file.name, mimeType: file.type, base64Data: await fileToDataUrl(file) }),
+            });
+            const payload = await response.json().catch(() => ({}));
+            if (response.ok && payload.success && typeof payload.text === 'string' && payload.text.trim()) {
+              text = payload.text;
+              parseStatus = 'extracted';
+              parseMessage = 'Đã trích xuất ' + Number(payload.charCount || text.length).toLocaleString('vi-VN') + ' ký tự.';
+            } else if (response.status === 422 && lower.endsWith('.pdf')) {
+              parseStatus = 'needs_ocr';
+              parseMessage = 'PDF không có lớp văn bản; có thể là bản quét ảnh, cần OCR.';
+            } else {
+              parseStatus = 'error';
+              parseMessage = typeof payload.error === 'string' ? payload.error : 'Máy chủ không trích xuất được nội dung (HTTP ' + response.status + ').';
+            }
+          }
+        } else {
+          parseStatus = 'unsupported';
+          parseMessage = 'Định dạng chưa được hỗ trợ trong phân hệ hồ sơ.';
         }
-      } catch { text = ''; }
-      additions.push({ id: uid(), name: file.name, size: file.size, type: file.type || 'Không xác định', text, addedAt: new Date().toLocaleString('vi-VN') });
+      } catch {
+        parseStatus = 'error';
+        parseMessage = 'Lỗi kết nối hoặc xử lý tệp; có thể thử tải lại.';
+      }
+      additions.push({ id: uid(), name: file.name, size: file.size, type: file.type || 'Không xác định', text, parseStatus, parseMessage, addedAt: new Date().toLocaleString('vi-VN') });
     }
     setDossiers(prev => prev.map(d => d.id === selected.id ? { ...d, documents: [...d.documents, ...additions] } : d));
-    setNotice(`Đã tiếp nhận ${additions.length} tệp. PDF và tệp scan cần bổ sung bộ trích xuất/OCR ở bước kỹ thuật tiếp theo; hiện chưa đọc nội dung các định dạng đó trong mô-đun này.`);
+    const readCount = additions.filter(d => d.parseStatus === 'extracted').length;
+    const ocrCount = additions.filter(d => d.parseStatus === 'needs_ocr').length;
+    setNotice('Đã tiếp nhận ' + additions.length + ' tệp; đọc được nội dung ' + readCount + ' tệp; ' + ocrCount + ' tệp cần OCR. Trích xuất không đồng nghĩa với thẩm định.');
     if (inputRef.current) inputRef.current.value = '';
   };
 
@@ -136,7 +176,7 @@ export const AttpDossierReview: React.FC = () => {
         <div className="rounded-xl border border-neutral-200 bg-white p-4">
           <div className="flex flex-wrap items-start justify-between gap-3"><div><div className="text-xs font-semibold text-emerald-800">{selected.code}</div><h3 className="text-lg font-bold">{selected.facilityName}</h3><p className="text-sm text-neutral-600">{selected.address}</p><p className="text-xs text-neutral-500">{selected.procedure} · {selected.facilityType}</p></div>
             <button onClick={()=>inputRef.current?.click()} className="rounded-lg bg-neutral-900 px-3 py-2 text-sm font-semibold text-white"><FilePlus2 className="mr-1 inline h-4 w-4"/> Thêm tài liệu</button>
-            <input ref={inputRef} type="file" multiple accept=".pdf,.docx,.doc,.txt,.md,.csv" className="hidden" onChange={e=>void addFiles(e.target.files)}/>
+            <input ref={inputRef} type="file" multiple accept=".pdf,.docx,.txt,.md,.csv" className="hidden" onChange={e=>void addFiles(e.target.files)}/>
           </div>
           <div className="mt-4 grid grid-cols-3 gap-2 text-center">
             <div className="rounded-lg bg-neutral-50 p-3"><div className="text-xl font-bold">{stats.total}</div><div className="text-xs text-neutral-500">Đầu mục</div></div>
@@ -157,7 +197,7 @@ export const AttpDossierReview: React.FC = () => {
 
         <div className="rounded-xl border border-neutral-200 bg-white p-4 space-y-2">
           <h3 className="font-semibold">Tài liệu đã tiếp nhận ({selected.documents.length})</h3>
-          {selected.documents.length===0 ? <p className="text-sm text-neutral-500">Chưa có tài liệu. Chọn “Thêm tài liệu” để tải lên.</p> : selected.documents.map(doc=><div key={doc.id} className="flex items-center justify-between gap-3 rounded-lg bg-neutral-50 p-3"><div className="min-w-0"><div className="truncate text-sm font-medium"><FileText className="mr-1 inline h-4 w-4"/>{doc.name}</div><div className="text-xs text-neutral-500">{Math.ceil(doc.size/1024)} KB · {doc.text ? `${doc.text.length.toLocaleString('vi-VN')} ký tự đã trích xuất` : 'Chưa trích xuất nội dung trong mô-đun này'}</div></div><button onClick={()=>removeDocument(doc.id)} title="Gỡ tài liệu" className="rounded p-2 text-red-700 hover:bg-red-50"><Trash2 className="h-4 w-4"/></button></div>)}
+          {selected.documents.length===0 ? <p className="text-sm text-neutral-500">Chưa có tài liệu. Chọn “Thêm tài liệu” để tải lên.</p> : selected.documents.map(doc=><div key={doc.id} className="flex items-center justify-between gap-3 rounded-lg bg-neutral-50 p-3"><div className="min-w-0"><div className="truncate text-sm font-medium"><FileText className="mr-1 inline h-4 w-4"/>{doc.name}</div><div className="text-xs text-neutral-500">{Math.ceil(doc.size/1024)} KB · {doc.parseMessage}</div></div><button onClick={()=>removeDocument(doc.id)} title="Gỡ tài liệu" className="rounded p-2 text-red-700 hover:bg-red-50"><Trash2 className="h-4 w-4"/></button></div>)}
         </div>
       </section>}
     </div>}
