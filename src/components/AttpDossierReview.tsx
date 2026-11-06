@@ -106,6 +106,32 @@ export const AttpDossierReview: React.FC = () => {
     return { total: items.length, required: required.length, matched: matched.length, missing: required.filter(i => i.documentIds.length === 0).length };
   }, [selected]);
 
+  const reloadDossiers = async () => {
+    const [dossierRows, documentRows, checklistRows, linkRows] = await Promise.all([
+      dossierApi('attp_dossiers', 'GET', undefined, '?select=*&order=created_at.desc'),
+      dossierApi('attp_dossier_documents', 'GET', undefined, '?select=*&is_removed=eq.false&order=created_at.asc'),
+      dossierApi('attp_dossier_checklist_items', 'GET', undefined, '?select=*&order=sort_order.asc'),
+      dossierApi('attp_dossier_document_links', 'GET', undefined, '?select=*'),
+    ]);
+    const mapped: Dossier[] = (dossierRows || []).map((row: any) => ({
+      id: row.id, code: row.code, facilityName: row.facility_name, representative: row.representative || '',
+      address: row.address, facilityType: row.facility_type, procedure: row.procedure,
+      createdAt: new Date(row.created_at).toLocaleString('vi-VN'),
+      documents: (documentRows || []).filter((doc: any) => doc.dossier_id === row.id).map((doc: any) => ({
+        id: doc.id, name: doc.file_name, size: Number(doc.size_bytes), type: doc.mime_type || 'Không xác định',
+        storagePath: doc.storage_path, text: doc.extracted_text || '',
+        parseStatus: doc.parse_status === 'EXTRACTED' ? 'extracted' : doc.parse_status === 'NEEDS_OCR' ? 'needs_ocr' : doc.parse_status === 'UNSUPPORTED' ? 'unsupported' : 'error',
+        parseMessage: doc.parse_message || 'Tệp đã lưu.', addedAt: new Date(doc.created_at).toLocaleString('vi-VN'),
+      })),
+      checklist: (checklistRows || []).filter((item: any) => item.dossier_id === row.id).map((item: any) => ({
+        id: item.id, group: item.group_label, label: item.requirement_label, required: item.is_required,
+        documentIds: (linkRows || []).filter((link: any) => link.checklist_item_id === item.id).map((link: any) => link.document_id),
+      })),
+    }));
+    setDossiers(mapped);
+    return mapped;
+  };
+
   const createDossier = async () => {
     if (!facilityName.trim() || !address.trim()) {
       setNotice('Cần nhập tên cơ sở và địa chỉ để tạo hồ sơ.');
@@ -132,6 +158,7 @@ export const AttpDossierReview: React.FC = () => {
       setDossiers(prev => [dossier, ...prev]); setSelectedId(id); setShowCreate(false);
       setFacilityName(''); setRepresentative(''); setAddress('');
       setNotice('Đã lưu hồ sơ và danh mục kiểm soát vào cơ sở dữ liệu.');
+      await reloadDossiers();
     } catch (error) {
       setNotice(error instanceof Error ? error.message : 'Không lưu được hồ sơ. Vui lòng thử lại.');
     }
@@ -215,7 +242,7 @@ export const AttpDossierReview: React.FC = () => {
       }
       additions.push({ id: documentId, name: file.name, size: file.size, type: file.type || 'Không xác định', storagePath, text, parseStatus, parseMessage, addedAt: new Date().toLocaleString('vi-VN') });
     }
-    setDossiers(prev => prev.map(d => d.id === selected.id ? { ...d, documents: [...d.documents, ...additions] } : d));
+    await reloadDossiers().catch(error => setNotice(error instanceof Error ? error.message : 'Không tải lại được hồ sơ sau khi thêm tài liệu.'));
     const readCount = additions.filter(d => d.parseStatus === 'extracted').length;
     const ocrCount = additions.filter(d => d.parseStatus === 'needs_ocr').length;
     const uploadedCount = additions.filter(doc => Boolean(doc.storagePath)).length;
@@ -233,9 +260,7 @@ export const AttpDossierReview: React.FC = () => {
           dossier_id: selected.id, checklist_item_id: itemId, document_id: documentId, created_by: getCurrentUserId(),
         })));
       }
-      setDossiers(prev => prev.map(d => d.id === selected.id ? {
-        ...d, checklist: d.checklist.map(item => item.id === itemId ? { ...item, documentIds } : item)
-      } : d));
+      await reloadDossiers();
     } catch (error) {
       setNotice(error instanceof Error ? error.message : 'Không cập nhật được liên kết tài liệu.');
     }
@@ -246,9 +271,7 @@ export const AttpDossierReview: React.FC = () => {
     const item = { id: uid(), dossier_id: selected.id, group_label: newChecklistGroup, requirement_label: newChecklistLabel.trim(), is_required: false, sort_order: selected.checklist.length + 1, created_by: userId };
     try {
       await dossierApi('attp_dossier_checklist_items', 'POST', item);
-      setDossiers(prev => prev.map(d => d.id === selected.id ? {
-        ...d, checklist: [...d.checklist, { id: item.id, group: item.group_label, label: item.requirement_label, required: false, documentIds: [] }]
-      } : d));
+      await reloadDossiers();
       setNewChecklistLabel('');
     } catch (error) {
       setNotice(error instanceof Error ? error.message : 'Không lưu được đầu mục kiểm soát.');
@@ -259,10 +282,7 @@ export const AttpDossierReview: React.FC = () => {
     try {
       await dossierApi('attp_dossier_documents', 'PATCH', { is_removed: true }, '?id=eq.' + encodeURIComponent(documentId));
       await dossierApi('attp_dossier_document_links', 'DELETE', undefined, '?document_id=eq.' + encodeURIComponent(documentId));
-      setDossiers(prev => prev.map(d => d.id === selected.id ? {
-        ...d, documents: d.documents.filter(doc => doc.id !== documentId),
-        checklist: d.checklist.map(item => ({ ...item, documentIds: item.documentIds.filter(id => id !== documentId) }))
-      } : d));
+      await reloadDossiers();
       setNotice('Đã gỡ tài liệu khỏi danh sách làm việc. Tệp gốc vẫn được giữ trong kho lưu trữ để bảo toàn dấu vết.');
     } catch (error) {
       setNotice(error instanceof Error ? error.message : 'Không gỡ được tài liệu khỏi hồ sơ.');
