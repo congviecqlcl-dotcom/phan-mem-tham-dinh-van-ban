@@ -74,9 +74,9 @@ export const AttpDossierReview: React.FC = () => {
         const { url, anonKey } = getAuthConfig();
         const token = getAccessToken();
         if (!url || !anonKey || !token) throw new Error('Phiên đăng nhập không hợp lệ. Vui lòng đăng nhập lại.');
-        const isPdf = /\\.pdf$/i.test(lower) || file.type === 'application/pdf';
-        const isDocx = /\\.docx$/i.test(lower) || file.type === 'application/vnd.openxmlformats-officedocument.wordprocessingml.document';
-        const isPlain = /\\.(txt|md|csv)$/i.test(lower);
+        const isPdf = /\.pdf$/i.test(lower) || file.type === 'application/pdf';
+        const isDocx = /\.docx$/i.test(lower) || file.type === 'application/vnd.openxmlformats-officedocument.wordprocessingml.document';
+        const isPlain = /\.(txt|md|csv)$/i.test(lower);
         if (!isPdf && !isDocx && !isPlain) {
           parseStatus = 'unsupported';
           parseMessage = 'Định dạng chưa được hỗ trợ trong phân hệ hồ sơ.';
