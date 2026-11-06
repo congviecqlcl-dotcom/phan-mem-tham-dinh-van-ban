@@ -1,8 +1,8 @@
 import React, { useMemo, useRef, useState } from 'react';
-import { authenticatedFetch } from '../utils/auth';
+import { authenticatedFetch, getAccessToken, getAuthConfig } from '../utils/auth';
 import { FilePlus2, FolderOpen, ClipboardCheck, AlertTriangle, Trash2, Plus, Search, FileText } from 'lucide-react';
 
-type DossierDocument = { id: string; name: string; size: number; type: string; text: string; parseStatus: 'extracted' | 'needs_ocr' | 'unsupported' | 'error'; parseMessage: string; addedAt: string };
+type DossierDocument = { id: string; name: string; size: number; type: string; storagePath?: string; text: string; parseStatus: 'extracted' | 'needs_ocr' | 'unsupported' | 'error'; parseMessage: string; addedAt: string };
 type ChecklistItem = { id: string; label: string; group: string; required: boolean; documentId?: string };
 type Dossier = {
   id: string; code: string; facilityName: string; representative: string; address: string;
@@ -61,13 +61,6 @@ export const AttpDossierReview: React.FC = () => {
     setNotice('Đã tạo hồ sơ làm việc. Danh mục tài liệu mặc định là khung rà soát nghiệp vụ, chưa thay thế danh mục pháp lý áp dụng cho từng thủ tục.');
   };
 
-  const fileToDataUrl = (file: File): Promise<string> => new Promise((resolve, reject) => {
-    const reader = new FileReader();
-    reader.onload = () => resolve(String(reader.result || ''));
-    reader.onerror = reject;
-    reader.readAsDataURL(file);
-  });
-
   const addFiles = async (files: FileList | null) => {
     if (!selected || !files?.length) return;
     const additions: DossierDocument[] = [];
@@ -76,43 +69,60 @@ export const AttpDossierReview: React.FC = () => {
       let parseStatus: DossierDocument['parseStatus'] = 'error';
       let parseMessage = 'Chưa đọc được nội dung.';
       const lower = file.name.toLowerCase().trim();
+      let storagePath: string | undefined;
       try {
-        if (/\.(txt|md|csv)$/i.test(lower)) {
-          text = await file.text();
-          parseStatus = text.trim() ? 'extracted' : 'error';
-          parseMessage = text.trim() ? 'Đã đọc văn bản thuần.' : 'Tệp không có nội dung văn bản.';
-        } else if (/\.(pdf|docx)$/i.test(lower) || file.type === 'application/pdf' || file.type === 'application/vnd.openxmlformats-officedocument.wordprocessingml.document') {
-          if (file.size > 11_250_000) {
-            parseStatus = 'unsupported';
-            parseMessage = 'Tệp vượt giới hạn xử lý hiện tại 11,25 MB.';
+        const { url, anonKey } = getAuthConfig();
+        const token = getAccessToken();
+        if (!url || !anonKey || !token) throw new Error('Phiên đăng nhập không hợp lệ. Vui lòng đăng nhập lại.');
+        const isPdf = /\\.pdf$/i.test(lower) || file.type === 'application/pdf';
+        const isDocx = /\\.docx$/i.test(lower) || file.type === 'application/vnd.openxmlformats-officedocument.wordprocessingml.document';
+        const isPlain = /\\.(txt|md|csv)$/i.test(lower);
+        if (!isPdf && !isDocx && !isPlain) {
+          parseStatus = 'unsupported';
+          parseMessage = 'Định dạng chưa được hỗ trợ trong phân hệ hồ sơ.';
+        } else {
+          if (file.size > 25 * 1024 * 1024) throw new Error('Tệp vượt giới hạn 25 MB của kho lưu trữ.');
+          const safeName = file.name.normalize('NFKC').replace(/[^a-zA-Z0-9._-]+/g, '_').slice(-120) || 'tai-lieu';
+          storagePath = selected.id + '/' + uid() + '-' + safeName;
+          const uploadUrl = url.replace(/\\/$/, '') + '/storage/v1/object/attp-dossiers-private/' + storagePath.split('/').map(encodeURIComponent).join('/');
+          const uploadResponse = await fetch(uploadUrl, {
+            method: 'POST',
+            headers: { apikey: anonKey, Authorization: 'Bearer ' + token, 'Content-Type': file.type || (isPdf ? 'application/pdf' : isDocx ? 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' : 'text/plain'), 'x-upsert': 'false' },
+            body: file,
+          });
+          if (!uploadResponse.ok) {
+            const detail = await uploadResponse.text().catch(() => '');
+            throw new Error('Không tải được tệp lên kho riêng tư (HTTP ' + uploadResponse.status + '). ' + detail.slice(0, 180));
+          }
+          if (isPlain) {
+            text = await file.text();
+            parseStatus = text.trim() ? 'extracted' : 'error';
+            parseMessage = text.trim() ? 'Đã lưu tệp riêng tư và đọc văn bản thuần.' : 'Đã lưu tệp nhưng không có nội dung văn bản.';
           } else {
             const response = await authenticatedFetch('/api/parse-document', {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ fileName: file.name.toLowerCase().endsWith('.pdf') || file.name.toLowerCase().endsWith('.docx') ? file.name : file.name + (file.type === 'application/pdf' ? '.pdf' : '.docx'), mimeType: file.type, base64Data: await fileToDataUrl(file) }),
+              body: JSON.stringify({ fileName: file.name, mimeType: file.type, storagePath }),
             });
             const payload = await response.json().catch(() => ({}));
             if (response.ok && payload.success && typeof payload.text === 'string' && payload.text.trim()) {
               text = payload.text;
               parseStatus = 'extracted';
-              parseMessage = 'Đã trích xuất ' + Number(payload.charCount || text.length).toLocaleString('vi-VN') + ' ký tự.';
-            } else if (response.status === 422 && (lower.endsWith('.pdf') || file.type === 'application/pdf')) {
+              parseMessage = 'Đã lưu tệp riêng tư và trích xuất ' + Number(payload.charCount || text.length).toLocaleString('vi-VN') + ' ký tự.';
+            } else if (response.status === 422 && isPdf) {
               parseStatus = 'needs_ocr';
-              parseMessage = 'PDF không có lớp văn bản; có thể là bản quét ảnh, cần OCR.';
+              parseMessage = 'Đã lưu tệp riêng tư. PDF không có lớp văn bản; có thể là bản quét ảnh, cần OCR.';
             } else {
               parseStatus = 'error';
-              parseMessage = typeof payload.error === 'string' ? payload.error : 'Máy chủ không trích xuất được nội dung (HTTP ' + response.status + ').';
+              parseMessage = typeof payload.error === 'string' ? payload.error : 'Đã lưu tệp nhưng chưa trích xuất được nội dung (HTTP ' + response.status + ').';
             }
           }
-        } else {
-          parseStatus = 'unsupported';
-          parseMessage = 'Định dạng chưa được hỗ trợ trong phân hệ hồ sơ.';
         }
-      } catch {
+      } catch (error) {
         parseStatus = 'error';
-        parseMessage = 'Lỗi kết nối hoặc xử lý tệp; có thể thử tải lại.';
+        parseMessage = error instanceof Error ? error.message : 'Lỗi tải lên hoặc xử lý tệp.';
       }
-      additions.push({ id: uid(), name: file.name, size: file.size, type: file.type || 'Không xác định', text, parseStatus, parseMessage, addedAt: new Date().toLocaleString('vi-VN') });
+      additions.push({ id: uid(), name: file.name, size: file.size, type: file.type || 'Không xác định', storagePath, text, parseStatus, parseMessage, addedAt: new Date().toLocaleString('vi-VN') });
     }
     setDossiers(prev => prev.map(d => d.id === selected.id ? { ...d, documents: [...d.documents, ...additions] } : d));
     const readCount = additions.filter(d => d.parseStatus === 'extracted').length;
