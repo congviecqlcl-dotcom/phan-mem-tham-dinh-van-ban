@@ -75,13 +75,13 @@ export const AttpDossierReview: React.FC = () => {
       let text = '';
       let parseStatus: DossierDocument['parseStatus'] = 'error';
       let parseMessage = 'Chưa đọc được nội dung.';
-      const lower = file.name.toLowerCase();
+      const lower = file.name.toLowerCase().trim();
       try {
-        if (/\\.(txt|md|csv)$/i.test(lower)) {
+        if (/\.(txt|md|csv)$/i.test(lower)) {
           text = await file.text();
           parseStatus = text.trim() ? 'extracted' : 'error';
           parseMessage = text.trim() ? 'Đã đọc văn bản thuần.' : 'Tệp không có nội dung văn bản.';
-        } else if (/\\.(pdf|docx)$/i.test(lower)) {
+        } else if (/\.(pdf|docx)$/i.test(lower) || file.type === 'application/pdf' || file.type === 'application/vnd.openxmlformats-officedocument.wordprocessingml.document') {
           if (file.size > 11_250_000) {
             parseStatus = 'unsupported';
             parseMessage = 'Tệp vượt giới hạn xử lý hiện tại 11,25 MB.';
@@ -89,14 +89,14 @@ export const AttpDossierReview: React.FC = () => {
             const response = await authenticatedFetch('/api/parse-document', {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ fileName: file.name, mimeType: file.type, base64Data: await fileToDataUrl(file) }),
+              body: JSON.stringify({ fileName: file.name.toLowerCase().endsWith('.pdf') || file.name.toLowerCase().endsWith('.docx') ? file.name : file.name + (file.type === 'application/pdf' ? '.pdf' : '.docx'), mimeType: file.type, base64Data: await fileToDataUrl(file) }),
             });
             const payload = await response.json().catch(() => ({}));
             if (response.ok && payload.success && typeof payload.text === 'string' && payload.text.trim()) {
               text = payload.text;
               parseStatus = 'extracted';
               parseMessage = 'Đã trích xuất ' + Number(payload.charCount || text.length).toLocaleString('vi-VN') + ' ký tự.';
-            } else if (response.status === 422 && lower.endsWith('.pdf')) {
+            } else if (response.status === 422 && (lower.endsWith('.pdf') || file.type === 'application/pdf')) {
               parseStatus = 'needs_ocr';
               parseMessage = 'PDF không có lớp văn bản; có thể là bản quét ảnh, cần OCR.';
             } else {
