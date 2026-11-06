@@ -96,7 +96,7 @@ Bạn có thể đặt bất kỳ câu hỏi nào về thẩm quyền, biểu m�
         const data = await response.json().catch(() => ({}));
         if (!response.ok) {
           const serverMessage = typeof data.error === 'string' ? data.error : 'Máy chủ không xử lý được yêu cầu.';
-          replyText = `⚠️ Không gọi được dịch vụ trợ lý (HTTP ${response.status}). ${serverMessage}\\n\\nKhông sử dụng phản hồi này làm căn cứ pháp lý. Mã lỗi HTTP được hiển thị để quản trị viên xác định nguyên nhân.`;
+          replyText = `⚠️ Không gọi được dịch vụ trợ lý (HTTP ${response.status}). ${serverMessage}\n\nKhông sử dụng phản hồi này làm căn cứ pháp lý. Mã lỗi HTTP được hiển thị để quản trị viên xác định nguyên nhân.`;
         } else {
           const notice = typeof data.notice === 'string' && data.notice.trim()
             ? data.notice.trim()
