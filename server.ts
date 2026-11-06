@@ -836,6 +836,38 @@ function getIntelligentLegalAnswer(_question: string): string {
   ].join("\n");
 }
 
+// API: kiểm tra cấu hình và khả năng kết nối Gemini; không tiết lộ khóa.
+app.get("/api/ai-status", requireAppRole(["CONG_CHUC", "LANH_DAO", "QUAN_TRI"]), async (_req, res) => {
+  if (!process.env.GEMINI_API_KEY) {
+    return res.status(503).json({ configured: false, connected: false, code: "MISSING_API_KEY", message: "Chưa cấu hình khóa Gemini cho môi trường này." });
+  }
+  try {
+    const ai = getAI();
+    if (!ai) {
+      return res.status(503).json({ configured: false, connected: false, code: "CLIENT_INIT_FAILED", message: "Không khởi tạo được ứng dụng Gemini." });
+    }
+    const response = await ai.models.generateContent({
+      model: "gemini-3.7-flash",
+      contents: "Trả lời đúng một từ: OK",
+      config: { maxOutputTokens: 8, temperature: 0 },
+    });
+    if (!response?.text) {
+      return res.status(502).json({ configured: true, connected: false, code: "EMPTY_RESPONSE", message: "Gemini không trả về nội dung." });
+    }
+    return res.json({ configured: true, connected: true, model: "gemini-3.7-flash", message: "Kết nối Gemini thành công." });
+  } catch (err: any) {
+    const status = Number(err?.status ?? err?.statusCode ?? err?.response?.status ?? 0);
+    const message = String(err?.message ?? "");
+    const code = status === 401 || status === 403 ? "AUTH_OR_PERMISSION"
+      : status === 429 ? "QUOTA_OR_RATE_LIMIT"
+      : status === 404 ? "MODEL_NOT_FOUND"
+      : status >= 500 ? "PROVIDER_ERROR"
+      : "GEMINI_REQUEST_FAILED";
+    console.error("Gemini connectivity test failed", { status, code, message: message.slice(0, 300) });
+    return res.status(502).json({ configured: true, connected: false, code, status: status || null, message: "Gemini chưa phản hồi thành công. Kiểm tra log máy chủ theo mã lỗi." });
+  }
+});
+
 // API: Legal Assistant Chat
 app.post("/api/chat", requireAppRole(["CONG_CHUC", "LANH_DAO", "QUAN_TRI"]), async (req, res) => {
   try {
@@ -862,7 +894,12 @@ app.post("/api/chat", requireAppRole(["CONG_CHUC", "LANH_DAO", "QUAN_TRI"]), asy
           return res.json({ reply: response.text, source: "gemini", notice: "Câu trả lời do mô hình AI tạo; cần đối chiếu văn bản pháp luật gốc, hiệu lực và phạm vi áp dụng trước khi sử dụng." });
         }
       } catch (geminiError: any) {
-        // Fallback to intelligent legal Q&A engine
+        const status = Number(geminiError?.status ?? geminiError?.statusCode ?? geminiError?.response?.status ?? 0);
+        console.error("Gemini chat request failed", {
+          status,
+          message: String(geminiError?.message ?? "").slice(0, 300),
+        });
+        // Chuyển sang bộ dự phòng; nguyên nhân được ghi rút gọn vào log máy chủ.
       }
     }
 
