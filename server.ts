@@ -427,21 +427,50 @@ function runLocalRuleAudit(content: string, docType?: string) {
 // API: Universal Document Parser (/api/parse-document)
 app.post("/api/parse-document", requireAppRole(["CONG_CHUC", "LANH_DAO", "QUAN_TRI"]), async (req, res) => {
   try {
-    const { fileName, base64Data, mimeType } = req.body ?? {};
-    if (!isNonEmptyString(base64Data)) {
-      return res.status(400).json({ error: "Chưa nhận được dữ liệu tệp văn bản hợp lệ." });
-    }
-    if (base64Data.length > MAX_BASE64_CHARS) {
-      return res.status(413).json({ error: "Tệp vượt giới hạn xử lý. Hãy dùng tệp nhỏ hơn 15 MB trước khi mã hóa." });
-    }
-
-    const cleanBase64 = base64Data.replace(/^data:.*?;base64,/, "");
-    if (!isStrictBase64(cleanBase64)) {
-      return res.status(400).json({ error: "Dữ liệu tệp mã hóa không hợp lệ. Hãy tải lại tệp gốc và thử lại." });
-    }
-    const buffer = Buffer.from(cleanBase64, "base64");
-    if (buffer.length === 0 || buffer.length > 11_250_000) {
-      return res.status(413).json({ error: "Kích thước tệp sau giải mã không hợp lệ hoặc vượt giới hạn xử lý." });
+    const { fileName, base64Data, mimeType, storagePath } = req.body ?? {};
+    let buffer: Buffer;
+    if (isNonEmptyString(storagePath)) {
+      // Accept only object paths inside this private bucket; never accept arbitrary URLs.
+      const segments = storagePath.split('/');
+      if (segments.length < 2 || segments.length > 4 || segments.some((part: string) => !part || part === '.' || part === '..' || part.includes('\\\\'))) {
+        return res.status(400).json({ error: "Đường dẫn tài liệu không hợp lệ." });
+      }
+      const authorization = req.header("authorization") || "";
+      const supabaseUrl = process.env.SUPABASE_URL?.replace(/\\/$/, "");
+      const supabaseAnonKey = process.env.SUPABASE_ANON_KEY;
+      if (!supabaseUrl || !supabaseAnonKey || !/^Bearer\\s+.+$/i.test(authorization)) {
+        return res.status(503).json({ error: "Chưa cấu hình kết nối kho lưu trữ." });
+      }
+      const objectUrl = supabaseUrl + "/storage/v1/object/attp-dossiers-private/" + segments.map(encodeURIComponent).join("/");
+      const objectResponse = await fetch(objectUrl, {
+        headers: { apikey: supabaseAnonKey, Authorization: authorization },
+        signal: AbortSignal.timeout(20000),
+      });
+      if (!objectResponse.ok) {
+        return res.status(objectResponse.status === 404 ? 404 : objectResponse.status === 403 ? 403 : 502).json({
+          error: objectResponse.status === 403 ? "Bạn không có quyền đọc tài liệu này." : "Không lấy được tài liệu từ kho lưu trữ để trích xuất.",
+        });
+      }
+      const arrayBuffer = await objectResponse.arrayBuffer();
+      if (arrayBuffer.byteLength === 0 || arrayBuffer.byteLength > 25 * 1024 * 1024) {
+        return res.status(413).json({ error: "Tệp rỗng hoặc vượt giới hạn xử lý 25 MB." });
+      }
+      buffer = Buffer.from(arrayBuffer);
+    } else {
+      if (!isNonEmptyString(base64Data)) {
+        return res.status(400).json({ error: "Chưa nhận được dữ liệu tệp văn bản hợp lệ." });
+      }
+      if (base64Data.length > MAX_BASE64_CHARS) {
+        return res.status(413).json({ error: "Tệp vượt giới hạn xử lý. Hãy tải tệp trực tiếp lên kho lưu trữ." });
+      }
+      const cleanBase64 = base64Data.replace(/^data:.*?;base64,/, "");
+      if (!isStrictBase64(cleanBase64)) {
+        return res.status(400).json({ error: "Dữ liệu tệp mã hóa không hợp lệ. Hãy tải lại tệp gốc và thử lại." });
+      }
+      buffer = Buffer.from(cleanBase64, "base64");
+      if (buffer.length === 0 || buffer.length > 25 * 1024 * 1024) {
+        return res.status(413).json({ error: "Kích thước tệp sau giải mã không hợp lệ hoặc vượt giới hạn xử lý." });
+      }
     }
     const lowerName = typeof fileName === "string" ? fileName.toLowerCase() : "";
     const hasExtension = /\.[a-z0-9]+$/i.test(lowerName);
