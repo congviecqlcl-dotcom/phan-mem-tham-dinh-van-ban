@@ -1,7 +1,7 @@
 import React from 'react';
-import { ShieldCheck, FileSearch, MessageSquareText, BookOpen, FileCheck2, Sparkles, Github } from 'lucide-react';
+import { ShieldCheck, FileSearch, MessageSquareText, BookOpen, FileCheck2, Sparkles, Github, ClipboardList } from 'lucide-react';
 
-export type ActiveTab = 'auditor' | 'chat' | 'library' | 'templates' | 'admin';
+export type ActiveTab = 'auditor' | 'dossier' | 'chat' | 'library' | 'templates' | 'admin';
 
 interface NavbarProps {
   activeTab: ActiveTab;
@@ -39,6 +39,7 @@ export const Navbar: React.FC<NavbarProps> = ({ activeTab, setActiveTab, canMana
               <button id="nav-tab-auditor" onClick={() => setActiveTab('auditor')} className={`flex items-center gap-2 rounded-xl px-3 py-2 text-xs sm:text-sm font-medium ${tabClass('auditor')}`}>
                 <FileSearch className="w-4 h-4" /><span>Thẩm định</span>
               </button>
+              <button id="nav-tab-dossier" onClick={() => setActiveTab("dossier")} className={`flex items-center gap-2 rounded-xl px-3 py-2 text-xs sm:text-sm font-medium ${tabClass("dossier")}`}><ClipboardList className="w-4 h-4" /><span>Hồ sơ ATTP</span></button>
               <button id="nav-tab-chat" onClick={() => setActiveTab('chat')} className={`flex items-center gap-2 rounded-xl px-3 py-2 text-xs sm:text-sm font-medium ${tabClass('chat')}`}>
                 <MessageSquareText className="w-4 h-4" /><span>Trợ lý</span>
               </button>
