@@ -2,7 +2,6 @@ import { authenticatedFetch } from '../utils/auth';
 import React, { useState, useRef, useEffect } from 'react';
 import { Send, Bot, User, Sparkles, Scale, Copy, Check, CornerDownLeft } from 'lucide-react';
 import { ChatMessage } from '../types';
-import { getLocalChatResponse } from '../utils/chatEngine';
 
 const PRESET_QUESTIONS = [
   'Thông tư 17/2024/TT-BNNPTNT thay đổi cách xếp loại cơ sở và thẩm quyền thế nào?',
@@ -78,23 +77,21 @@ Bạn có thể đặt bất kỳ câu hỏi nào về thẩm quyền, biểu m�
           const serverMessage = typeof data.error === 'string' ? data.error : 'Máy chủ không xử lý được yêu cầu.';
           replyText = `⚠️ Không gọi được dịch vụ trợ lý (HTTP ${response.status}). ${serverMessage}\\n\\nKhông sử dụng phản hồi này làm căn cứ pháp lý. Mã lỗi HTTP được hiển thị để quản trị viên xác định nguyên nhân.`;
         } else {
-          const sourceNotice =
-            data.source === 'local_fallback'
-              ? '\\n\\n⚠️ LƯU Ý: Câu trả lời từ bộ quy tắc cục bộ, không phải tra cứu pháp luật trực tiếp. Hãy kiểm chứng với văn bản gốc hiện hành.'
+          const notice = typeof data.notice === 'string' && data.notice.trim()
+            ? data.notice.trim()
+            : data.source === 'local_fallback'
+              ? 'Đây là câu trả lời từ bộ quy tắc cục bộ, không phải tra cứu pháp luật trực tiếp. Cần kiểm chứng với văn bản gốc hiện hành.'
               : data.source === 'gemini'
-              ? '\\n\\n⚠️ LƯU Ý: Câu trả lời do AI tạo. Cần đối chiếu văn bản pháp luật gốc, hiệu lực và phạm vi áp dụng trước khi sử dụng.'
-              : '';
-          const apiNotice = data.notice ? '\\n\\n⚠️ ' + data.notice : '';
-          replyText = (data.reply || '') + sourceNotice + apiNotice;
+                ? 'Câu trả lời do AI tạo; cần đối chiếu văn bản pháp luật gốc, hiệu lực và phạm vi áp dụng trước khi sử dụng.'
+                : '';
+          replyText = [data.reply || 'Máy chủ không trả về nội dung.', notice ? '⚠️ LƯU Ý: ' + notice : '']
+            .filter(Boolean)
+            .join('\n\n');
         }
       } catch (netErr) {
-        console.warn('Network chat error, using local legal engine:', netErr);
-      }
-
-      if (!replyText) {
-        replyText =
-          getLocalChatResponse(query) +
-          '\n\n⚠️ LƯU Ý: Đây là câu trả lời dự phòng cục bộ do kết nối hoặc máy chủ không trả về kết quả. Chưa được xác minh với văn bản pháp luật gốc hiện hành.';
+        // Do not hide transport/authentication failures behind a canned legal answer.
+        console.error('Chat request could not reach the API:', netErr);
+        replyText = '⚠️ Không kết nối được với dịch vụ Trợ lý. Yêu cầu có thể chưa đến máy chủ; vui lòng kiểm tra kết nối và đăng nhập. Không sử dụng câu trả lời dự phòng làm căn cứ pháp lý.';
       }
 
       const botMessage: ChatMessage = {
@@ -106,7 +103,8 @@ Bạn có thể đặt bất kỳ câu hỏi nào về thẩm quyền, biểu m�
 
       setMessages((prev) => [...prev, botMessage]);
     } catch (err: any) {
-      const fallbackReply = getLocalChatResponse(query);
+      console.error('Unexpected chat interface error:', err);
+      const fallbackReply = '⚠️ Giao diện Trợ lý gặp lỗi khi xử lý yêu cầu. Không có kết quả pháp lý được xác minh; vui lòng thử lại hoặc báo quản trị viên.';
       setMessages((prev) => [
         ...prev,
         {
