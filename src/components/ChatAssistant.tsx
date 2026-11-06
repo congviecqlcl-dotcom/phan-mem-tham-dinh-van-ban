@@ -1,6 +1,6 @@
 import { authenticatedFetch } from '../utils/auth';
 import React, { useState, useRef, useEffect } from 'react';
-import { Send, Bot, User, Sparkles, Scale, Copy, Check, CornerDownLeft } from 'lucide-react';
+import { Send, Bot, User, Sparkles, Copy, Check, RefreshCw, CircleCheck, AlertCircle } from 'lucide-react';
 import { ChatMessage } from '../types';
 
 const PRESET_QUESTIONS = [
@@ -36,6 +36,7 @@ Bạn có thể đặt bất kỳ câu hỏi nào về thẩm quyền, biểu m�
   const [input, setInput] = useState<string>('');
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [copiedId, setCopiedId] = useState<string | null>(null);
+  const [geminiStatus, setGeminiStatus] = useState<{checking:boolean; connected:boolean|null; message:string; code?:string}>({checking:false, connected:null, message:'Chưa kiểm tra kết nối Gemini.'});
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   const scrollToBottom = () => {
@@ -45,6 +46,26 @@ Bạn có thể đặt bất kỳ câu hỏi nào về thẩm quyền, biểu m�
   useEffect(() => {
     scrollToBottom();
   }, [messages, isLoading]);
+
+  const checkGeminiStatus = async () => {
+    setGeminiStatus({ checking: true, connected: null, message: 'Đang kiểm tra kết nối Gemini...' });
+    try {
+      const response = await authenticatedFetch('/api/ai-status', { method: 'GET' });
+      const data = await response.json().catch(() => ({}));
+      if (response.ok && data.connected === true) {
+        setGeminiStatus({ checking: false, connected: true, message: data.message || 'Kết nối Gemini thành công.' });
+      } else {
+        setGeminiStatus({
+          checking: false,
+          connected: false,
+          code: typeof data.code === 'string' ? data.code : `HTTP_${response.status}`,
+          message: typeof data.message === 'string' ? data.message : 'Gemini chưa kết nối được. Quản trị viên cần kiểm tra cấu hình và nhật ký máy chủ.',
+        });
+      }
+    } catch {
+      setGeminiStatus({ checking: false, connected: false, code: 'NETWORK_ERROR', message: 'Không gọi được dịch vụ kiểm tra. Hãy kiểm tra đăng nhập và kết nối mạng.' });
+    }
+  };
 
   const handleSendMessage = async (textToSend?: string) => {
     const query = (textToSend || input).trim();
@@ -127,6 +148,20 @@ Bạn có thể đặt bất kỳ câu hỏi nào về thẩm quyền, biểu m�
 
   return (
     <div className="max-w-5xl mx-auto space-y-4">
+      <div className="bg-white rounded-2xl border border-neutral-200 px-4 py-3 shadow-sm flex flex-wrap items-center justify-between gap-3">
+        <div className="flex items-center gap-2 text-xs">
+          {geminiStatus.connected === true ? <CircleCheck className="w-4 h-4 text-emerald-600" /> : geminiStatus.connected === false ? <AlertCircle className="w-4 h-4 text-amber-600" /> : <Bot className="w-4 h-4 text-neutral-500" />}
+          <div>
+            <div className="font-semibold text-neutral-800">Trạng thái kết nối Gemini</div>
+            <div className="text-neutral-500">{geminiStatus.message}{geminiStatus.code ? ` (mã: ${geminiStatus.code})` : ''}</div>
+          </div>
+        </div>
+        <button type="button" onClick={checkGeminiStatus} disabled={geminiStatus.checking} className="inline-flex items-center gap-2 rounded-lg border border-neutral-300 px-3 py-2 text-xs font-medium text-neutral-700 hover:bg-neutral-50 disabled:opacity-50">
+          <RefreshCw className={`w-3.5 h-3.5 ${geminiStatus.checking ? 'animate-spin' : ''}`} />
+          {geminiStatus.checking ? 'Đang kiểm tra...' : 'Kiểm tra kết nối'}
+        </button>
+      </div>
+
       {/* Quick Question Chips */}
       <div className="bg-white rounded-2xl border border-neutral-200 p-4 shadow-sm space-y-2">
         <div className="flex items-center gap-2 text-xs font-semibold text-neutral-700">
