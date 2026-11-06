@@ -1,4 +1,5 @@
 import React, { useMemo, useRef, useState } from 'react';
+import mammoth from 'mammoth';
 import { FilePlus2, FolderOpen, ClipboardCheck, AlertTriangle, Trash2, Plus, Search, FileText } from 'lucide-react';
 
 type DossierDocument = { id: string; name: string; size: number; type: string; text: string; addedAt: string };
@@ -69,7 +70,6 @@ export const AttpDossierReview: React.FC = () => {
       try {
         if (lower.endsWith('.txt') || lower.endsWith('.md') || lower.endsWith('.csv')) text = await file.text();
         else if (lower.endsWith('.docx')) {
-          const mammoth = await import('mammoth');
           const result = await mammoth.extractRawText({ arrayBuffer: await file.arrayBuffer() });
           text = result.value || '';
         }
