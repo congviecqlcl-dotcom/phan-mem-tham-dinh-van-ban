@@ -226,7 +226,9 @@ export const DocumentAuditor: React.FC = () => {
     // Auto-detect Document Type if not detected
     if (detectedType === 'khac' && text) {
       const lower = text.toLowerCase();
-      if (lower.includes('tờ trình') || lowerName.includes('to_trinh') || lowerName.includes('totrinh')) {
+      if (lower.includes('đơn đề nghị') || lowerName.includes('don_de_nghi') || lowerName.includes('don-de-nghi')) {
+        detectedType = 'don_de_nghi';
+      } else if (lower.includes('tờ trình') || lowerName.includes('to_trinh') || lowerName.includes('totrinh')) {
         detectedType = 'to_trinh';
       } else if (lower.includes('quyết định') || lowerName.includes('quyet_dinh') || lowerName.includes('quyetdinh')) {
         detectedType = 'quyet_dinh';
@@ -1201,6 +1203,7 @@ export const DocumentAuditor: React.FC = () => {
                     <option value="to_trinh">Tờ trình (Mẫu TTr)</option>
                     <option value="quyet_dinh">Quyết định (Mẫu QĐ)</option>
                     <option value="cong_van">Công văn (Mẫu CV)</option>
+                    <option value="don_de_nghi">Đơn đề nghị</option>
                     <option value="bien_ban">Biên bản thẩm định</option>
                     <option value="tu_cong_bo">Bản tự công bố SP</option>
                     <option value="nhan_hang_hoa">Nhãn hàng hóa / Nhãn phụ</option>
