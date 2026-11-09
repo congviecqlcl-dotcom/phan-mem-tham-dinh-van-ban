@@ -36,8 +36,8 @@ export function detectCompositeDocument(text: string): CompositeDocumentSegment[
       page: Number(match[1]),
       text: text.slice(match.index! + match[0].length, index + 1 < matches.length ? matches[index + 1].index! : text.length).trim(),
     }));
-  } else if (text.includes('\\f')) {
-    pages = text.split('\\f').map((pageText, index) => ({ page: index + 1, text: pageText.trim() }));
+  } else if (text.includes('\f')) {
+    pages = text.split('\f').map((pageText, index) => ({ page: index + 1, text: pageText.trim() }));
   } else {
     return [];
   }
