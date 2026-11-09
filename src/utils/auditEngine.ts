@@ -7,7 +7,9 @@ export function runClientAuditEngine(content: string, docType?: DocumentType | s
 
   // Determine detected document type
   let documentTypeDetected = 'Văn bản hành chính';
-  if (docType === 'to_trinh' || lower.includes('tờ trình') || lowerName.includes('to_trinh')) {
+  if (docType === 'don_de_nghi' || lower.includes('đơn đề nghị') || lowerName.includes('don_de_nghi')) {
+    documentTypeDetected = 'Đơn đề nghị';
+  } else if (docType === 'to_trinh' || lower.includes('tờ trình') || lowerName.includes('to_trinh')) {
     documentTypeDetected = 'Tờ trình (Nghị định 30/2020)';
   } else if (docType === 'quyet_dinh' || lower.includes('quyết định') || lowerName.includes('quyet_dinh')) {
     documentTypeDetected = 'Quyết định hành chính (Nghị định 30/2020)';
@@ -42,9 +44,9 @@ export function runClientAuditEngine(content: string, docType?: DocumentType | s
     });
   }
 
-  // 2. Viết tắt chức vụ, chức danh sai quy định (PGĐ, GĐ, PCT, CT, CCT, TP, PP, BGD)
+  // 2. Chỉ cảnh báo chữ viết tắt thực sự có trong văn bản; không suy diễn từ chức danh viết đầy đủ.
   if (
-    /\b(pgđ|gđ|pct|cct|bgd)\b/i.test(content) ||
+    /\b(pgđ|pct|cct|bgd)\b/i.test(content) ||
     /các\s+pgđ/i.test(content) ||
     /phó\s+cct/i.test(content) ||
     /phòng\s+tccb/i.test(content) ||
