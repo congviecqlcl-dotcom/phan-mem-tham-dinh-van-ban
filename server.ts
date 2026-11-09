@@ -527,7 +527,7 @@ app.post("/api/parse-document", requireAppRole(["CONG_CHUC", "LANH_DAO", "QUAN_T
         const textResult = await parser.getText();
         const pageTexts = Array.isArray((textResult as any)?.pages) ? (textResult as any).pages : [];
         extractedText = pageTexts.length > 0
-          ? pageTexts.map((page: any, index: number) => "[Trang " + Number(page?.pageNumber ?? page?.num ?? index + 1) + "]\\n" + (typeof page?.text === "string" ? page.text : "")).join("\\n\\n")
+          ? pageTexts.map((page: any, index: number) => "[Trang " + Number(page?.pageNumber ?? page?.num ?? index + 1) + "]\n" + (typeof page?.text === "string" ? page.text : "")).join("\n\n")
           : (textResult?.text || "");
         await parser.destroy().catch(() => {});
       } catch (pdfErr: any) {
@@ -987,7 +987,7 @@ app.post("/api/chat", requireAppRole(["CONG_CHUC", "LANH_DAO", "QUAN_TRI"]), asy
               const chat = ai.chats.create({
                 model: modelName,
                 config: {
-                  systemInstruction: `${LEGAL_SYSTEM_PROMPT}\\n\\nBạn trả lời ngắn gọn, rành mạch, súc tích. Chỉ viện dẫn Điều/Khoản khi có căn cứ kiểm chứng; nếu chưa có văn bản gốc thì phải nói rõ chưa đủ căn cứ. Hãy hỗ trợ nghiệp vụ an toàn thực phẩm và văn bản hành chính.`,
+                  systemInstruction: `${LEGAL_SYSTEM_PROMPT}\n\nBạn trả lời ngắn gọn, rành mạch, súc tích. Chỉ viện dẫn Điều/Khoản khi có căn cứ kiểm chứng; nếu chưa có văn bản gốc thì phải nói rõ chưa đủ căn cứ. Hãy hỗ trợ nghiệp vụ an toàn thực phẩm và văn bản hành chính.`,
                 },
               });
               response = await chat.sendMessage({ message: message || "Xin chào" });
