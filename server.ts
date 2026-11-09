@@ -525,7 +525,10 @@ app.post("/api/parse-document", requireAppRole(["CONG_CHUC", "LANH_DAO", "QUAN_T
         const { PDFParse } = await import("pdf-parse");
         const parser = new PDFParse({ data: buffer });
         const textResult = await parser.getText();
-        extractedText = textResult?.text || "";
+        const pageTexts = Array.isArray((textResult as any)?.pages) ? (textResult as any).pages : [];
+        extractedText = pageTexts.length > 0
+          ? pageTexts.map((page: any, index: number) => "[Trang " + Number(page?.pageNumber ?? page?.num ?? index + 1) + "]\\n" + (typeof page?.text === "string" ? page.text : "")).join("\\n\\n")
+          : (textResult?.text || "");
         await parser.destroy().catch(() => {});
       } catch (pdfErr: any) {
         console.warn("Lỗi đọc PDF:", pdfErr);
