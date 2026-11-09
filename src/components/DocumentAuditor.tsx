@@ -734,6 +734,8 @@ export const DocumentAuditor: React.FC = () => {
   const needsHumanReviewDocs = completedDocs.filter((f) => f.auditResult?.status === 'CAN_XAC_MINH');
   const docsWithFindings = completedDocs.filter((f) => (f.auditResult?.issues?.length || 0) > 0);
   const docsWithHighSignals = completedDocs.filter((f) => f.auditResult?.issues?.some((issue) => issue.severity === 'error'));
+  const unprocessedDocs = files.filter((f) => f.content.trim().length > 0 && !f.auditResult);
+  const aiCompletedDocs = geminiDocs.length;
   const totalIssuesAcrossAll = completedDocs.reduce(
     (acc, curr) => acc + (curr.auditResult?.issues?.length || 0),
     0
@@ -1015,6 +1017,9 @@ export const DocumentAuditor: React.FC = () => {
                 <p className="text-xs text-neutral-500 mt-0.5">
                   Nhấp vào từng dòng để xem dấu hiệu cần rà soát. Nội dung xuất ra hiện giữ nguyên văn bản gốc.
                 </p>
+                <p className="mt-2 rounded-lg border border-neutral-200 bg-neutral-50 px-3 py-2 text-xs leading-relaxed text-neutral-700">
+                  Trạng thái xử lý: <strong>{aiCompletedDocs} tệp có kết quả Gemini</strong> • <strong>{localFallbackDocs.length} tệp chỉ chạy quy tắc cục bộ</strong> • <strong>{unprocessedDocs.length} tệp chưa có kết quả</strong>. Kết quả từ quy tắc cục bộ không được tính là thẩm định AI.
+                </p>
               </div>
 
               <div className="flex items-center gap-2">
@@ -1077,6 +1082,11 @@ export const DocumentAuditor: React.FC = () => {
                           <span className="px-2 py-0.5 rounded-md bg-neutral-100 text-neutral-700 font-medium">
                             {res?.documentTypeDetected || file.docType}
                           </span>
+                          {res && (
+                            <div className="mt-1 text-[10px] font-medium text-neutral-500">
+                              {res.source === 'gemini' ? 'Nguồn: Gemini' : res.source === 'local_rule' || res.source === 'client_rule' ? 'Nguồn: Quy tắc cục bộ – không phải kết quả AI' : 'Chưa xác định nguồn'}
+                            </div>
+                          )}
                         </td>
                         <td className="py-3 px-4 text-center">
                           {res ? (
