@@ -39,6 +39,7 @@ import {
   downloadConsolidatedBatchReport
 } from '../utils/docxExport';
 import { runClientAuditEngine } from '../utils/auditEngine';
+import { recognizeScannedPdf } from '../utils/browserPdfOcr';
 
 export const DocumentAuditor: React.FC = () => {
   // Initial list with preset
@@ -160,6 +161,40 @@ export const DocumentAuditor: React.FC = () => {
 
     // Do not treat failed PDF/DOC/DOCX/RTF parsing as plain UTF-8 text.
     // Unsupported or unreadable binary files remain empty and are marked as errors.
+
+    // PDF scan fallback: if the PDF text layer is absent or only contains signature metadata,
+    // render and recognize every page locally in the browser.
+    if (lowerName.endsWith('.pdf') && text.trim().length < 200) {
+      try {
+        const ocr = await recognizeScannedPdf(file);
+        const failedPages = ocr.pages.filter((page) => page.status !== 'dat');
+        if (!ocr.text || ocr.text.length < 20) {
+          extractionError = 'OCR không nhận dạng được nội dung đủ tin cậy. Hãy kiểm tra ảnh quét hoặc nhập lại nội dung.';
+          text = '';
+        } else {
+          const pageSummary = ocr.pages.map((page) =>
+            `Trang ${page.page}: ${page.status === 'dat' ? 'nhận dạng được' : page.status === 'can_kiem_tra' ? 'cần kiểm tra' : 'không đọc được'} (độ tin cậy ${Math.round(page.confidence)}%)`
+          ).join('\n');
+          const preview = ocr.text.slice(0, 1800);
+          const accepted = window.confirm(
+            `Đã OCR ${ocr.pages.length} trang ngay trên trình duyệt. Tệp không được tải lên dịch vụ OCR.\n\n${pageSummary}\n\n--- XEM TRƯỚC NỘI DUNG ---\n${preview}${ocr.text.length > 1800 ? '\n… (còn nội dung)' : ''}\n\nBạn có xác nhận đã xem trước và muốn đưa nội dung OCR vào bước thẩm định không? Nội dung OCR vẫn phải được đối chiếu với ảnh gốc.`
+          );
+          if (accepted) {
+            text = ocr.text;
+            extractionError = failedPages.length
+              ? `Đã OCR nhưng có ${failedPages.length} trang cần kiểm tra thủ công: ${failedPages.map((p) => p.page).join(', ')}.`
+              : 'Đã OCR tại trình duyệt. Công chức vẫn phải đối chiếu nội dung với ảnh gốc trước khi sử dụng.';
+          } else {
+            text = '';
+            extractionError = 'Đã OCR nhưng người dùng chưa xác nhận nội dung; tệp chưa được đưa vào thẩm định.';
+          }
+        }
+      } catch (ocrErr) {
+        console.warn('Browser OCR failed:', ocrErr);
+        extractionError = 'Không thể khởi chạy OCR tiếng Việt trên trình duyệt. Kiểm tra kết nối tải bộ OCR hoặc thử tệp khác.';
+        text = '';
+      }
+    }
 
     // Auto-detect Document Type if not detected
     if (detectedType === 'khac' && text) {
