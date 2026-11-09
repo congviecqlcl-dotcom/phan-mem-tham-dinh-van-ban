@@ -101,6 +101,14 @@ export interface OcrPageEvidence {
   status: 'dat' | 'can_kiem_tra' | 'khong_doc_duoc';
 }
 
+export interface CompositeDocumentSegment {
+  kind: 'hop_dong' | 'hoa_don' | 'giay_chung_nhan_attp' | 'kiem_dich' | 'kiem_nghiem';
+  label: string;
+  pageStart: number;
+  pageEnd: number;
+  evidence: string[];
+}
+
 export interface DocumentFileItem {
   id: string;
   name: string;
@@ -112,6 +120,7 @@ export interface DocumentFileItem {
   reviewNotice?: string;
   ocrPages?: OcrPageEvidence[];
   ocrNeedsReview?: boolean;
+  compositeSegments?: CompositeDocumentSegment[];
   auditResult?: AuditResult;
   charCount?: number;
 }
