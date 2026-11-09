@@ -27,7 +27,9 @@ Tôi có thể hỗ trợ rà soát các nhóm văn bản dưới đây. Tuy nhi
 - 📜 **Nghị định số 43/2017/NĐ-CP & 111/2021/NĐ-CP** (Nhãn hàng hóa)
 - 📜 **Nghị định số 181/2013/NĐ-CP** (Quảng cáo thực phẩm, TPCN, thuốc, mỹ phẩm)
 - 📜 **Nghị định số 30/2020/NĐ-CP** (Thể thức & kỹ thuật trình bày văn bản hành chính)
-- 📜 **Nghị quyết 202/2025/QH15 & 1676/NQ-UBTVQH15** (Sáp nhập & sắp xếp địa giới hành chính mới).
+- 📜 **Nghị quyết 202/2025/QH15 & 1676/NQ-UBTVQH15** (Sắp xếp đơn vị hành chính cấp tỉnh, cấp xã).
+- 📜 **Nghị định số 46/2026/NĐ-CP và Nghị quyết số 09/2026/NQ-CP** (cần kiểm tra mốc áp dụng và văn bản chuyển tiếp tại thời điểm tra cứu).
+- 📜 **Thông tư số 17/2025/TT-BNNMT** và các quyết định công bố thủ tục hành chính, quy trình nội bộ của tỉnh (cần đối chiếu bản đang có hiệu lực).
 
 Bạn có thể đặt bất kỳ câu hỏi nào về thẩm quyền, biểu mẫu, quy chuẩn, nhãn mác hoặc yêu cầu kiểm tra tình huống thực tế!`,
       timestamp: new Date().toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' }),
