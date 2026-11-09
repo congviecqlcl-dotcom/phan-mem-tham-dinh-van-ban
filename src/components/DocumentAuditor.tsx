@@ -30,7 +30,7 @@ import {
   CheckCheck
 } from 'lucide-react';
 import mammoth from 'mammoth';
-import { AuditResult, DocumentType, IssueCategory, IssueSeverity, CategoryScore, DocumentFileItem } from '../types';
+import { AuditResult, DocumentType, IssueCategory, IssueSeverity, CategoryScore, DocumentFileItem, OcrPageEvidence } from '../types';
 import { PRESET_SAMPLES } from '../data/presets';
 import {
   downloadFixedAsWord,
@@ -96,11 +96,12 @@ export const DocumentAuditor: React.FC = () => {
   };
 
   // Extract text from a single file object
-  const extractTextFromFile = async (file: File): Promise<{ text: string; detectedType: DocumentType; errorMessage?: string }> => {
+  const extractTextFromFile = async (file: File): Promise<{ text: string; detectedType: DocumentType; errorMessage?: string; ocrPages?: OcrPageEvidence[] }> => {
     const lowerName = file.name.toLowerCase();
     let text = '';
     let detectedType: DocumentType = 'khac';
     let extractionError: string | undefined;
+    let ocrPages: OcrPageEvidence[] | undefined;
 
     // Direct phone photos and scanned image files: OCR locally in the browser.
     const isImage = /\.(png|jpe?g|webp|bmp|tif|tiff)$/i.test(lowerName) ||
@@ -116,6 +117,12 @@ export const DocumentAuditor: React.FC = () => {
           );
           if (accepted) {
             text = result.text;
+            ocrPages = [{
+              page: 1,
+              text: result.text,
+              confidence: result.confidence,
+              status: result.confidence < 65 ? 'can_kiem_tra' : 'dat',
+            }];
             extractionError = 'Đã OCR ảnh tại trình duyệt. Cần đối chiếu toàn bộ nội dung với ảnh gốc trước khi sử dụng.';
           } else {
             extractionError = 'Đã OCR nhưng chưa được người dùng xác nhận; ảnh chưa được đưa vào thẩm định.';
@@ -207,6 +214,7 @@ export const DocumentAuditor: React.FC = () => {
           );
           if (accepted) {
             text = ocr.text;
+            ocrPages = ocr.pages;
             extractionError = failedPages.length
               ? `Đã OCR nhưng có ${failedPages.length} trang cần kiểm tra thủ công: ${failedPages.map((p) => p.page).join(', ')}.`
               : 'Đã OCR tại trình duyệt. Công chức vẫn phải đối chiếu nội dung với ảnh gốc trước khi sử dụng.';
@@ -245,7 +253,7 @@ export const DocumentAuditor: React.FC = () => {
       }
     }
 
-    return { text: text.trim(), detectedType, errorMessage: extractionError };
+    return { text: text.trim(), detectedType, errorMessage: extractionError, ocrPages };
   };
 
   // Process multiple uploaded files in parallel
@@ -264,7 +272,7 @@ export const DocumentAuditor: React.FC = () => {
     for (const file of incomingFiles) {
       const fileId = `file-${Date.now()}-${Math.random().toString(36).substr(2, 6)}`;
       try {
-        const { text, detectedType, errorMessage } = await extractTextFromFile(file);
+        const { text, detectedType, errorMessage, ocrPages } = await extractTextFromFile(file);
         const hasText = Boolean(text && text.trim().length > 0);
 
         newItems.push({
@@ -275,6 +283,9 @@ export const DocumentAuditor: React.FC = () => {
           docType: detectedType,
           status: hasText ? 'ready' : 'error',
           errorMessage: hasText ? undefined : (errorMessage || 'Không trích xuất được văn bản; tệp này sẽ không được đưa vào thẩm định.'),
+          reviewNotice: hasText ? errorMessage : undefined,
+          ocrPages,
+          ocrNeedsReview: Boolean(ocrPages?.some((page) => page.status !== 'dat')),
           charCount: hasText ? text.length : 0,
         });
       } catch (extractErr) {
@@ -856,7 +867,10 @@ export const DocumentAuditor: React.FC = () => {
                         {'Cần công chức xác minh'} • {res.issues.length} lỗi
                       </span>
                     ) : (
-                      <span>{file.charCount ? `${file.charCount.toLocaleString('vi-VN')} ký tự` : 'Chờ thẩm định'}</span>
+                      <span title={file.reviewNotice || ''}>
+                        {file.charCount ? `${file.charCount.toLocaleString('vi-VN')} ký tự` : 'Chờ thẩm định'}
+                        {file.ocrNeedsReview ? ' • OCR cần kiểm tra' : ''}
+                      </span>
                     )}
                   </span>
                 </div>
