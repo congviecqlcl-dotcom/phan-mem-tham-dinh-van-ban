@@ -102,3 +102,32 @@ export async function recognizeScannedPdf(file: File): Promise<PdfOcrResult> {
   const text = pages.map((p) => `[Trang ${p.page}]\n${p.text}`).join("\n\n").trim();
   return { text, pages, needsReview: pages.some((p) => p.status !== "dat") };
 }
+
+
+export async function recognizeImageText(file: File): Promise<{ text: string; confidence: number }> {
+  await loadScriptOnce(
+    "https://cdn.jsdelivr.net/npm/tesseract.js@6.0.1/dist/tesseract.min.js",
+    "tesseract"
+  );
+  const tesseract = window.Tesseract;
+  if (!tesseract?.createWorker) throw new Error("Thư viện OCR đã tải nhưng không khởi tạo được.");
+  let worker: any;
+  try {
+    worker = await tesseract.createWorker("vie", 1, {
+      workerPath: "https://cdn.jsdelivr.net/npm/tesseract.js@6.0.1/dist/worker.min.js",
+      corePath: "https://cdn.jsdelivr.net/npm/tesseract.js-core@6.0.1",
+      langPath: "https://tessdata.projectnaptha.com/4.0.0",
+      logger: () => undefined,
+    });
+    const result = await worker.recognize(file);
+    return {
+      text: String(result?.data?.text || "").trim(),
+      confidence: Number(result?.data?.confidence || 0),
+    };
+  } catch (error) {
+    const message = error instanceof Error ? error.message : String(error);
+    throw new Error(`Không nhận dạng được ảnh: ${message}`);
+  } finally {
+    if (worker) await worker.terminate().catch(() => undefined);
+  }
+}
