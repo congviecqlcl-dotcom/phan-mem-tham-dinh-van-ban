@@ -7,7 +7,9 @@ export function runClientAuditEngine(content: string, docType?: DocumentType | s
 
   // Determine detected document type
   let documentTypeDetected = 'Văn bản hành chính';
-  if (docType === 'to_trinh' || lower.includes('tờ trình') || lowerName.includes('to_trinh')) {
+  if (docType === 'don_de_nghi' || lower.includes('đơn đề nghị') || lowerName.includes('don_de_nghi')) {
+    documentTypeDetected = 'Đơn đề nghị';
+  } else if (docType === 'to_trinh' || lower.includes('tờ trình') || lowerName.includes('to_trinh')) {
     documentTypeDetected = 'Tờ trình (Nghị định 30/2020)';
   } else if (docType === 'quyet_dinh' || lower.includes('quyết định') || lowerName.includes('quyet_dinh')) {
     documentTypeDetected = 'Quyết định hành chính (Nghị định 30/2020)';
@@ -42,27 +44,8 @@ export function runClientAuditEngine(content: string, docType?: DocumentType | s
     });
   }
 
-  // 2. Viết tắt chức vụ, chức danh sai quy định (PGĐ, GĐ, PCT, CT, CCT, TP, PP, BGD)
-  if (
-    /\b(pgđ|gđ|pct|cct|bgd)\b/i.test(content) ||
-    /các\s+pgđ/i.test(content) ||
-    /phó\s+cct/i.test(content) ||
-    /phòng\s+tccb/i.test(content) ||
-    /phòng\s+qlcl/i.test(content)
-  ) {
-    issues.push({
-      id: 'err-thethuc-viet-tat-chuc-vu',
-      category: 'the_thuc',
-      severity: 'error',
-      title: 'Viết tắt tùy tiện chức vụ, chức danh lãnh đạo và phòng ban',
-      currentContent: 'PGĐ Sở, CCT, Phó CCT, Phòng TCCB, Phòng QLCL...',
-      expectedContent: 'Phó Giám đốc Sở, Chi cục trưởng, Phó Chi cục trưởng, Phòng Tổ chức cán bộ, Phòng Quản lý chất lượng...',
-      legalBasis: 'Khoản 10 Mục II Phần I Phụ lục I Nghị định số 30/2020/NĐ-CP & Quy chuẩn văn thư nhà nước',
-      explanation:
-        'Trong văn bản hành chính (đặc biệt là phần Nơi nhận và nội dung), nghiêm cấm viết tắt tùy tiện các chức vụ, chức danh lãnh đạo và tên phòng ban. Chỉ được phép viết tắt các từ ngữ theo quy chuẩn pháp luật như TM., KT., TL., TUQ., Q., UBND, HĐND.',
-      location: 'Phần Nơi nhận hoặc nội dung văn bản',
-    });
-  }
+  // Không tự động kết luận lỗi viết tắt chức vụ/phòng ban bằng quy tắc từ khóa.
+  // Chỉ chuyển nội dung này cho AI/công chức rà soát khi có trích dẫn nguyên văn và căn cứ áp dụng.
 
   // 3. Viết hoa bừa bãi tên cơ quan (viết hoa chữ Và, Của, Tại, Thuộc)
   if (

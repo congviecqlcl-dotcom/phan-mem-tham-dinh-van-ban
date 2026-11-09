@@ -1,6 +1,7 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import { Navbar, ActiveTab } from './components/Navbar';
 import { DocumentAuditor } from './components/DocumentAuditor';
+import { AttpDossierReview } from './components/AttpDossierReview';
 import { ChatAssistant } from './components/ChatAssistant';
 import { LegalExplorer } from './components/LegalExplorer';
 import { TemplateGenerator } from './components/TemplateGenerator';
@@ -114,6 +115,7 @@ export default function App() {
       <Navbar activeTab={activeTab} setActiveTab={setActiveTab} canManageUsers={isAdmin} />
       <main className="flex-1 max-w-7xl w-full mx-auto p-4 sm:p-6 lg:p-8">
         {activeTab === 'auditor' && <DocumentAuditor />}
+        {activeTab === 'dossier' && <AttpDossierReview />}
         {activeTab === 'chat' && <ChatAssistant />}
         {activeTab === 'library' && <LegalExplorer />}
         {activeTab === 'templates' && <TemplateGenerator />}

@@ -1,15 +1,14 @@
 import { authenticatedFetch } from '../utils/auth';
 import React, { useState, useRef, useEffect } from 'react';
-import { Send, Bot, User, Sparkles, Scale, Copy, Check, CornerDownLeft } from 'lucide-react';
+import { Send, Bot, User, Sparkles, Copy, Check, RefreshCw, CircleCheck, AlertCircle } from 'lucide-react';
 import { ChatMessage } from '../types';
-import { getLocalChatResponse } from '../utils/chatEngine';
 
 const PRESET_QUESTIONS = [
   'Thông tư 17/2024/TT-BNNPTNT thay đổi cách xếp loại cơ sở và thẩm quyền thế nào?',
   'Cơ sở nào được miễn cấp Giấy chứng nhận đủ điều kiện ATTP theo Điều 12 NĐ 15/2018?',
   'Quy tắc ghi trích yếu và dấu câu trong Nghị định 30/2020/NĐ-CP?',
   'Nội dung bắt buộc ghi nhãn Thực phẩm bảo vệ sức khỏe theo NĐ 111/2021?',
-  'Quy trình thu hồi thực phẩm không an toàn trong 24 giờ theo Thông tư 17/2021?',
+  'Quy trình tiếp nhận, xác minh, xử lý và theo dõi việc thu hồi thực phẩm không an toàn; cần đối chiếu căn cứ và thời hạn nào?',
   'Địa giới hành chính cấp xã mới của tỉnh Phú Thọ theo Nghị quyết 1676/2025?'
 ];
 
@@ -28,7 +27,9 @@ Tôi có thể hỗ trợ rà soát các nhóm văn bản dưới đây. Tuy nhi
 - 📜 **Nghị định số 43/2017/NĐ-CP & 111/2021/NĐ-CP** (Nhãn hàng hóa)
 - 📜 **Nghị định số 181/2013/NĐ-CP** (Quảng cáo thực phẩm, TPCN, thuốc, mỹ phẩm)
 - 📜 **Nghị định số 30/2020/NĐ-CP** (Thể thức & kỹ thuật trình bày văn bản hành chính)
-- 📜 **Nghị quyết 202/2025/QH15 & 1676/NQ-UBTVQH15** (Sáp nhập & sắp xếp địa giới hành chính mới).
+- 📜 **Nghị quyết 202/2025/QH15 & 1676/NQ-UBTVQH15** (Sắp xếp đơn vị hành chính cấp tỉnh, cấp xã).
+- 📜 **Nghị định số 46/2026/NĐ-CP và Nghị quyết số 09/2026/NQ-CP** (cần kiểm tra mốc áp dụng và văn bản chuyển tiếp tại thời điểm tra cứu).
+- 📜 **Thông tư số 17/2025/TT-BNNMT** và các quyết định công bố thủ tục hành chính, quy trình nội bộ của tỉnh (cần đối chiếu bản đang có hiệu lực).
 
 Bạn có thể đặt bất kỳ câu hỏi nào về thẩm quyền, biểu mẫu, quy chuẩn, nhãn mác hoặc yêu cầu kiểm tra tình huống thực tế!`,
       timestamp: new Date().toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' }),
@@ -37,6 +38,7 @@ Bạn có thể đặt bất kỳ câu hỏi nào về thẩm quyền, biểu m�
   const [input, setInput] = useState<string>('');
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [copiedId, setCopiedId] = useState<string | null>(null);
+  const [geminiStatus, setGeminiStatus] = useState<{checking:boolean; connected:boolean|null; message:string; code?:string}>({checking:false, connected:null, message:'Chưa kiểm tra kết nối Gemini.'});
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   const scrollToBottom = () => {
@@ -46,6 +48,26 @@ Bạn có thể đặt bất kỳ câu hỏi nào về thẩm quyền, biểu m�
   useEffect(() => {
     scrollToBottom();
   }, [messages, isLoading]);
+
+  const checkGeminiStatus = async () => {
+    setGeminiStatus({ checking: true, connected: null, message: 'Đang kiểm tra kết nối Gemini...' });
+    try {
+      const response = await authenticatedFetch('/api/ai-status', { method: 'GET' });
+      const data = await response.json().catch(() => ({}));
+      if (response.ok && data.connected === true) {
+        setGeminiStatus({ checking: false, connected: true, message: data.message || 'Kết nối Gemini thành công.' });
+      } else {
+        setGeminiStatus({
+          checking: false,
+          connected: false,
+          code: typeof data.code === 'string' ? data.code : `HTTP_${response.status}`,
+          message: typeof data.message === 'string' ? data.message : 'Gemini chưa kết nối được. Quản trị viên cần kiểm tra cấu hình và nhật ký máy chủ.',
+        });
+      }
+    } catch {
+      setGeminiStatus({ checking: false, connected: false, code: 'NETWORK_ERROR', message: 'Không gọi được dịch vụ kiểm tra. Hãy kiểm tra đăng nhập và kết nối mạng.' });
+    }
+  };
 
   const handleSendMessage = async (textToSend?: string) => {
     const query = (textToSend || input).trim();
@@ -73,25 +95,26 @@ Bạn có thể đặt bất kỳ câu hỏi nào về thẩm quyền, biểu m�
           }),
         });
 
-        if (response.ok) {
-          const data = await response.json();
-          const sourceNotice =
-            data.source === 'local_fallback'
-              ? '\n\n⚠️ LƯU Ý: Câu trả lời từ bộ quy tắc cục bộ, không phải tra cứu pháp luật trực tiếp. Hãy kiểm chứng với văn bản gốc hiện hành.'
+        const data = await response.json().catch(() => ({}));
+        if (!response.ok) {
+          const serverMessage = typeof data.error === 'string' ? data.error : 'Máy chủ không xử lý được yêu cầu.';
+          replyText = `⚠️ Không gọi được dịch vụ trợ lý (HTTP ${response.status}). ${serverMessage}\n\nKhông sử dụng phản hồi này làm căn cứ pháp lý. Mã lỗi HTTP được hiển thị để quản trị viên xác định nguyên nhân.`;
+        } else {
+          const notice = typeof data.notice === 'string' && data.notice.trim()
+            ? data.notice.trim()
+            : data.source === 'local_fallback'
+              ? 'Đây là câu trả lời từ bộ quy tắc cục bộ, không phải tra cứu pháp luật trực tiếp. Cần kiểm chứng với văn bản gốc hiện hành.'
               : data.source === 'gemini'
-              ? '\n\n⚠️ LƯU Ý: Câu trả lời do AI tạo. Cần đối chiếu văn bản pháp luật gốc, hiệu lực và phạm vi áp dụng trước khi sử dụng.'
-              : '';
-          const apiNotice = data.notice ? '\n\n⚠️ ' + data.notice : '';
-          replyText = (data.reply || '') + sourceNotice + apiNotice;
+                ? 'Câu trả lời do AI tạo; cần đối chiếu văn bản pháp luật gốc, hiệu lực và phạm vi áp dụng trước khi sử dụng.'
+                : '';
+          replyText = [data.reply || 'Máy chủ không trả về nội dung.', notice ? '⚠️ LƯU Ý: ' + notice : '']
+            .filter(Boolean)
+            .join('\n\n');
         }
       } catch (netErr) {
-        console.warn('Network chat error, using local legal engine:', netErr);
-      }
-
-      if (!replyText) {
-        replyText =
-          getLocalChatResponse(query) +
-          '\n\n⚠️ LƯU Ý: Đây là câu trả lời dự phòng cục bộ do kết nối hoặc máy chủ không trả về kết quả. Chưa được xác minh với văn bản pháp luật gốc hiện hành.';
+        // Do not hide transport/authentication failures behind a canned legal answer.
+        console.error('Chat request could not reach the API:', netErr);
+        replyText = '⚠️ Không kết nối được với dịch vụ Trợ lý. Yêu cầu có thể chưa đến máy chủ; vui lòng kiểm tra kết nối và đăng nhập. Không sử dụng câu trả lời dự phòng làm căn cứ pháp lý.';
       }
 
       const botMessage: ChatMessage = {
@@ -103,7 +126,8 @@ Bạn có thể đặt bất kỳ câu hỏi nào về thẩm quyền, biểu m�
 
       setMessages((prev) => [...prev, botMessage]);
     } catch (err: any) {
-      const fallbackReply = getLocalChatResponse(query);
+      console.error('Unexpected chat interface error:', err);
+      const fallbackReply = '⚠️ Giao diện Trợ lý gặp lỗi khi xử lý yêu cầu. Không có kết quả pháp lý được xác minh; vui lòng thử lại hoặc báo quản trị viên.';
       setMessages((prev) => [
         ...prev,
         {
@@ -126,6 +150,20 @@ Bạn có thể đặt bất kỳ câu hỏi nào về thẩm quyền, biểu m�
 
   return (
     <div className="max-w-5xl mx-auto space-y-4">
+      <div className="bg-white rounded-2xl border border-neutral-200 px-4 py-3 shadow-sm flex flex-wrap items-center justify-between gap-3">
+        <div className="flex items-center gap-2 text-xs">
+          {geminiStatus.connected === true ? <CircleCheck className="w-4 h-4 text-emerald-600" /> : geminiStatus.connected === false ? <AlertCircle className="w-4 h-4 text-amber-600" /> : <Bot className="w-4 h-4 text-neutral-500" />}
+          <div>
+            <div className="font-semibold text-neutral-800">Trạng thái kết nối Gemini</div>
+            <div className="text-neutral-500">{geminiStatus.message}{geminiStatus.code ? ` (mã: ${geminiStatus.code})` : ''}</div>
+          </div>
+        </div>
+        <button type="button" onClick={checkGeminiStatus} disabled={geminiStatus.checking} className="inline-flex items-center gap-2 rounded-lg border border-neutral-300 px-3 py-2 text-xs font-medium text-neutral-700 hover:bg-neutral-50 disabled:opacity-50">
+          <RefreshCw className={`w-3.5 h-3.5 ${geminiStatus.checking ? 'animate-spin' : ''}`} />
+          {geminiStatus.checking ? 'Đang kiểm tra...' : 'Kiểm tra kết nối'}
+        </button>
+      </div>
+
       {/* Quick Question Chips */}
       <div className="bg-white rounded-2xl border border-neutral-200 p-4 shadow-sm space-y-2">
         <div className="flex items-center gap-2 text-xs font-semibold text-neutral-700">

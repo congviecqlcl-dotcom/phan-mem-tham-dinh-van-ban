@@ -81,7 +81,14 @@ Bạn hỗ trợ phân tích các văn bản pháp luật được nêu dưới 
 
 Các tên văn bản trên chỉ là danh mục gợi ý phạm vi. Không suy ra từ danh mục này rằng văn bản còn hiệu lực, chưa bị sửa đổi/thay thế, áp dụng cho tình huống cụ thể, hoặc rằng bất kỳ mô tả nội dung nào đã được xác minh. Không nhắc lại các chi tiết pháp lý cụ thể như thời hạn, thẩm quyền, điều kiện, mức xử lý hoặc quy tắc trình bày nếu không có toàn văn nguồn chính thức và căn cứ hiện hành để kiểm chứng.
 
-KHI THẨM ĐỊNH VĂN BẢN ĐƯỢC CUNG CẤP:
+NGUYÊN TẮC KIỂM SOÁT BẰNG CHỨNG VÀ CHỐNG PHÁT HIỆN SAI:
+1. Mỗi phát hiện bắt buộc trích nguyên văn một đoạn thực sự có trong nội dung đầu vào ở trường currentContent. Nếu không trích được đoạn chứng minh, không tạo phát hiện.
+2. Không suy đoán nội dung bị mất, mờ hoặc sai dấu do OCR. Phải phân biệt nghi vấn lỗi OCR với lỗi của tài liệu; nội dung không đọc rõ phải chuyển công chức đối chiếu ảnh gốc.
+3. Không gắn lỗi viết tắt nếu chuỗi viết tắt không xuất hiện nguyên văn trong đầu vào. Nếu văn bản gốc ghi “GIÁM ĐỐC” thì tuyệt đối không báo lỗi viết tắt “GĐ”.
+4. Phải phân loại đúng tài liệu trước khi áp dụng quy tắc: đơn đề nghị do doanh nghiệp lập không mặc nhiên là công văn hoặc văn bản hành chính do cơ quan nhà nước ban hành; không áp dụng máy móc toàn bộ thể thức Nghị định 30/2020/NĐ-CP.
+5. Với tên cơ quan, địa danh, thẩm quyền và đăng ký doanh nghiệp, phải xét thời điểm phát sinh dữ kiện. Địa chỉ trụ sở đăng ký doanh nghiệp không mặc nhiên phải trùng địa chỉ cơ sở hoạt động.
+6. Không đề xuất tên cơ quan, địa chỉ hoặc nội dung pháp lý thay thế nếu không có căn cứ chính thức, đúng thời điểm và đúng phạm vi áp dụng. Khi thiếu chứng cứ, ghi “CHƯA ĐỦ CĂN CỨ XÁC ĐỊNH”.
+7. Chỉ xếp “Lỗi nghiêm trọng” khi có quy định bắt buộc xác định được, áp dụng đúng loại tài liệu và có đoạn chứng minh cụ thể. Nghi vấn OCR, dữ liệu thiếu hoặc chưa xác minh không được xếp là lỗi nghiêm trọng.\n\nKHI THẨM ĐỊNH VĂN BẢN ĐƯỢC CUNG CẤP:
 Hãy phân tích tỉ mỉ từng chi tiết theo 4 trục:
 1. Thể thức & Kỹ thuật trình bày (Nghị định 30/2020/NĐ-CP - đặc biệt là cấm viết tắt tùy tiện theo Phụ lục I và tuân thủ quy tắc viết hoa theo Phụ lục II).
 2. Căn cứ pháp lý & Hiệu lực văn bản.
@@ -89,6 +96,21 @@ Hãy phân tích tỉ mỉ từng chi tiết theo 4 trục:
 4. Địa giới hành chính (Nghị quyết 202/2025 & 1676/NQ-UBTVQH15).
 
 Hãy chỉ ra vấn đề cụ thể và nêu căn cứ Điều/Khoản/Mẫu Phụ lục chỉ khi xác minh được từ nguồn có sẵn. Phân biệt rõ dữ kiện trích từ hồ sơ, suy luận, quy tắc kiểm tra cục bộ và căn cứ pháp luật. Nếu không xác minh được, ghi rõ điều chưa xác minh thay vì tự tạo viện dẫn. Có thể cung cấp bản dự thảo chỉnh sửa (fixedDocument), nhưng phải ghi rõ đây là dự thảo AI cần công chức kiểm tra; không cam kết chính xác tuyệt đối.
+
+QUY TẮC BẮT BUỘC KHI HƯỚNG DẪN THỦ TỤC HÀNH CHÍNH VÀ THẨM ĐỊNH HỒ SƠ:
+1. Trước khi hướng dẫn, phải phân loại đúng hoạt động thực tế (sản xuất ban đầu, sơ chế, sơ chế nhỏ lẻ, chế biến, bảo quản, kinh doanh, kinh doanh nhỏ lẻ, kinh doanh thực phẩm bao gói sẵn...), loại sản phẩm, quy mô, địa điểm, công đoạn và chủ thể. Không mặc định mọi HTX đều phải xin giấy chứng nhận. Phải rà soát trường hợp không thuộc diện cấp giấy và vẫn phải tuân thủ điều kiện ATTP.
+2. Phải phân biệt: quy định chung của Luật/Nghị định; quy định chuyên ngành nông, lâm, thủy sản; thủ tục hành chính đã được công bố; quy trình nội bộ; yêu cầu xác minh thực tế. Không dùng văn bản chung để thay thế mẫu, thành phần hồ sơ, thời hạn hoặc thẩm quyền trong thủ tục chuyên ngành đã công bố.
+3. Không được ghi “đã xác minh”, “căn cứ hiện hành” hoặc khẳng định một điều/khoản nếu nội dung văn bản gốc chưa có trong ngữ cảnh hoặc chưa được truy xuất từ nguồn chính thức. Trong trường hợp đó phải ghi “CHƯA TRUY XUẤT ĐƯỢC VĂN BẢN GỐC ĐỂ XÁC MINH”. Không tự tạo đường dẫn, số quyết định, số điều, khoản, phụ lục, biểu mẫu hoặc nội dung điều khoản.
+4. Với hồ sơ cấp giấy ATTP lĩnh vực nông, lâm, thủy sản, phải kiểm tra phiên bản thủ tục hành chính và quy trình nội bộ đang áp dụng tại đúng tỉnh; kiểm tra quyết định công bố TTHC, quyết định phê duyệt quy trình nội bộ, cơ quan tiếp nhận, cơ quan thẩm định, người có thẩm quyền ký và cơ chế ủy quyền/phân cấp. Không nêu “Chi cục hay Phòng cấp huyện” như hai lựa chọn mặc định; phải căn cứ tài liệu địa phương hiện hành được cung cấp hoặc truy xuất.
+5. Không tự đặt thời hạn theo các chặng kiểu “ngày 01–03”, “ngày 03–05”, không tự tính thời hạn xử lý nội bộ. Chỉ nêu thời hạn giải quyết, thời hạn trả lời tính đầy đủ hồ sơ, thời hạn bổ sung/khắc phục khi có căn cứ từ thủ tục hiện hành; phải phân biệt ngày làm việc với ngày theo lịch.
+6. Không tự đặt ra kết quả “đạt có điều kiện”, thời hạn khắc phục, số lần tái kiểm tra, quy trình thành lập đoàn hoặc thành phần ký biên bản. Chỉ sử dụng đúng tên trạng thái/kết quả, mẫu biên bản và cách xử lý được quy định tại văn bản chuyên ngành hoặc quy trình nội bộ đã kiểm chứng.
+7. Với thành phần hồ sơ, phải lập bảng đối chiếu riêng: (a) thành phần bắt buộc theo thủ tục hành chính đang công bố; (b) biểu mẫu và bản chính/bản sao; (c) thông tin phải đối chiếu; (d) nội dung chỉ xác minh tại hiện trường. Không tự loại bỏ giấy tờ được TTHC chuyên ngành đang công bố yêu cầu; cũng không áp đặt giấy tờ không có trong TTHC áp dụng.
+8. Không coi nội dung mô tả trong hồ sơ là bằng chứng cơ sở đã đáp ứng ngoài thực tế. Phân biệt “hồ sơ có kê khai”, “tài liệu chứng minh”, “đã kiểm tra trực tiếp”, “chưa kiểm tra”. Không đề xuất cấp giấy chỉ căn cứ vào bản thuyết minh.
+9. Với câu hỏi có giả định sai (ví dụ một thời hạn “24 giờ”, một điều kiện miễn giấy, một mẫu giấy hoặc tên cơ quan), phải kiểm tra giả định trước; nếu không có căn cứ thì nói rõ chưa xác nhận, không lặp lại giả định như sự thật.
+10. Không khẳng định mọi chữ viết tắt như ATTP, HTX, GCN đều bị cấm trong mọi tài liệu. Phải xác định loại văn bản, vị trí sử dụng và quy tắc viết tắt áp dụng; dẫn căn cứ cụ thể nếu có.
+11. Cấu trúc câu trả lời nghiệp vụ: (i) dữ liệu tình huống còn thiếu; (ii) phân loại hoạt động và xem xét diện miễn/không phải cấp; (iii) căn cứ và phiên bản văn bản đã kiểm chứng; (iv) từng thao tác công chức phải làm; (v) đầu vào, cách kiểm tra, tiêu chí, sản phẩm đầu ra từng bước; (vi) điểm cần thẩm định thực tế; (vii) rủi ro và người có thẩm quyền quyết định. Nếu chưa có dữ liệu thiết yếu, chỉ đưa khung quy trình có điều kiện, không giả định thay người dùng.
+12. Cập nhật pháp luật là việc bắt buộc: phải xem xét văn bản mới, văn bản sửa đổi, điều khoản chuyển tiếp, tạm ngưng hiệu lực, ngày áp dụng và văn bản công bố TTHC. Không mặc định Nghị định 15/2018/NĐ-CP là căn cứ hiện hành duy nhất; phải kiểm tra văn bản mới và mốc hiệu lực tại thời điểm hỏi.
+
 `;
 
 // Helper: Local static rule checker as instant analyzer & fallback
@@ -117,28 +139,8 @@ function runLocalRuleAudit(content: string, docType?: string) {
     });
   }
 
-  // 2. Viết tắt chức vụ, chức danh sai quy định (PGĐ, GĐ, PCT, CT, CCT, TP, PP, BGD)
-  if (
-    /\b(pgđ|gđ|pct|cct|bgd)\b/i.test(content) ||
-    /các\s+pgđ/i.test(content) ||
-    /phó\s+cct/i.test(content) ||
-    /phòng\s+tccb/i.test(content)
-  ) {
-    issues.push({
-      id: "err-thethuc-viet-tat-chuc-vu",
-      category: "the_thuc",
-      severity: "error",
-      title: "Viết tắt tùy tiện chức vụ, chức danh lãnh đạo và phòng ban",
-      currentContent: "PGĐ Sở, CCT, Phó CCT, Phòng TCCB...",
-      expectedContent:
-        "Phó Giám đốc Sở, Chi cục trưởng, Phó Chi cục trưởng, Phòng Tổ chức cán bộ...",
-      legalBasis:
-        "Khoản 10 Mục II Phần I Phụ lục I Nghị định số 30/2020/NĐ-CP & Quy chuẩn văn thư nhà nước",
-      explanation:
-        "Trong văn bản hành chính (đặc biệt là phần Nơi nhận và nội dung), nghiêm cấm viết tắt tùy tiện các chức vụ, chức danh lãnh đạo và tên phòng ban. Chỉ được phép viết tắt các từ ngữ theo quy chuẩn pháp luật như TM., KT., TL., TUQ., Q., UBND, HĐND.",
-      location: "Phần Nơi nhận hoặc nội dung văn bản",
-    });
-  }
+  // Không tự động kết luận lỗi viết tắt chức vụ/phòng ban bằng quy tắc từ khóa.
+  // Chỉ ghi nhận khi có trích dẫn nguyên văn và căn cứ áp dụng được xác minh.
 
   // 3. Viết hoa bừa bãi tên cơ quan (viết hoa chữ Và, Của, Tại, Thuộc)
   if (
@@ -427,21 +429,51 @@ function runLocalRuleAudit(content: string, docType?: string) {
 // API: Universal Document Parser (/api/parse-document)
 app.post("/api/parse-document", requireAppRole(["CONG_CHUC", "LANH_DAO", "QUAN_TRI"]), async (req, res) => {
   try {
-    const { fileName, base64Data, mimeType } = req.body ?? {};
-    if (!isNonEmptyString(base64Data)) {
-      return res.status(400).json({ error: "Chưa nhận được dữ liệu tệp văn bản hợp lệ." });
-    }
-    if (base64Data.length > MAX_BASE64_CHARS) {
-      return res.status(413).json({ error: "Tệp vượt giới hạn xử lý. Hãy dùng tệp nhỏ hơn 15 MB trước khi mã hóa." });
-    }
-
-    const cleanBase64 = base64Data.replace(/^data:.*?;base64,/, "");
-    if (!isStrictBase64(cleanBase64)) {
-      return res.status(400).json({ error: "Dữ liệu tệp mã hóa không hợp lệ. Hãy tải lại tệp gốc và thử lại." });
-    }
-    const buffer = Buffer.from(cleanBase64, "base64");
-    if (buffer.length === 0 || buffer.length > 11_250_000) {
-      return res.status(413).json({ error: "Kích thước tệp sau giải mã không hợp lệ hoặc vượt giới hạn xử lý." });
+    const { fileName, base64Data, mimeType, storagePath } = req.body ?? {};
+    let buffer: Buffer;
+    if (isNonEmptyString(storagePath)) {
+      // Accept only object paths inside this private bucket; never accept arbitrary URLs.
+      const segments = storagePath.split('/');
+      if (segments.length < 2 || segments.length > 4 || segments.some((part: string) => !part || part === "." || part === ".." || part.includes(String.fromCharCode(92)))) {
+        return res.status(400).json({ error: "Đường dẫn tài liệu không hợp lệ." });
+      }
+      const authorization = req.header("authorization") || "";
+      const rawSupabaseUrl = process.env.SUPABASE_URL || "";
+      const supabaseUrl = rawSupabaseUrl.endsWith("/") ? rawSupabaseUrl.slice(0, -1) : rawSupabaseUrl;
+      const supabaseAnonKey = process.env.SUPABASE_ANON_KEY;
+      if (!supabaseUrl || !supabaseAnonKey || authorization.slice(0, 7).toLowerCase() !== "bearer ") {
+        return res.status(503).json({ error: "Chưa cấu hình kết nối kho lưu trữ." });
+      }
+      const objectUrl = supabaseUrl + "/storage/v1/object/attp-dossiers-private/" + segments.map(encodeURIComponent).join("/");
+      const objectResponse = await fetch(objectUrl, {
+        headers: { apikey: supabaseAnonKey, Authorization: authorization },
+        signal: AbortSignal.timeout(20000),
+      });
+      if (!objectResponse.ok) {
+        return res.status(objectResponse.status === 404 ? 404 : objectResponse.status === 403 ? 403 : 502).json({
+          error: objectResponse.status === 403 ? "Bạn không có quyền đọc tài liệu này." : "Không lấy được tài liệu từ kho lưu trữ để trích xuất.",
+        });
+      }
+      const arrayBuffer = await objectResponse.arrayBuffer();
+      if (arrayBuffer.byteLength === 0 || arrayBuffer.byteLength > 25 * 1024 * 1024) {
+        return res.status(413).json({ error: "Tệp rỗng hoặc vượt giới hạn xử lý 25 MB." });
+      }
+      buffer = Buffer.from(arrayBuffer);
+    } else {
+      if (!isNonEmptyString(base64Data)) {
+        return res.status(400).json({ error: "Chưa nhận được dữ liệu tệp văn bản hợp lệ." });
+      }
+      if (base64Data.length > MAX_BASE64_CHARS) {
+        return res.status(413).json({ error: "Tệp vượt giới hạn xử lý. Hãy tải tệp trực tiếp lên kho lưu trữ." });
+      }
+      const cleanBase64 = base64Data.replace(/^data:.*?;base64,/, "");
+      if (!isStrictBase64(cleanBase64)) {
+        return res.status(400).json({ error: "Dữ liệu tệp mã hóa không hợp lệ. Hãy tải lại tệp gốc và thử lại." });
+      }
+      buffer = Buffer.from(cleanBase64, "base64");
+      if (buffer.length === 0 || buffer.length > 25 * 1024 * 1024) {
+        return res.status(413).json({ error: "Kích thước tệp sau giải mã không hợp lệ hoặc vượt giới hạn xử lý." });
+      }
     }
     const lowerName = typeof fileName === "string" ? fileName.toLowerCase() : "";
     const hasExtension = /\.[a-z0-9]+$/i.test(lowerName);
@@ -544,7 +576,7 @@ async function performSingleAudit(params: {
 
   if (ai && content && content.length > 20) {
     // List of models to try in priority order
-    const modelsToTry = ["gemini-3.7-flash", "gemini-3.1-flash-lite"];
+    const modelsToTry = ["gemini-3.8-flash", "gemini-3.1-flash-lite"];
 
     for (const modelName of modelsToTry) {
       try {
@@ -584,6 +616,15 @@ YÊU CẦU ĐÁNH GIÁ:
           config: {
             systemInstruction: LEGAL_SYSTEM_PROMPT,
             responseMimeType: "application/json",
+            // Bound each provider request and the full two-model attempt sequence.
+            // SDK timeout aborts the HTTP attempt; AbortSignal caps the overall sequence.
+            httpOptions: {
+              timeout: 35_000,
+              retryOptions: { attempts: 1 },
+            },
+            abortSignal: AbortSignal.timeout(75_000),
+            automaticContinuation: false,
+            maxOutputTokens: 6000,
             responseSchema: {
               type: Type.OBJECT,
               properties: {
@@ -624,12 +665,8 @@ YÊU CẦU ĐÁNH GIÁ:
                     required: ["id", "category", "severity", "title", "expectedContent", "legalBasis", "explanation"],
                   },
                 },
-                fixedDocument: {
-                  type: Type.STRING,
-                  description: "Bản dự thảo chỉnh sửa do AI đề xuất; phải được công chức kiểm tra căn cứ pháp lý và nội dung trước khi sử dụng.",
-                },
               },
-              required: ["status", "documentTypeDetected", "summary", "positivePoints", "issues", "fixedDocument"],
+              required: ["status", "documentTypeDetected", "summary", "positivePoints", "issues"],
             },
           },
         });
@@ -806,6 +843,82 @@ function getIntelligentLegalAnswer(_question: string): string {
   ].join("\n");
 }
 
+// API: kiểm tra cấu hình và khả năng kết nối Gemini; không tiết lộ khóa.
+app.get("/api/ai-status", requireAppRole(["CONG_CHUC", "LANH_DAO", "QUAN_TRI"]), async (_req, res) => {
+  if (!process.env.GEMINI_API_KEY) {
+    return res.status(503).json({ configured: false, connected: false, code: "MISSING_API_KEY", message: "Chưa cấu hình khóa Gemini cho môi trường này." });
+  }
+  try {
+    const ai = getAI();
+    if (!ai) {
+      return res.status(503).json({ configured: false, connected: false, code: "CLIENT_INIT_FAILED", message: "Không khởi tạo được ứng dụng Gemini." });
+    }
+    const modelsToTry = ["gemini-3.8-flash", "gemini-3.5-flash-lite"];
+    let response: any = null;
+    let selectedModel = "";
+    let lastProviderError: any = null;
+    for (const modelName of modelsToTry) {
+      for (let attempt = 0; attempt < 2; attempt += 1) {
+        try {
+          response = await ai.models.generateContent({
+            model: modelName,
+            contents: "Reply with the single word OK.",
+            config: { maxOutputTokens: 128 },
+          });
+          selectedModel = modelName;
+          break;
+        } catch (providerError: any) {
+          lastProviderError = providerError;
+          const status = Number(providerError?.status ?? providerError?.statusCode ?? providerError?.response?.status ?? 0);
+          const transient = [429, 500, 502, 503, 504].includes(status);
+          if (!transient) throw providerError;
+          if (attempt === 0) await new Promise(resolve => setTimeout(resolve, 600));
+        }
+      }
+      if (response) break;
+    }
+    if (!response) throw lastProviderError ?? new Error("Gemini không phản hồi từ các mô hình dự phòng.");
+    const responseText = response?.text?.trim()
+      || response?.candidates?.flatMap((candidate: any) =>
+        candidate?.content?.parts?.map((part: any) => part?.text).filter((part: any) => typeof part === "string")
+      ).join("").trim()
+      || "";
+    if (!responseText) {
+      const firstCandidate = response?.candidates?.[0];
+      const finishReason = String(firstCandidate?.finishReason ?? "UNKNOWN");
+      const blockReason = String(response?.promptFeedback?.blockReason ?? "");
+      const code = blockReason ? "PROMPT_BLOCKED"
+        : finishReason === "SAFETY" ? "SAFETY_BLOCKED"
+        : finishReason === "MAX_TOKENS" ? "OUTPUT_LIMIT"
+        : "EMPTY_RESPONSE";
+      console.warn("Gemini connectivity test returned no text", {
+        model: selectedModel,
+        candidateCount: response?.candidates?.length ?? 0,
+        finishReason,
+        blockReason: blockReason || null,
+      });
+      return res.status(502).json({ configured: true, connected: false, code, message: "Gemini đã phản hồi nhưng không có phần văn bản để đọc." });
+    }
+    return res.json({ configured: true, connected: true, model: selectedModel, message: "Kết nối Gemini thành công." });
+  } catch (err: any) {
+    const status = Number(err?.status ?? err?.statusCode ?? err?.response?.status ?? 0);
+    const message = String(err?.message ?? "");
+    const code = status === 401 || status === 403 ? "AUTH_OR_PERMISSION"
+      : status === 429 ? "QUOTA_OR_RATE_LIMIT"
+      : status === 503 ? "PROVIDER_BUSY"
+      : status === 404 ? "MODEL_NOT_FOUND"
+      : status >= 500 ? "PROVIDER_ERROR"
+      : "GEMINI_REQUEST_FAILED";
+    console.error("Gemini connectivity test failed", { status, code, message: message.slice(0, 300) });
+    return res.status(502).json({
+      configured: true, connected: false, code, status: status || null,
+      message: code === "PROVIDER_BUSY"
+        ? "Gemini đang quá tải hoặc tạm thời không khả dụng. Hệ thống đã thử mô hình dự phòng; vui lòng thử lại sau."
+        : "Gemini chưa phản hồi thành công. Kiểm tra log máy chủ theo mã lỗi.",
+    });
+  }
+});
+
 // API: Legal Assistant Chat
 app.post("/api/chat", requireAppRole(["CONG_CHUC", "LANH_DAO", "QUAN_TRI"]), async (req, res) => {
   try {
@@ -816,23 +929,53 @@ app.post("/api/chat", requireAppRole(["CONG_CHUC", "LANH_DAO", "QUAN_TRI"]), asy
     if (exceedsStringLimit(message, MAX_CHAT_CHARS)) {
       return res.status(413).json({ error: `Câu hỏi vượt giới hạn ${MAX_CHAT_CHARS.toLocaleString("vi-VN")} ký tự.` });
     }
+    // Log only request metadata; never log the user's question, tokens, or dossier content.
+    console.info("[Chat API] request accepted", { messageLength: typeof message === "string" ? message.length : 0 });
     const ai = getAI();
 
     if (ai) {
       try {
-        const chat = ai.chats.create({
-          model: "gemini-3.7-flash",
-          config: {
-            systemInstruction: `${LEGAL_SYSTEM_PROMPT}\n\nBạn trả lời ngắn gọn, rành mạch, súc tích, luôn trích dẫn chính xác tên văn bản và Điều/Khoản tương ứng. Hãy hỗ trợ người dùng giải đáp chuyên sâu về an toàn thực phẩm, soạn thảo văn bản hành chính theo NĐ 30, nhãn mác hàng hóa theo NĐ 111, phân công quản lý và kiểm tra thẩm định.`,
-          },
-        });
-
-        const response = await chat.sendMessage({ message: message || "Xin chào" });
-        if (response && response.text) {
-          return res.json({ reply: response.text, source: "gemini", notice: "Câu trả lời do mô hình AI tạo; cần đối chiếu văn bản pháp luật gốc, hiệu lực và phạm vi áp dụng trước khi sử dụng." });
+        const modelsToTry = ["gemini-3.8-flash", "gemini-3.5-flash-lite"];
+        let response: any = null;
+        let lastProviderError: any = null;
+        for (const modelName of modelsToTry) {
+          for (let attempt = 0; attempt < 2; attempt += 1) {
+            try {
+              const chat = ai.chats.create({
+                model: modelName,
+                config: {
+                  systemInstruction: `${LEGAL_SYSTEM_PROMPT}\\n\\nBạn trả lời ngắn gọn, rành mạch, súc tích. Chỉ viện dẫn Điều/Khoản khi có căn cứ kiểm chứng; nếu chưa có văn bản gốc thì phải nói rõ chưa đủ căn cứ. Hãy hỗ trợ nghiệp vụ an toàn thực phẩm và văn bản hành chính.`,
+                },
+              });
+              response = await chat.sendMessage({ message: message || "Xin chào" });
+              break;
+            } catch (providerError: any) {
+              lastProviderError = providerError;
+              const status = Number(providerError?.status ?? providerError?.statusCode ?? providerError?.response?.status ?? 0);
+              const transient = [429, 500, 502, 503, 504].includes(status);
+              if (!transient) throw providerError;
+              if (attempt === 0) await new Promise(resolve => setTimeout(resolve, 600));
+            }
+          }
+          const replyText = response?.text?.trim()
+            || response?.candidates?.flatMap((candidate: any) =>
+              candidate?.content?.parts?.map((part: any) => part?.text).filter((part: any) => typeof part === "string")
+            ).join("").trim()
+            || "";
+          if (replyText) {
+            return res.json({ reply: replyText, source: "gemini", notice: "Câu trả lời do mô hình AI tạo; cần đối chiếu văn bản pháp luật gốc, hiệu lực và phạm vi áp dụng trước khi sử dụng." });
+          }
+          response = null;
         }
+        if (lastProviderError) throw lastProviderError;
+        console.warn("Gemini chat returned no text from primary or fallback models.");
       } catch (geminiError: any) {
-        // Fallback to intelligent legal Q&A engine
+        const status = Number(geminiError?.status ?? geminiError?.statusCode ?? geminiError?.response?.status ?? 0);
+        console.error("Gemini chat request failed", {
+          status,
+          message: String(geminiError?.message ?? "").slice(0, 300),
+        });
+        // Chuyển sang bộ dự phòng; nguyên nhân được ghi rút gọn vào log máy chủ.
       }
     }
 

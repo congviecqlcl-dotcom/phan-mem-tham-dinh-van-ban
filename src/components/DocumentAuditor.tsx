@@ -39,6 +39,7 @@ import {
   downloadConsolidatedBatchReport
 } from '../utils/docxExport';
 import { runClientAuditEngine } from '../utils/auditEngine';
+import { recognizeScannedPdf, recognizeImageText } from '../utils/browserPdfOcr';
 
 export const DocumentAuditor: React.FC = () => {
   // Initial list with preset
@@ -101,6 +102,32 @@ export const DocumentAuditor: React.FC = () => {
     let detectedType: DocumentType = 'khac';
     let extractionError: string | undefined;
 
+    // Direct phone photos and scanned image files: OCR locally in the browser.
+    const isImage = /\.(png|jpe?g|webp|bmp|tif|tiff)$/i.test(lowerName) ||
+      ['image/png', 'image/jpeg', 'image/webp', 'image/bmp', 'image/tiff'].includes(file.type);
+    if (isImage) {
+      try {
+        const result = await recognizeImageText(file);
+        if (result.text.length < 20) {
+          extractionError = 'Ảnh không có đủ nội dung chữ để nhận dạng. Hãy chụp lại rõ nét, đủ sáng và không mất mép giấy.';
+        } else {
+          const accepted = window.confirm(
+            `Đã nhận dạng ảnh ngay trên trình duyệt (độ tin cậy ${Math.round(result.confidence)}%).\\n\\n--- NỘI DUNG NHẬN DẠNG ---\\n${result.text.slice(0, 1800)}${result.text.length > 1800 ? '\\n… (còn nội dung)' : ''}\\n\\nBạn đã đối chiếu với ảnh gốc và xác nhận đưa nội dung này vào thẩm định chưa?`
+          );
+          if (accepted) {
+            text = result.text;
+            extractionError = 'Đã OCR ảnh tại trình duyệt. Cần đối chiếu toàn bộ nội dung với ảnh gốc trước khi sử dụng.';
+          } else {
+            extractionError = 'Đã OCR nhưng chưa được người dùng xác nhận; ảnh chưa được đưa vào thẩm định.';
+          }
+        }
+      } catch (imageErr) {
+        console.error('Browser image OCR failed:', imageErr);
+        const detail = imageErr instanceof Error ? imageErr.message : String(imageErr);
+        extractionError = `Không thể OCR ảnh: ${detail || 'Lỗi không xác định'}.`;
+      }
+    }
+
     // 1. Client-side Mammoth for DOCX
     if (lowerName.endsWith('.docx')) {
       try {
@@ -161,10 +188,47 @@ export const DocumentAuditor: React.FC = () => {
     // Do not treat failed PDF/DOC/DOCX/RTF parsing as plain UTF-8 text.
     // Unsupported or unreadable binary files remain empty and are marked as errors.
 
+    // PDF scan fallback: if the PDF text layer is absent or only contains signature metadata,
+    // render and recognize every page locally in the browser.
+    if (lowerName.endsWith('.pdf') && text.trim().length < 200) {
+      try {
+        const ocr = await recognizeScannedPdf(file);
+        const failedPages = ocr.pages.filter((page) => page.status !== 'dat');
+        if (!ocr.text || ocr.text.length < 20) {
+          extractionError = 'OCR không nhận dạng được nội dung đủ tin cậy. Hãy kiểm tra ảnh quét hoặc nhập lại nội dung.';
+          text = '';
+        } else {
+          const pageSummary = ocr.pages.map((page) =>
+            `Trang ${page.page}: ${page.status === 'dat' ? 'nhận dạng được' : page.status === 'can_kiem_tra' ? 'cần kiểm tra' : 'không đọc được'} (độ tin cậy ${Math.round(page.confidence)}%)`
+          ).join('\n');
+          const preview = ocr.text.slice(0, 1800);
+          const accepted = window.confirm(
+            `Đã OCR ${ocr.pages.length} trang ngay trên trình duyệt. Tệp không được tải lên dịch vụ OCR.\n\n${pageSummary}\n\n--- XEM TRƯỚC NỘI DUNG ---\n${preview}${ocr.text.length > 1800 ? '\n… (còn nội dung)' : ''}\n\nBạn có xác nhận đã xem trước và muốn đưa nội dung OCR vào bước thẩm định không? Nội dung OCR vẫn phải được đối chiếu với ảnh gốc.`
+          );
+          if (accepted) {
+            text = ocr.text;
+            extractionError = failedPages.length
+              ? `Đã OCR nhưng có ${failedPages.length} trang cần kiểm tra thủ công: ${failedPages.map((p) => p.page).join(', ')}.`
+              : 'Đã OCR tại trình duyệt. Công chức vẫn phải đối chiếu nội dung với ảnh gốc trước khi sử dụng.';
+          } else {
+            text = '';
+            extractionError = 'Đã OCR nhưng người dùng chưa xác nhận nội dung; tệp chưa được đưa vào thẩm định.';
+          }
+        }
+      } catch (ocrErr) {
+        console.error('Browser OCR failed:', ocrErr);
+        const detail = ocrErr instanceof Error ? ocrErr.message : String(ocrErr);
+        extractionError = `Không thể khởi chạy OCR tiếng Việt: ${detail || 'Lỗi không xác định'}. Kiểm tra kết nối mạng, quyền chạy Web Worker và chính sách bảo mật trình duyệt.`;
+        text = '';
+      }
+    }
+
     // Auto-detect Document Type if not detected
     if (detectedType === 'khac' && text) {
       const lower = text.toLowerCase();
-      if (lower.includes('tờ trình') || lowerName.includes('to_trinh') || lowerName.includes('totrinh')) {
+      if (lower.includes('đơn đề nghị') || lowerName.includes('don_de_nghi') || lowerName.includes('don-de-nghi')) {
+        detectedType = 'don_de_nghi';
+      } else if (lower.includes('tờ trình') || lowerName.includes('to_trinh') || lowerName.includes('totrinh')) {
         detectedType = 'to_trinh';
       } else if (lower.includes('quyết định') || lowerName.includes('quyet_dinh') || lowerName.includes('quyetdinh')) {
         detectedType = 'quyet_dinh';
@@ -246,8 +310,8 @@ export const DocumentAuditor: React.FC = () => {
       message: failedCount === 0
         ? `Đã trích xuất thành công ${readyCount}/${newItems.length} tệp. Nhấn "Thẩm định tất cả" để xử lý hàng loạt!`
         : readyCount === 0
-          ? `Không trích xuất được nội dung của ${failedCount} tệp. Hãy kiểm tra định dạng; hệ thống hỗ trợ PDF, DOCX và TXT/MD/CSV/LOG.`
-          : `Đã trích xuất ${readyCount}/${newItems.length} tệp; ${failedCount} tệp lỗi và chưa được đưa vào thẩm định. Hãy kiểm tra định dạng hoặc nội dung các tệp lỗi.`,
+          ? `Không trích xuất được nội dung của ${failedCount} tệp. Chi tiết: ${newItems.filter((item) => item.status === 'error').map((item) => `${item.name}: ${item.errorMessage || 'Không rõ nguyên nhân'}`).join(' | ')}`
+          : `Đã trích xuất ${readyCount}/${newItems.length} tệp; ${failedCount} tệp lỗi. Chi tiết: ${newItems.filter((item) => item.status === 'error').map((item) => `${item.name}: ${item.errorMessage || 'Không rõ nguyên nhân'}`).join(' | ')}`,
     });
 
     if (fileInputRef.current) {
@@ -1091,7 +1155,7 @@ export const DocumentAuditor: React.FC = () => {
                   id="file-upload-input"
                   type="file"
                   multiple
-                  accept=".docx,.doc,.pdf,.txt,.md,.rtf,.odt,.csv,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/pdf,text/plain"
+                  accept=".docx,.doc,.pdf,.txt,.md,.rtf,.odt,.csv,.jpg,.jpeg,.png,.webp,.bmp,.tif,.tiff,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/pdf,image/jpeg,image/png,image/webp,text/plain"
                   onChange={handleFileInputChange}
                   className="hidden"
                 />
@@ -1139,6 +1203,7 @@ export const DocumentAuditor: React.FC = () => {
                     <option value="to_trinh">Tờ trình (Mẫu TTr)</option>
                     <option value="quyet_dinh">Quyết định (Mẫu QĐ)</option>
                     <option value="cong_van">Công văn (Mẫu CV)</option>
+                    <option value="don_de_nghi">Đơn đề nghị</option>
                     <option value="bien_ban">Biên bản thẩm định</option>
                     <option value="tu_cong_bo">Bản tự công bố SP</option>
                     <option value="nhan_hang_hoa">Nhãn hàng hóa / Nhãn phụ</option>

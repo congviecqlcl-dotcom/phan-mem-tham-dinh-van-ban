@@ -2,6 +2,7 @@ export type DocumentType =
   | 'to_trinh'
   | 'quyet_dinh'
   | 'cong_van'
+  | 'don_de_nghi'
   | 'bien_ban'
   | 'tu_cong_bo'
   | 'nhan_hang_hoa'
