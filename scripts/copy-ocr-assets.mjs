@@ -57,7 +57,7 @@ fs.copyFileSync(pdfWorker, path.join(publicOcr, "pdf.worker.min.js"));
 
 // Tesseract.js-core package versions use several filename conventions
 // (including *.wasm.js); copy all runtime assets instead of relying on one regex.
-const coreFiles = findFiles(coreRoot, (name) => /\\.(?:js|wasm|data)$/.test(name));
+const coreFiles = findFiles(coreRoot, (name) => /\.(?:js|wasm|data)$/.test(name));
 if (coreFiles.length === 0) {
   throw new Error("Không tìm thấy tệp JavaScript/WASM trong gói tesseract.js-core tại " + coreRoot);
 }
