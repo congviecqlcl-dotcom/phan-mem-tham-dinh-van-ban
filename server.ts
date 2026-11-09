@@ -46,6 +46,18 @@ function validateDocumentText(value: unknown): string | null {
   return null;
 }
 
+function filterEvidenceBackedIssues(issues: unknown, sourceContent: string) {
+  const source = sourceContent.normalize("NFC").replace(/\\s+/g, " ").trim();
+  const candidates = Array.isArray(issues) ? issues : [];
+  const validIssues = candidates.filter((issue: any) => {
+    const quote = typeof issue?.currentContent === "string"
+      ? issue.currentContent.normalize("NFC").replace(/\\s+/g, " ").trim()
+      : "";
+    return quote.length >= 3 && source.includes(quote);
+  });
+  return { validIssues, rejectedCount: candidates.length - validIssues.length };
+}
+
 // Lazy initialization of Gemini Client
 let aiClient: GoogleGenAI | null = null;
 function getAI(): GoogleGenAI | null {
@@ -90,7 +102,7 @@ NGUYÊN TẮC KIỂM SOÁT BẰNG CHỨNG VÀ CHỐNG PHÁT HIỆN SAI:
 6. Không đề xuất tên cơ quan, địa chỉ hoặc nội dung pháp lý thay thế nếu không có căn cứ chính thức, đúng thời điểm và đúng phạm vi áp dụng. Khi thiếu chứng cứ, ghi “CHƯA ĐỦ CĂN CỨ XÁC ĐỊNH”.
 7. Chỉ xếp “Lỗi nghiêm trọng” khi có quy định bắt buộc xác định được, áp dụng đúng loại tài liệu và có đoạn chứng minh cụ thể. Nghi vấn OCR, dữ liệu thiếu hoặc chưa xác minh không được xếp là lỗi nghiêm trọng.\n\nKHI THẨM ĐỊNH VĂN BẢN ĐƯỢC CUNG CẤP:
 Hãy phân tích tỉ mỉ từng chi tiết theo 4 trục:
-1. Thể thức & Kỹ thuật trình bày (Nghị định 30/2020/NĐ-CP - đặc biệt là cấm viết tắt tùy tiện theo Phụ lục I và tuân thủ quy tắc viết hoa theo Phụ lục II).
+1. Thể thức & Kỹ thuật trình bày: chỉ áp dụng Nghị định 30/2020/NĐ-CP sau khi xác định đúng loại văn bản và chủ thể ban hành; không áp dụng cho tài liệu doanh nghiệp/cá nhân chỉ vì có hình thức giống văn bản hành chính.
 2. Căn cứ pháp lý & Hiệu lực văn bản.
 3. Nội dung chuyên môn & Thẩm quyền quản lý (ATTP, Nhãn mác, Thủ tục, Thời hạn).
 4. Địa giới hành chính (Nghị quyết 202/2025 & 1676/NQ-UBTVQH15).
@@ -592,10 +604,10 @@ ${content || ""}
 \`\`\`
 
 YÊU CẦU ĐÁNH GIÁ:
-1. Đánh giá tính chính xác về Thể thức & Kỹ thuật trình bày theo Nghị định 30/2020/NĐ-CP (Quốc hiệu, Tiêu ngữ, Tên cơ quan, Số & Ký hiệu, Trích yếu có bị lỗi 'V/v' không, đường kẻ ngang dưới trích yếu, căn cứ in nghiêng và dấu chấm phẩy, quyền hạn ký TM./KT./Q./TL./TUQ., họ tên đứng đậm, nơi nhận dấu chấm phẩy và dòng Lưu, TUYỆT ĐỐI KHÔNG VIẾT TẮT PGĐ, GĐ, PCT, CT, CCT, TP, TCCB, PTTT theo Phụ lục I, TUÂN THỦ quy tắc viết hoa Phụ lục II).
-2. Kiểm tra Căn cứ pháp lý & Hiệu lực (Thông tư 17/2024 có hiệu lực 15/01/2025 đã bỏ phân loại A/B/C sang Đạt/Không đạt, bãi bỏ GCN kiến thức ATTP chuyển chủ cơ sở tự xác nhận, thời hạn khắc phục 30 ngày, các văn bản hết hiệu lực như TT 51/2014, TT 45/2014, TT 32/2022...).
-3. Kiểm tra Chuyên môn ATTP, Thẩm quyền quản lý, Ghi nhãn hàng hóa (NĐ 111/2021), Quảng cáo (NĐ 181/2013).
-4. Kiểm tra Địa giới hành chính theo Nghị quyết 202/2025/QH15 & Nghị quyết 1676/NQ-UBTVQH15 (xã Vĩnh An, Tiên Lữ, Hy Cương, Lâm Thao... tỉnh Phú Thọ mới).
+1. Chỉ kiểm tra thể thức theo Nghị định 30/2020/NĐ-CP khi đã xác định tài liệu là văn bản thuộc phạm vi điều chỉnh và do cơ quan, tổ chức có thẩm quyền ban hành; không áp dụng máy móc cho đơn, biểu mẫu hoặc giấy tờ nội bộ do doanh nghiệp/cá nhân lập.
+2. Kiểm tra căn cứ pháp lý theo đúng loại tài liệu, chủ thể, hoạt động và thời điểm phát sinh. Không mặc định Thông tư 17/2024/TT-BNNPTNT đã tạo ra một thay đổi cụ thể, không tự kết luận văn bản bị bãi bỏ/thay thế, không tự đặt thời hạn khắc phục. Nếu không có văn bản gốc và căn cứ hiệu lực được cung cấp hoặc truy xuất, phải ghi rõ chưa đủ căn cứ xác nhận.
+3. Chỉ kiểm tra chuyên môn ATTP, thẩm quyền, ghi nhãn và quảng cáo khi nội dung tài liệu thuộc đúng phạm vi điều chỉnh; không suy diễn từ tên sản phẩm hoặc từ khóa đơn lẻ.
+4. Chỉ kiểm tra địa giới hành chính khi có dữ liệu về địa chỉ và thời điểm phát sinh; phải đối chiếu nghị quyết chính thức, đơn vị cũ/mới và ngày có hiệu lực. Không dùng danh sách địa danh ví dụ làm danh mục đầy đủ hoặc căn cứ tự thân.
 5. Không tự viết lại toàn văn trong trường fixedDocument. Máy chủ sẽ giữ nguyên nội dung đầu vào cho đến khi có quy trình so sánh từng thay đổi và người dùng duyệt rõ ràng. Chỉ nêu từng dấu hiệu cần rà soát trong issues; không tuyên bố đã sửa đúng hoặc tuân thủ đầy đủ.
 `;
 
@@ -656,13 +668,13 @@ YÊU CẦU ĐÁNH GIÁ:
                         enum: ["error", "warning", "suggestion"],
                       },
                       title: { type: Type.STRING },
-                      currentContent: { type: Type.STRING },
+                      currentContent: { type: Type.STRING, description: "Trích dẫn nguyên văn, liên tục và có thật trong nội dung đầu vào; không dùng dấu ba chấm hoặc nội dung diễn giải." },
                       expectedContent: { type: Type.STRING },
                       legalBasis: { type: Type.STRING },
                       explanation: { type: Type.STRING },
                       location: { type: Type.STRING },
                     },
-                    required: ["id", "category", "severity", "title", "expectedContent", "legalBasis", "explanation"],
+                    required: ["id", "category", "severity", "title", "currentContent", "expectedContent", "legalBasis", "explanation"],
                   },
                 },
               },
@@ -673,6 +685,11 @@ YÊU CẦU ĐÁNH GIÁ:
 
         if (response.text) {
           const parsed = JSON.parse(response.text);
+          const evidenceCheck = filterEvidenceBackedIssues(parsed.issues, content || "");
+          parsed.issues = evidenceCheck.validIssues;
+          if (evidenceCheck.rejectedCount > 0) {
+            parsed.summary = `${parsed.summary} Hệ thống đã loại ${evidenceCheck.rejectedCount} dấu hiệu vì không kiểm chứng được trích dẫn nguyên văn trong nội dung đầu vào.`;
+          }
           const categoryScores: Record<string, any> = {
             the_thuc: { name: "Thể thức văn bản (Nghị định 30/2020)", totalIssues: 0, severityBreakdown: { error: 0, warning: 0, suggestion: 0 } },
             can_cu_phap_ly: { name: "Căn cứ pháp lý & Hiệu lực", totalIssues: 0, severityBreakdown: { error: 0, warning: 0, suggestion: 0 } },
@@ -703,7 +720,9 @@ YÊU CẦU ĐÁNH GIÁ:
             fixedDocument: content || "",
             categoryScores,
             source: "gemini",
-            sourceNotice: "Kết quả do Gemini tạo; cần kiểm tra từng phát hiện với hồ sơ gốc và văn bản pháp luật hiện hành.",
+            sourceNotice: evidenceCheck.rejectedCount > 0
+              ? `Kết quả do Gemini tạo; đã loại ${evidenceCheck.rejectedCount} dấu hiệu không có trích dẫn nguyên văn khớp nội dung đầu vào. Các phát hiện còn lại vẫn phải được kiểm tra với hồ sơ gốc và văn bản pháp luật hiện hành.`
+              : "Kết quả do Gemini tạo; cần kiểm tra từng phát hiện với hồ sơ gốc và văn bản pháp luật hiện hành.",
             auditDate: new Date().toLocaleDateString("vi-VN"),
           };
         }
