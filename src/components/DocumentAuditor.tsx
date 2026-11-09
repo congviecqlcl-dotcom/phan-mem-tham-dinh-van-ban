@@ -39,7 +39,7 @@ import {
   downloadConsolidatedBatchReport
 } from '../utils/docxExport';
 import { runClientAuditEngine } from '../utils/auditEngine';
-import { recognizeScannedPdf } from '../utils/browserPdfOcr';
+import { recognizeScannedPdf, recognizeImageText } from '../utils/browserPdfOcr';
 
 export const DocumentAuditor: React.FC = () => {
   // Initial list with preset
@@ -101,6 +101,32 @@ export const DocumentAuditor: React.FC = () => {
     let text = '';
     let detectedType: DocumentType = 'khac';
     let extractionError: string | undefined;
+
+    // Direct phone photos and scanned image files: OCR locally in the browser.
+    const isImage = /\\.(png|jpe?g|webp|bmp|tif|tiff)$/i.test(lowerName) ||
+      ['image/png', 'image/jpeg', 'image/webp', 'image/bmp', 'image/tiff'].includes(file.type);
+    if (isImage) {
+      try {
+        const result = await recognizeImageText(file);
+        if (result.text.length < 20) {
+          extractionError = 'Ảnh không có đủ nội dung chữ để nhận dạng. Hãy chụp lại rõ nét, đủ sáng và không mất mép giấy.';
+        } else {
+          const accepted = window.confirm(
+            `Đã nhận dạng ảnh ngay trên trình duyệt (độ tin cậy ${Math.round(result.confidence)}%).\\n\\n--- NỘI DUNG NHẬN DẠNG ---\\n${result.text.slice(0, 1800)}${result.text.length > 1800 ? '\\n… (còn nội dung)' : ''}\\n\\nBạn đã đối chiếu với ảnh gốc và xác nhận đưa nội dung này vào thẩm định chưa?`
+          );
+          if (accepted) {
+            text = result.text;
+            extractionError = 'Đã OCR ảnh tại trình duyệt. Cần đối chiếu toàn bộ nội dung với ảnh gốc trước khi sử dụng.';
+          } else {
+            extractionError = 'Đã OCR nhưng chưa được người dùng xác nhận; ảnh chưa được đưa vào thẩm định.';
+          }
+        }
+      } catch (imageErr) {
+        console.error('Browser image OCR failed:', imageErr);
+        const detail = imageErr instanceof Error ? imageErr.message : String(imageErr);
+        extractionError = `Không thể OCR ảnh: ${detail || 'Lỗi không xác định'}.`;
+      }
+    }
 
     // 1. Client-side Mammoth for DOCX
     if (lowerName.endsWith('.docx')) {
@@ -1127,7 +1153,7 @@ export const DocumentAuditor: React.FC = () => {
                   id="file-upload-input"
                   type="file"
                   multiple
-                  accept=".docx,.doc,.pdf,.txt,.md,.rtf,.odt,.csv,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/pdf,text/plain"
+                  accept=".docx,.doc,.pdf,.txt,.md,.rtf,.odt,.csv,.jpg,.jpeg,.png,.webp,.bmp,.tif,.tiff,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/pdf,image/jpeg,image/png,image/webp,text/plain"
                   onChange={handleFileInputChange}
                   className="hidden"
                 />
