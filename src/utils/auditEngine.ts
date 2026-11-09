@@ -44,27 +44,8 @@ export function runClientAuditEngine(content: string, docType?: DocumentType | s
     });
   }
 
-  // 2. Chỉ cảnh báo chữ viết tắt thực sự có trong văn bản; không suy diễn từ chức danh viết đầy đủ.
-  if (
-    /\b(pgđ|pct|cct|bgd)\b/i.test(content) ||
-    /các\s+pgđ/i.test(content) ||
-    /phó\s+cct/i.test(content) ||
-    /phòng\s+tccb/i.test(content) ||
-    /phòng\s+qlcl/i.test(content)
-  ) {
-    issues.push({
-      id: 'err-thethuc-viet-tat-chuc-vu',
-      category: 'the_thuc',
-      severity: 'error',
-      title: 'Viết tắt tùy tiện chức vụ, chức danh lãnh đạo và phòng ban',
-      currentContent: 'PGĐ Sở, CCT, Phó CCT, Phòng TCCB, Phòng QLCL...',
-      expectedContent: 'Phó Giám đốc Sở, Chi cục trưởng, Phó Chi cục trưởng, Phòng Tổ chức cán bộ, Phòng Quản lý chất lượng...',
-      legalBasis: 'Khoản 10 Mục II Phần I Phụ lục I Nghị định số 30/2020/NĐ-CP & Quy chuẩn văn thư nhà nước',
-      explanation:
-        'Trong văn bản hành chính (đặc biệt là phần Nơi nhận và nội dung), nghiêm cấm viết tắt tùy tiện các chức vụ, chức danh lãnh đạo và tên phòng ban. Chỉ được phép viết tắt các từ ngữ theo quy chuẩn pháp luật như TM., KT., TL., TUQ., Q., UBND, HĐND.',
-      location: 'Phần Nơi nhận hoặc nội dung văn bản',
-    });
-  }
+  // Không tự động kết luận lỗi viết tắt chức vụ/phòng ban bằng quy tắc từ khóa.
+  // Chỉ chuyển nội dung này cho AI/công chức rà soát khi có trích dẫn nguyên văn và căn cứ áp dụng.
 
   // 3. Viết hoa bừa bãi tên cơ quan (viết hoa chữ Và, Của, Tại, Thuộc)
   if (
