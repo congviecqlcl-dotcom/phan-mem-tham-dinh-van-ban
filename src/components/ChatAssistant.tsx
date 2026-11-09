@@ -8,7 +8,7 @@ const PRESET_QUESTIONS = [
   'Cơ sở nào được miễn cấp Giấy chứng nhận đủ điều kiện ATTP theo Điều 12 NĐ 15/2018?',
   'Quy tắc ghi trích yếu và dấu câu trong Nghị định 30/2020/NĐ-CP?',
   'Nội dung bắt buộc ghi nhãn Thực phẩm bảo vệ sức khỏe theo NĐ 111/2021?',
-  'Quy trình thu hồi thực phẩm không an toàn trong 24 giờ theo Thông tư 17/2021?',
+  'Quy trình tiếp nhận, xác minh, xử lý và theo dõi việc thu hồi thực phẩm không an toàn; cần đối chiếu căn cứ và thời hạn nào?',
   'Địa giới hành chính cấp xã mới của tỉnh Phú Thọ theo Nghị quyết 1676/2025?'
 ];
 
