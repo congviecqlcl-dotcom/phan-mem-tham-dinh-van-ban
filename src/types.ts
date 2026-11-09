@@ -94,6 +94,13 @@ export interface PresetSample {
   content: string;
 }
 
+export interface OcrPageEvidence {
+  page: number;
+  text: string;
+  confidence: number;
+  status: 'dat' | 'can_kiem_tra' | 'khong_doc_duoc';
+}
+
 export interface DocumentFileItem {
   id: string;
   name: string;
@@ -102,6 +109,9 @@ export interface DocumentFileItem {
   docType: DocumentType;
   status: 'idle' | 'extracting' | 'ready' | 'auditing' | 'completed' | 'error';
   errorMessage?: string;
+  reviewNotice?: string;
+  ocrPages?: OcrPageEvidence[];
+  ocrNeedsReview?: boolean;
   auditResult?: AuditResult;
   charCount?: number;
 }
