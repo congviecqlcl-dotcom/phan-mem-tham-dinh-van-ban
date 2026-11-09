@@ -898,11 +898,17 @@ app.get("/api/ai-status", requireAppRole(["CONG_CHUC", "LANH_DAO", "QUAN_TRI"]),
     const message = String(err?.message ?? "");
     const code = status === 401 || status === 403 ? "AUTH_OR_PERMISSION"
       : status === 429 ? "QUOTA_OR_RATE_LIMIT"
+      : status === 503 ? "PROVIDER_BUSY"
       : status === 404 ? "MODEL_NOT_FOUND"
       : status >= 500 ? "PROVIDER_ERROR"
       : "GEMINI_REQUEST_FAILED";
     console.error("Gemini connectivity test failed", { status, code, message: message.slice(0, 300) });
-    return res.status(502).json({ configured: true, connected: false, code, status: status || null, message: "Gemini chưa phản hồi thành công. Kiểm tra log máy chủ theo mã lỗi." });
+    return res.status(502).json({
+      configured: true, connected: false, code, status: status || null,
+      message: code === "PROVIDER_BUSY"
+        ? "Gemini đang quá tải hoặc tạm thời không khả dụng. Hệ thống đã thử mô hình dự phòng; vui lòng thử lại sau."
+        : "Gemini chưa phản hồi thành công. Kiểm tra log máy chủ theo mã lỗi.",
+    });
   }
 });
 
