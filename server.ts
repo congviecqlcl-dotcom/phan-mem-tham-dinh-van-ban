@@ -616,6 +616,15 @@ YÊU CẦU ĐÁNH GIÁ:
           config: {
             systemInstruction: LEGAL_SYSTEM_PROMPT,
             responseMimeType: "application/json",
+            // Bound each provider request and the full two-model attempt sequence.
+            // SDK timeout aborts the HTTP attempt; AbortSignal caps the overall sequence.
+            httpOptions: {
+              timeout: 35_000,
+              retryOptions: { attempts: 1 },
+            },
+            abortSignal: AbortSignal.timeout(75_000),
+            automaticContinuation: false,
+            maxOutputTokens: 6000,
             responseSchema: {
               type: Type.OBJECT,
               properties: {
@@ -656,12 +665,8 @@ YÊU CẦU ĐÁNH GIÁ:
                     required: ["id", "category", "severity", "title", "expectedContent", "legalBasis", "explanation"],
                   },
                 },
-                fixedDocument: {
-                  type: Type.STRING,
-                  description: "Bản dự thảo chỉnh sửa do AI đề xuất; phải được công chức kiểm tra căn cứ pháp lý và nội dung trước khi sử dụng.",
-                },
               },
-              required: ["status", "documentTypeDetected", "summary", "positivePoints", "issues", "fixedDocument"],
+              required: ["status", "documentTypeDetected", "summary", "positivePoints", "issues"],
             },
           },
         });
