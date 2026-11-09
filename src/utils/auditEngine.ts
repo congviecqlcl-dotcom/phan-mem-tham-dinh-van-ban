@@ -271,11 +271,11 @@ export function runClientAuditEngine(content: string, docType?: DocumentType | s
     });
   }
 
-  const sourceText = content.normalize('NFC').replace(/\\s+/g, ' ').trim();
+  const sourceText = content.normalize('NFC').replace(/\s+/g, ' ').trim();
   const candidateIssueCount = issues.length;
   const evidenceBackedIssues = issues.filter((issue) => {
     const quote = typeof issue.currentContent === 'string'
-      ? issue.currentContent.normalize('NFC').replace(/\\s+/g, ' ').trim()
+      ? issue.currentContent.normalize('NFC').replace(/\s+/g, ' ').trim()
       : '';
     return quote.length >= 3 && sourceText.includes(quote);
   });
