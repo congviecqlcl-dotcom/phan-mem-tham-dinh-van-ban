@@ -357,6 +357,11 @@ function runLocalRuleAudit(content: string, docType?: string) {
     });
   }
 
+  const candidateIssueCount = issues.length;
+  const evidenceCheck = filterEvidenceBackedIssues(issues, content);
+  issues.splice(0, issues.length, ...evidenceCheck.validIssues);
+  const rejectedIssueCount = candidateIssueCount - issues.length;
+
   // Legacy compatibility field only; this is not a legal or statistical score.
   const overallScore = 0;
   // A heuristic score must never be converted into a legal pass/fail status.
@@ -369,7 +374,9 @@ function runLocalRuleAudit(content: string, docType?: string) {
   return {
     overallScore,
     source: "local_rule",
-    sourceNotice: "Kết quả từ bộ quy tắc cục bộ theo mẫu đã lập trình; chưa phải tra cứu pháp luật trực tiếp và không chứng minh tuân thủ đầy đủ.",
+    sourceNotice: rejectedIssueCount > 0
+      ? `Kết quả từ bộ quy tắc cục bộ; đã loại ${rejectedIssueCount} dấu hiệu không có trích dẫn nguyên văn khớp nội dung đầu vào. Đây không phải tra cứu pháp luật trực tiếp.`
+      : "Kết quả từ bộ quy tắc cục bộ theo mẫu đã lập trình; chưa phải tra cứu pháp luật trực tiếp và không chứng minh tuân thủ đầy đủ.",
     status,
     documentTypeDetected:
       docType ||
@@ -381,9 +388,11 @@ function runLocalRuleAudit(content: string, docType?: string) {
         ? "Bản tự công bố"
         : "Văn bản hành chính"),
     summary:
-      issues.length === 0
-        ? "Bộ quy tắc cục bộ chưa phát hiện dấu hiệu thuộc các mẫu đã lập trình. Điều này không chứng minh văn bản tuân thủ đầy đủ pháp luật hoặc không có sai sót."
-        : `Bộ quy tắc cục bộ ghi nhận ${issues.length} dấu hiệu cần rà soát (${issues.filter((i: any) => i.severity === "error").length} mức cao, ${issues.filter((i: any) => i.severity === "warning").length} cảnh báo). Cần đối chiếu từng dấu hiệu với văn bản gốc và căn cứ hiện hành trước khi kết luận.`,
+      rejectedIssueCount > 0 && issues.length === 0
+        ? `Bộ quy tắc cục bộ có ${rejectedIssueCount} dấu hiệu theo mẫu nhưng không trích được nội dung nguyên văn khớp tài liệu; hệ thống không đưa các dấu hiệu này thành phát hiện. Cần công chức kiểm tra trực tiếp.`
+        : issues.length === 0
+          ? "Bộ quy tắc cục bộ chưa phát hiện dấu hiệu thuộc các mẫu đã lập trình. Điều này không chứng minh văn bản tuân thủ đầy đủ pháp luật hoặc không có sai sót."
+          : `Bộ quy tắc cục bộ ghi nhận ${issues.length} dấu hiệu có trích dẫn khớp nội dung cần rà soát (${issues.filter((i: any) => i.severity === "error").length} mức cao, ${issues.filter((i: any) => i.severity === "warning").length} cảnh báo). Cần đối chiếu từng dấu hiệu với văn bản gốc và căn cứ hiện hành trước khi kết luận.`,
     positivePoints: [
       "Đây là kết quả sàng lọc theo các mẫu quy tắc được lập trình; chưa xác minh đầy đủ hiệu lực và phạm vi áp dụng của mọi căn cứ pháp lý.",
       "Không phát hiện dấu hiệu theo mẫu không đồng nghĩa với xác nhận địa giới hành chính hoặc nội dung pháp lý là chính xác.",
