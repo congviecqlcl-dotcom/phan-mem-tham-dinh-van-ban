@@ -103,7 +103,7 @@ export const DocumentAuditor: React.FC = () => {
     let extractionError: string | undefined;
 
     // Direct phone photos and scanned image files: OCR locally in the browser.
-    const isImage = /\\.(png|jpe?g|webp|bmp|tif|tiff)$/i.test(lowerName) ||
+    const isImage = /\.(png|jpe?g|webp|bmp|tif|tiff)$/i.test(lowerName) ||
       ['image/png', 'image/jpeg', 'image/webp', 'image/bmp', 'image/tiff'].includes(file.type);
     if (isImage) {
       try {
