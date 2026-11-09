@@ -47,11 +47,11 @@ function validateDocumentText(value: unknown): string | null {
 }
 
 function filterEvidenceBackedIssues(issues: unknown, sourceContent: string) {
-  const source = sourceContent.normalize("NFC").replace(/\\s+/g, " ").trim();
+  const source = sourceContent.normalize("NFC").replace(/\s+/g, " ").trim();
   const candidates = Array.isArray(issues) ? issues : [];
   const validIssues = candidates.filter((issue: any) => {
     const quote = typeof issue?.currentContent === "string"
-      ? issue.currentContent.normalize("NFC").replace(/\\s+/g, " ").trim()
+      ? issue.currentContent.normalize("NFC").replace(/\s+/g, " ").trim()
       : "";
     return quote.length >= 3 && source.includes(quote);
   });
