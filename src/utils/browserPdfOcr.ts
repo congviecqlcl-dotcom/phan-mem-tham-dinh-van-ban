@@ -1,3 +1,5 @@
+import { createWorker } from "tesseract.js";
+
 type OcrPageResult = {
   page: number;
   text: string;
@@ -46,11 +48,7 @@ function loadLocalScript(url: string, key: string): Promise<void> {
 }
 
 async function createVietnameseWorker() {
-  await loadLocalScript("/ocr/tesseract.min.js", "tesseract");
-  const tesseract = window.Tesseract;
-  if (!tesseract?.createWorker) throw new Error("Thư viện OCR nội bộ không khởi tạo được.");
-
-  return tesseract.createWorker("vie", 1, {
+  return createWorker("vie", 1, {
     workerPath: "/ocr/worker.min.js",
     corePath: "/ocr/core",
     langPath: "/ocr/lang",
