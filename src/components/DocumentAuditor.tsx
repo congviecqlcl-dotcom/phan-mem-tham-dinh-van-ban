@@ -281,8 +281,8 @@ export const DocumentAuditor: React.FC = () => {
       message: failedCount === 0
         ? `Đã trích xuất thành công ${readyCount}/${newItems.length} tệp. Nhấn "Thẩm định tất cả" để xử lý hàng loạt!`
         : readyCount === 0
-          ? `Không trích xuất được nội dung của ${failedCount} tệp. Hãy kiểm tra định dạng; hệ thống hỗ trợ PDF, DOCX và TXT/MD/CSV/LOG.`
-          : `Đã trích xuất ${readyCount}/${newItems.length} tệp; ${failedCount} tệp lỗi và chưa được đưa vào thẩm định. Hãy kiểm tra định dạng hoặc nội dung các tệp lỗi.`,
+          ? `Không trích xuất được nội dung của ${failedCount} tệp. Chi tiết: ${newItems.filter((item) => item.status === 'error').map((item) => `${item.name}: ${item.errorMessage || 'Không rõ nguyên nhân'}`).join(' | ')}`
+          : `Đã trích xuất ${readyCount}/${newItems.length} tệp; ${failedCount} tệp lỗi. Chi tiết: ${newItems.filter((item) => item.status === 'error').map((item) => `${item.name}: ${item.errorMessage || 'Không rõ nguyên nhân'}`).join(' | ')}`,
     });
 
     if (fileInputRef.current) {
