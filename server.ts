@@ -594,6 +594,7 @@ async function performSingleAudit(params: {
 }) {
   const { content, docType, fileName, fileData, mimeType } = params;
   const ai = getAI();
+  let fallbackReason = ai ? "GEMINI_REQUEST_FAILED" : "GEMINI_NOT_CONFIGURED";
 
   if (ai && content && content.length > 20) {
     // List of models to try in priority order
@@ -736,21 +737,32 @@ YÊU CẦU ĐÁNH GIÁ:
           };
         }
       } catch (geminiError: any) {
-        // Suppress expected quota / permission warnings and gracefully try next model or fallback
-        const isQuotaOrAccess =
-          geminiError?.status === "RESOURCE_EXHAUSTED" ||
-          geminiError?.status === "PERMISSION_DENIED" ||
-          geminiError?.message?.includes("quota") ||
-          geminiError?.message?.includes("denied");
-
-        if (!isQuotaOrAccess) {
-          console.log(`[Audit fallback] Model ${modelName} unavailable, checking next options.`);
-        }
+        // Record only sanitized provider metadata; never log dossier text, prompts, or credentials.
+        const providerStatus = Number(geminiError?.statusCode ?? geminiError?.response?.status ?? 0);
+        const providerCode = String(geminiError?.status ?? geminiError?.code ?? "").toUpperCase();
+        const errorName = String(geminiError?.name ?? "").toLowerCase();
+        fallbackReason = providerStatus === 429 || providerCode.includes("RESOURCE_EXHAUSTED")
+          ? "QUOTA_OR_RATE_LIMIT"
+          : providerStatus === 401 || providerStatus === 403 || providerCode.includes("PERMISSION_DENIED")
+            ? "AUTH_OR_PERMISSION"
+            : providerStatus === 404 ? "MODEL_NOT_FOUND"
+              : errorName.includes("timeout") || errorName.includes("abort") ? "REQUEST_TIMEOUT"
+                : providerStatus >= 500 ? "PROVIDER_ERROR"
+                  : "GEMINI_REQUEST_FAILED";
+        console.warn("[Audit API] Gemini attempt failed", {
+          model: modelName,
+          status: providerStatus || null,
+          code: fallbackReason,
+        });
       }
     }
   }
 
-  return runLocalRuleAudit(content || "", docType);
+  const localFallback = runLocalRuleAudit(content || "", docType);
+  return {
+    ...localFallback,
+    sourceNotice: `${localFallback.sourceNotice} Mã nguyên nhân dự phòng: ${fallbackReason}.`,
+  };
 }
 
 // API: Document Audit Endpoint
