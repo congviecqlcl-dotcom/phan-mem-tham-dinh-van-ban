@@ -271,6 +271,17 @@ export function runClientAuditEngine(content: string, docType?: DocumentType | s
     });
   }
 
+  const sourceText = content.normalize('NFC').replace(/\\s+/g, ' ').trim();
+  const candidateIssueCount = issues.length;
+  const evidenceBackedIssues = issues.filter((issue) => {
+    const quote = typeof issue.currentContent === 'string'
+      ? issue.currentContent.normalize('NFC').replace(/\\s+/g, ' ').trim()
+      : '';
+    return quote.length >= 3 && sourceText.includes(quote);
+  });
+  const rejectedIssueCount = candidateIssueCount - evidenceBackedIssues.length;
+  issues.splice(0, issues.length, ...evidenceBackedIssues);
+
   // Do not calculate an arbitrary aggregate score: it has no validated legal or
   // statistical interpretation. Keep the legacy field temporarily for API compatibility.
   const overallScore = 0;
@@ -295,9 +306,11 @@ export function runClientAuditEngine(content: string, docType?: DocumentType | s
     status,
     documentTypeDetected,
     summary:
-      issues.length === 0
-        ? 'Bộ quy tắc kiểm tra cục bộ chưa phát hiện dấu hiệu thuộc các mẫu kiểm tra đã lập trình. Điều này không chứng minh văn bản tuân thủ đầy đủ pháp luật hoặc không có sai sót.'
-        : `Bộ quy tắc kiểm tra cục bộ ghi nhận ${issues.length} dấu hiệu cần rà soát (${issues.filter((i) => i.severity === 'error').length} dấu hiệu mức cao, ${issues.filter((i) => i.severity === 'warning').length} cảnh báo). Mỗi dấu hiệu cần được đối chiếu với văn bản gốc và quy định hiện hành trước khi kết luận.`,
+      rejectedIssueCount > 0 && issues.length === 0
+        ? `Bộ quy tắc cục bộ có ${rejectedIssueCount} dấu hiệu theo mẫu nhưng không trích được nội dung nguyên văn khớp tài liệu; hệ thống không đưa các dấu hiệu này thành phát hiện. Cần công chức kiểm tra trực tiếp.`
+        : issues.length === 0
+          ? 'Bộ quy tắc kiểm tra cục bộ chưa phát hiện dấu hiệu thuộc các mẫu kiểm tra đã lập trình. Điều này không chứng minh văn bản tuân thủ đầy đủ pháp luật hoặc không có sai sót.'
+          : `Bộ quy tắc kiểm tra cục bộ ghi nhận ${issues.length} dấu hiệu có trích dẫn khớp nội dung cần rà soát (${issues.filter((i) => i.severity === 'error').length} dấu hiệu mức cao, ${issues.filter((i) => i.severity === 'warning').length} cảnh báo). Mỗi dấu hiệu cần được đối chiếu với văn bản gốc và quy định hiện hành trước khi kết luận.`,
     positivePoints: [
       'Đây là kết quả rà soát tự động theo các mẫu quy tắc đã lập trình, không phải xác nhận tuân thủ pháp luật.',
       'Hệ thống chưa tự xác minh hiệu lực, phạm vi áp dụng hoặc sửa đổi mới nhất của mọi căn cứ pháp lý được nêu.',
