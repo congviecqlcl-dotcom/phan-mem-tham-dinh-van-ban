@@ -433,7 +433,17 @@ export const DocumentAuditor: React.FC = () => {
     setFiles((prev) =>
       prev.map((f) =>
         f.id === activeFile.id
-          ? { ...f, content: newContent, charCount: newContent.length, status: 'ready', auditResult: undefined }
+          ? {
+              ...f,
+              content: newContent,
+              charCount: newContent.length,
+              status: 'ready',
+              auditResult: undefined,
+              ocrNeedsReview: f.ocrPages ? true : f.ocrNeedsReview,
+              reviewNotice: f.ocrPages
+                ? 'Nội dung đã được chỉnh sửa sau OCR. Cần đối chiếu lại từng trang với bản gốc; dữ liệu OCR lưu theo trang chỉ là bằng chứng nhận dạng ban đầu.'
+                : f.reviewNotice,
+            }
           : f
       )
     );
@@ -1259,6 +1269,33 @@ export const DocumentAuditor: React.FC = () => {
                   {extractStatus.type === 'info' && <Info className="w-4 h-4 text-neutral-600 shrink-0 mt-0.5" />}
                   <div className="flex-1 leading-relaxed">{extractStatus.message}</div>
                 </div>
+              )}
+
+              {activeFile?.ocrPages && activeFile.ocrPages.length > 0 && (
+                <section className="rounded-xl border border-amber-200 bg-amber-50 p-3 space-y-2" aria-label="Thông tin nhận dạng ký tự">
+                  <div className="flex items-center justify-between gap-2">
+                    <strong className="text-xs text-amber-900">Bằng chứng nhận dạng theo trang</strong>
+                    <span className="text-[11px] text-amber-800">{activeFile.ocrPages.length} trang</span>
+                  </div>
+                  {activeFile.reviewNotice && (
+                    <p className="text-xs leading-relaxed text-amber-900">{activeFile.reviewNotice}</p>
+                  )}
+                  <div className="space-y-1">
+                    {activeFile.ocrPages.map((page) => (
+                      <details key={page.page} className="rounded-lg border border-amber-200 bg-white/80 p-2">
+                        <summary className="cursor-pointer text-xs font-medium text-neutral-800">
+                          Trang {page.page} • Độ tin cậy {Math.round(page.confidence)}% • {
+                            page.status === 'dat' ? 'Nhận dạng được' : page.status === 'can_kiem_tra' ? 'Cần kiểm tra' : 'Không đọc được'
+                          }
+                        </summary>
+                        <pre className="mt-2 max-h-40 overflow-auto whitespace-pre-wrap break-words text-[11px] leading-relaxed text-neutral-700">{page.text || 'Không có nội dung nhận dạng.'}</pre>
+                      </details>
+                    ))}
+                  </div>
+                  <p className="text-[11px] leading-relaxed text-amber-900">
+                    Độ tin cậy OCR chỉ phản ánh kết quả nhận dạng ký tự, không chứng minh nội dung giấy tờ là đúng hoặc hợp pháp.
+                  </p>
+                </section>
               )}
 
               {/* Text Editor Area */}
