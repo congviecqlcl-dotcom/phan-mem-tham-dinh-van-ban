@@ -113,7 +113,7 @@ export const DocumentAuditor: React.FC = () => {
           extractionError = 'Ảnh không có đủ nội dung chữ để nhận dạng. Hãy chụp lại rõ nét, đủ sáng và không mất mép giấy.';
         } else {
           const accepted = window.confirm(
-            `Đã nhận dạng ảnh ngay trên trình duyệt (độ tin cậy ${Math.round(result.confidence)}%).\\n\\n--- NỘI DUNG NHẬN DẠNG ---\\n${result.text.slice(0, 1800)}${result.text.length > 1800 ? '\\n… (còn nội dung)' : ''}\\n\\nBạn đã đối chiếu với ảnh gốc và xác nhận đưa nội dung này vào thẩm định chưa?`
+            `Đã nhận dạng ảnh ngay trên trình duyệt (độ tin cậy ${Math.round(result.confidence)}%).\n\n--- NỘI DUNG NHẬN DẠNG ---\n${result.text.slice(0, 1800)}${result.text.length > 1800 ? '\n… (còn nội dung)' : ''}\n\nBạn đã đối chiếu với ảnh gốc và xác nhận đưa nội dung này vào thẩm định chưa?`
           );
           if (accepted) {
             text = result.text;
