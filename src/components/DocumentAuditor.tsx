@@ -40,6 +40,7 @@ import {
 } from '../utils/docxExport';
 import { runClientAuditEngine } from '../utils/auditEngine';
 import { recognizeScannedPdf, recognizeImageText } from '../utils/browserPdfOcr';
+import { detectCompositeDocument } from '../utils/compositeDocument';
 
 export const DocumentAuditor: React.FC = () => {
   // Initial list with preset
@@ -274,6 +275,7 @@ export const DocumentAuditor: React.FC = () => {
       try {
         const { text, detectedType, errorMessage, ocrPages } = await extractTextFromFile(file);
         const hasText = Boolean(text && text.trim().length > 0);
+        const compositeSegments = hasText ? detectCompositeDocument(text) : [];
 
         newItems.push({
           id: fileId,
@@ -286,6 +288,10 @@ export const DocumentAuditor: React.FC = () => {
           reviewNotice: hasText ? errorMessage : undefined,
           ocrPages,
           ocrNeedsReview: Boolean(ocrPages?.some((page) => page.status !== 'dat')),
+          compositeSegments,
+          reviewNotice: compositeSegments.length > 1
+            ? [errorMessage, 'Phát hiện dấu hiệu tệp chứa nhiều loại tài liệu. Cần kiểm tra phạm vi trang và tách từng thành phần trước khi kết luận; nhận diện tự động chỉ mang tính gợi ý.'].filter(Boolean).join(' ')
+            : (hasText ? errorMessage : undefined),
           charCount: hasText ? text.length : 0,
         });
       } catch (extractErr) {
@@ -437,6 +443,7 @@ export const DocumentAuditor: React.FC = () => {
               ...f,
               content: newContent,
               charCount: newContent.length,
+              compositeSegments: detectCompositeDocument(newContent),
               status: 'ready',
               auditResult: undefined,
               ocrNeedsReview: f.ocrPages ? true : f.ocrNeedsReview,
@@ -1279,6 +1286,27 @@ export const DocumentAuditor: React.FC = () => {
                   {extractStatus.type === 'info' && <Info className="w-4 h-4 text-neutral-600 shrink-0 mt-0.5" />}
                   <div className="flex-1 leading-relaxed">{extractStatus.message}</div>
                 </div>
+              )}
+
+              {activeFile?.compositeSegments && activeFile.compositeSegments.length > 1 && (
+                <section className="rounded-xl border border-rose-200 bg-rose-50 p-3 space-y-2" aria-label="Cảnh báo tài liệu hỗn hợp">
+                  <div className="flex items-center gap-2">
+                    <AlertTriangle className="h-4 w-4 shrink-0 text-rose-700" />
+                    <strong className="text-xs text-rose-900">Có dấu hiệu tệp chứa nhiều loại tài liệu</strong>
+                  </div>
+                  <p className="text-xs leading-relaxed text-rose-900">
+                    Không nên thẩm định toàn bộ tệp như một văn bản duy nhất. Hãy kiểm tra bản gốc, xác nhận từng khoảng trang và tách thành các tệp thành phần trước khi thẩm định riêng. Hệ thống chưa tự cắt hoặc thay đổi tệp gốc.
+                  </p>
+                  <div className="space-y-1">
+                    {activeFile.compositeSegments.map((segment, index) => (
+                      <div key={index} className="rounded-lg border border-rose-200 bg-white/80 px-2.5 py-2 text-xs text-neutral-800">
+                        <strong>{segment.label}</strong> • Trang {segment.pageStart === segment.pageEnd ? segment.pageStart : `${segment.pageStart}–${segment.pageEnd}`}
+                        <p className="mt-1 text-[10px] text-neutral-500">Dấu hiệu nhận diện: {segment.evidence.join('; ')}</p>
+                      </div>
+                    ))}
+                  </div>
+                  <p className="text-[11px] text-rose-900">Đây là cảnh báo nhận diện sơ bộ, không phải kết luận chắc chắn về loại tài liệu.</p>
+                </section>
               )}
 
               {activeFile?.ocrPages && activeFile.ocrPages.length > 0 && (
