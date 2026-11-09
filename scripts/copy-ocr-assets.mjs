@@ -55,11 +55,18 @@ if (!fs.existsSync(pdfScript) || !fs.existsSync(pdfWorker)) {
 fs.copyFileSync(pdfScript, path.join(publicOcr, "pdf.min.js"));
 fs.copyFileSync(pdfWorker, path.join(publicOcr, "pdf.worker.min.js"));
 
-const coreFiles = findFiles(coreRoot, (name) => /^tesseract-core.*\\.(?:js|wasm)$/.test(name));
-if (coreFiles.length < 4) {
-  throw new Error("Thiếu các biến thể Tesseract WASM core; tìm thấy " + coreFiles.length + " tệp.");
+// Tesseract.js-core package versions use several filename conventions
+// (including *.wasm.js); copy all runtime assets instead of relying on one regex.
+const coreFiles = findFiles(coreRoot, (name) => /\\.(?:js|wasm|data)$/.test(name));
+if (coreFiles.length === 0) {
+  throw new Error("Không tìm thấy tệp JavaScript/WASM trong gói tesseract.js-core tại " + coreRoot);
 }
-for (const file of coreFiles) fs.copyFileSync(file, path.join(coreOut, path.basename(file)));
+for (const file of coreFiles) {
+  const relative = path.relative(coreRoot, file);
+  const destination = path.join(coreOut, relative);
+  fs.mkdirSync(path.dirname(destination), { recursive: true });
+  fs.copyFileSync(file, destination);
+}
 
 const languageFiles = findFiles(dataRoot, (name) => name === "vie.traineddata.gz");
 if (!languageFiles.length) throw new Error("Không tìm thấy dữ liệu ngôn ngữ tiếng Việt vie.traineddata.gz.");
