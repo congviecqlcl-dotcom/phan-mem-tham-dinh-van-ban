@@ -846,12 +846,31 @@ app.get("/api/ai-status", requireAppRole(["CONG_CHUC", "LANH_DAO", "QUAN_TRI"]),
     if (!ai) {
       return res.status(503).json({ configured: false, connected: false, code: "CLIENT_INIT_FAILED", message: "Không khởi tạo được ứng dụng Gemini." });
     }
-    const response = await ai.models.generateContent({
-      model: "gemini-3.8-flash",
-      contents: "Reply with the single word OK.",
-      // Allow room for internal reasoning tokens as well as the visible response.
-      config: { maxOutputTokens: 64 },
-    });
+    const modelsToTry = ["gemini-3.8-flash", "gemini-3.5-flash-lite"];
+    let response: any = null;
+    let selectedModel = "";
+    let lastProviderError: any = null;
+    for (const modelName of modelsToTry) {
+      for (let attempt = 0; attempt < 2; attempt += 1) {
+        try {
+          response = await ai.models.generateContent({
+            model: modelName,
+            contents: "Reply with the single word OK.",
+            config: { maxOutputTokens: 128 },
+          });
+          selectedModel = modelName;
+          break;
+        } catch (providerError: any) {
+          lastProviderError = providerError;
+          const status = Number(providerError?.status ?? providerError?.statusCode ?? providerError?.response?.status ?? 0);
+          const transient = [429, 500, 502, 503, 504].includes(status);
+          if (!transient) throw providerError;
+          if (attempt === 0) await new Promise(resolve => setTimeout(resolve, 600));
+        }
+      }
+      if (response) break;
+    }
+    if (!response) throw lastProviderError ?? new Error("Gemini không phản hồi từ các mô hình dự phòng.");
     const responseText = response?.text?.trim()
       || response?.candidates?.flatMap((candidate: any) =>
         candidate?.content?.parts?.map((part: any) => part?.text).filter((part: any) => typeof part === "string")
@@ -865,27 +884,15 @@ app.get("/api/ai-status", requireAppRole(["CONG_CHUC", "LANH_DAO", "QUAN_TRI"]),
         : finishReason === "SAFETY" ? "SAFETY_BLOCKED"
         : finishReason === "MAX_TOKENS" ? "OUTPUT_LIMIT"
         : "EMPTY_RESPONSE";
-      // Log response diagnostics only; never log credentials or prompt contents.
       console.warn("Gemini connectivity test returned no text", {
-        modelVersion: response?.modelVersion ?? null,
+        model: selectedModel,
         candidateCount: response?.candidates?.length ?? 0,
         finishReason,
         blockReason: blockReason || null,
-        promptTokenCount: response?.usageMetadata?.promptTokenCount ?? null,
-        candidatesTokenCount: response?.usageMetadata?.candidatesTokenCount ?? null,
       });
-      return res.status(502).json({
-        configured: true,
-        connected: false,
-        code,
-        message: code === "PROMPT_BLOCKED" || code === "SAFETY_BLOCKED"
-          ? "Gemini đã nhận yêu cầu nhưng chặn nội dung phản hồi."
-          : code === "OUTPUT_LIMIT"
-            ? "Gemini đã dừng do giới hạn số token đầu ra."
-            : "Gemini đã phản hồi nhưng không có phần văn bản để đọc.",
-      });
+      return res.status(502).json({ configured: true, connected: false, code, message: "Gemini đã phản hồi nhưng không có phần văn bản để đọc." });
     }
-    return res.json({ configured: true, connected: true, model: response?.modelVersion ?? "gemini-3.8-flash", message: "Kết nối Gemini thành công." });
+    return res.json({ configured: true, connected: true, model: selectedModel, message: "Kết nối Gemini thành công." });
   } catch (err: any) {
     const status = Number(err?.status ?? err?.statusCode ?? err?.response?.status ?? 0);
     const message = String(err?.message ?? "");
@@ -915,27 +922,40 @@ app.post("/api/chat", requireAppRole(["CONG_CHUC", "LANH_DAO", "QUAN_TRI"]), asy
 
     if (ai) {
       try {
-        const chat = ai.chats.create({
-          model: "gemini-3.8-flash",
-          config: {
-            systemInstruction: `${LEGAL_SYSTEM_PROMPT}\n\nBạn trả lời ngắn gọn, rành mạch, súc tích, luôn trích dẫn chính xác tên văn bản và Điều/Khoản tương ứng. Hãy hỗ trợ người dùng giải đáp chuyên sâu về an toàn thực phẩm, soạn thảo văn bản hành chính theo NĐ 30, nhãn mác hàng hóa theo NĐ 111, phân công quản lý và kiểm tra thẩm định.`,
-          },
-        });
-
-        const response = await chat.sendMessage({ message: message || "Xin chào" });
-        const replyText = response?.text?.trim()
-          || response?.candidates?.flatMap((candidate: any) =>
-            candidate?.content?.parts?.map((part: any) => part?.text).filter((part: any) => typeof part === "string")
-          ).join("").trim()
-          || "";
-        if (replyText) {
-          return res.json({ reply: replyText, source: "gemini", notice: "Câu trả lời do mô hình AI tạo; cần đối chiếu văn bản pháp luật gốc, hiệu lực và phạm vi áp dụng trước khi sử dụng." });
+        const modelsToTry = ["gemini-3.8-flash", "gemini-3.5-flash-lite"];
+        let response: any = null;
+        let lastProviderError: any = null;
+        for (const modelName of modelsToTry) {
+          for (let attempt = 0; attempt < 2; attempt += 1) {
+            try {
+              const chat = ai.chats.create({
+                model: modelName,
+                config: {
+                  systemInstruction: `${LEGAL_SYSTEM_PROMPT}\\n\\nBạn trả lời ngắn gọn, rành mạch, súc tích. Chỉ viện dẫn Điều/Khoản khi có căn cứ kiểm chứng; nếu chưa có văn bản gốc thì phải nói rõ chưa đủ căn cứ. Hãy hỗ trợ nghiệp vụ an toàn thực phẩm và văn bản hành chính.`,
+                },
+              });
+              response = await chat.sendMessage({ message: message || "Xin chào" });
+              break;
+            } catch (providerError: any) {
+              lastProviderError = providerError;
+              const status = Number(providerError?.status ?? providerError?.statusCode ?? providerError?.response?.status ?? 0);
+              const transient = [429, 500, 502, 503, 504].includes(status);
+              if (!transient) throw providerError;
+              if (attempt === 0) await new Promise(resolve => setTimeout(resolve, 600));
+            }
+          }
+          const replyText = response?.text?.trim()
+            || response?.candidates?.flatMap((candidate: any) =>
+              candidate?.content?.parts?.map((part: any) => part?.text).filter((part: any) => typeof part === "string")
+            ).join("").trim()
+            || "";
+          if (replyText) {
+            return res.json({ reply: replyText, source: "gemini", notice: "Câu trả lời do mô hình AI tạo; cần đối chiếu văn bản pháp luật gốc, hiệu lực và phạm vi áp dụng trước khi sử dụng." });
+          }
+          response = null;
         }
-        console.warn("Gemini chat returned no text", {
-          candidateCount: response?.candidates?.length ?? 0,
-          finishReason: response?.candidates?.[0]?.finishReason ?? "UNKNOWN",
-          blockReason: response?.promptFeedback?.blockReason ?? null,
-        });
+        if (lastProviderError) throw lastProviderError;
+        console.warn("Gemini chat returned no text from primary or fallback models.");
       } catch (geminiError: any) {
         const status = Number(geminiError?.status ?? geminiError?.statusCode ?? geminiError?.response?.status ?? 0);
         console.error("Gemini chat request failed", {
