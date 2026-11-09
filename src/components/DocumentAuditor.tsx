@@ -708,6 +708,8 @@ export const DocumentAuditor: React.FC = () => {
 
   // Aggregated Stats for Batch
   const completedDocs = files.filter((f) => f.auditResult);
+  const geminiDocs = completedDocs.filter((f) => f.auditResult?.source === 'gemini');
+  const localFallbackDocs = completedDocs.filter((f) => f.auditResult?.source === 'local_rule' || f.auditResult?.source === 'client_rule');
   const needsHumanReviewDocs = completedDocs.filter((f) => f.auditResult?.status === 'CAN_XAC_MINH');
   const docsWithFindings = completedDocs.filter((f) => (f.auditResult?.issues?.length || 0) > 0);
   const docsWithHighSignals = completedDocs.filter((f) => f.auditResult?.issues?.some((issue) => issue.severity === 'error'));
@@ -750,7 +752,7 @@ export const DocumentAuditor: React.FC = () => {
             </h3>
             {completedDocs.length > 0 && (
               <span className="text-xs font-medium text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-md border border-emerald-200">
-                Đã thẩm định: {completedDocs.length}/{files.length}
+                Có kết quả xử lý: {completedDocs.length}/{files.length} (AI: {geminiDocs.length} • Dự phòng cục bộ: {localFallbackDocs.length})
               </span>
             )}
           </div>
