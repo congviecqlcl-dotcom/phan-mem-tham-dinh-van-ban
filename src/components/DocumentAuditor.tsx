@@ -190,8 +190,9 @@ export const DocumentAuditor: React.FC = () => {
           }
         }
       } catch (ocrErr) {
-        console.warn('Browser OCR failed:', ocrErr);
-        extractionError = 'Không thể khởi chạy OCR tiếng Việt trên trình duyệt. Kiểm tra kết nối tải bộ OCR hoặc thử tệp khác.';
+        console.error('Browser OCR failed:', ocrErr);
+        const detail = ocrErr instanceof Error ? ocrErr.message : String(ocrErr);
+        extractionError = `Không thể khởi chạy OCR tiếng Việt: ${detail || 'Lỗi không xác định'}. Kiểm tra kết nối mạng, quyền chạy Web Worker và chính sách bảo mật trình duyệt.`;
         text = '';
       }
     }
