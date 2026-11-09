@@ -285,7 +285,6 @@ export const DocumentAuditor: React.FC = () => {
           docType: detectedType,
           status: hasText ? 'ready' : 'error',
           errorMessage: hasText ? undefined : (errorMessage || 'Không trích xuất được văn bản; tệp này sẽ không được đưa vào thẩm định.'),
-          reviewNotice: hasText ? errorMessage : undefined,
           ocrPages,
           ocrNeedsReview: Boolean(ocrPages?.some((page) => page.status !== 'dat')),
           compositeSegments,
