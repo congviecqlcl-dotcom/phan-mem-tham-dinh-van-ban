@@ -81,7 +81,14 @@ Bạn hỗ trợ phân tích các văn bản pháp luật được nêu dưới 
 
 Các tên văn bản trên chỉ là danh mục gợi ý phạm vi. Không suy ra từ danh mục này rằng văn bản còn hiệu lực, chưa bị sửa đổi/thay thế, áp dụng cho tình huống cụ thể, hoặc rằng bất kỳ mô tả nội dung nào đã được xác minh. Không nhắc lại các chi tiết pháp lý cụ thể như thời hạn, thẩm quyền, điều kiện, mức xử lý hoặc quy tắc trình bày nếu không có toàn văn nguồn chính thức và căn cứ hiện hành để kiểm chứng.
 
-NGUYÊN TẮC KIỂM SOÁT BẰNG CHỨNG VÀ CHỐNG PHÁT HIỆN SAI:\n1. Mỗi phát hiện bắt buộc trích nguyên văn một đoạn thực sự có trong nội dung đầu vào ở trường currentContent. Nếu không trích được đoạn chứng minh, không tạo phát hiện.\n2. Không suy đoán nội dung bị mất, mờ hoặc sai dấu do OCR. Phải phân biệt nghi vấn lỗi OCR với lỗi của tài liệu; nội dung không đọc rõ phải chuyển công chức đối chiếu ảnh gốc.\n3. Không gắn lỗi viết tắt nếu chuỗi viết tắt không xuất hiện nguyên văn trong đầu vào. Nếu văn bản gốc ghi “GIÁM ĐỐC” thì tuyệt đối không báo lỗi viết tắt “GĐ”.\n4. Phải phân loại đúng tài liệu trước khi áp dụng quy tắc: đơn đề nghị do doanh nghiệp lập không mặc nhiên là công văn hoặc văn bản hành chính do cơ quan nhà nước ban hành; không áp dụng máy móc toàn bộ thể thức Nghị định 30/2020/NĐ-CP.\n5. Với tên cơ quan, địa danh, thẩm quyền và đăng ký doanh nghiệp, phải xét thời điểm phát sinh dữ kiện. Địa chỉ trụ sở đăng ký doanh nghiệp không mặc nhiên phải trùng địa chỉ cơ sở hoạt động.\n6. Không đề xuất tên cơ quan, địa chỉ hoặc nội dung pháp lý thay thế nếu không có căn cứ chính thức, đúng thời điểm và đúng phạm vi áp dụng. Khi thiếu chứng cứ, ghi “CHƯA ĐỦ CĂN CỨ XÁC ĐỊNH”.\n7. Chỉ xếp “Lỗi nghiêm trọng” khi có quy định bắt buộc xác định được, áp dụng đúng loại tài liệu và có đoạn chứng minh cụ thể. Nghi vấn OCR, dữ liệu thiếu hoặc chưa xác minh không được xếp là lỗi nghiêm trọng.\n\nKHI THẨM ĐỊNH VĂN BẢN ĐƯỢC CUNG CẤP:
+NGUYÊN TẮC KIỂM SOÁT BẰNG CHỨNG VÀ CHỐNG PHÁT HIỆN SAI:
+1. Mỗi phát hiện bắt buộc trích nguyên văn một đoạn thực sự có trong nội dung đầu vào ở trường currentContent. Nếu không trích được đoạn chứng minh, không tạo phát hiện.
+2. Không suy đoán nội dung bị mất, mờ hoặc sai dấu do OCR. Phải phân biệt nghi vấn lỗi OCR với lỗi của tài liệu; nội dung không đọc rõ phải chuyển công chức đối chiếu ảnh gốc.
+3. Không gắn lỗi viết tắt nếu chuỗi viết tắt không xuất hiện nguyên văn trong đầu vào. Nếu văn bản gốc ghi “GIÁM ĐỐC” thì tuyệt đối không báo lỗi viết tắt “GĐ”.
+4. Phải phân loại đúng tài liệu trước khi áp dụng quy tắc: đơn đề nghị do doanh nghiệp lập không mặc nhiên là công văn hoặc văn bản hành chính do cơ quan nhà nước ban hành; không áp dụng máy móc toàn bộ thể thức Nghị định 30/2020/NĐ-CP.
+5. Với tên cơ quan, địa danh, thẩm quyền và đăng ký doanh nghiệp, phải xét thời điểm phát sinh dữ kiện. Địa chỉ trụ sở đăng ký doanh nghiệp không mặc nhiên phải trùng địa chỉ cơ sở hoạt động.
+6. Không đề xuất tên cơ quan, địa chỉ hoặc nội dung pháp lý thay thế nếu không có căn cứ chính thức, đúng thời điểm và đúng phạm vi áp dụng. Khi thiếu chứng cứ, ghi “CHƯA ĐỦ CĂN CỨ XÁC ĐỊNH”.
+7. Chỉ xếp “Lỗi nghiêm trọng” khi có quy định bắt buộc xác định được, áp dụng đúng loại tài liệu và có đoạn chứng minh cụ thể. Nghi vấn OCR, dữ liệu thiếu hoặc chưa xác minh không được xếp là lỗi nghiêm trọng.\n\nKHI THẨM ĐỊNH VĂN BẢN ĐƯỢC CUNG CẤP:
 Hãy phân tích tỉ mỉ từng chi tiết theo 4 trục:
 1. Thể thức & Kỹ thuật trình bày (Nghị định 30/2020/NĐ-CP - đặc biệt là cấm viết tắt tùy tiện theo Phụ lục I và tuân thủ quy tắc viết hoa theo Phụ lục II).
 2. Căn cứ pháp lý & Hiệu lực văn bản.
@@ -132,28 +139,8 @@ function runLocalRuleAudit(content: string, docType?: string) {
     });
   }
 
-  // 2. Viết tắt chức vụ, chức danh sai quy định (PGĐ, GĐ, PCT, CT, CCT, TP, PP, BGD)
-  if (
-    /\b(pgđ|gđ|pct|cct|bgd)\b/i.test(content) ||
-    /các\s+pgđ/i.test(content) ||
-    /phó\s+cct/i.test(content) ||
-    /phòng\s+tccb/i.test(content)
-  ) {
-    issues.push({
-      id: "err-thethuc-viet-tat-chuc-vu",
-      category: "the_thuc",
-      severity: "error",
-      title: "Viết tắt tùy tiện chức vụ, chức danh lãnh đạo và phòng ban",
-      currentContent: "PGĐ Sở, CCT, Phó CCT, Phòng TCCB...",
-      expectedContent:
-        "Phó Giám đốc Sở, Chi cục trưởng, Phó Chi cục trưởng, Phòng Tổ chức cán bộ...",
-      legalBasis:
-        "Khoản 10 Mục II Phần I Phụ lục I Nghị định số 30/2020/NĐ-CP & Quy chuẩn văn thư nhà nước",
-      explanation:
-        "Trong văn bản hành chính (đặc biệt là phần Nơi nhận và nội dung), nghiêm cấm viết tắt tùy tiện các chức vụ, chức danh lãnh đạo và tên phòng ban. Chỉ được phép viết tắt các từ ngữ theo quy chuẩn pháp luật như TM., KT., TL., TUQ., Q., UBND, HĐND.",
-      location: "Phần Nơi nhận hoặc nội dung văn bản",
-    });
-  }
+  // Không tự động kết luận lỗi viết tắt chức vụ/phòng ban bằng quy tắc từ khóa.
+  // Chỉ ghi nhận khi có trích dẫn nguyên văn và căn cứ áp dụng được xác minh.
 
   // 3. Viết hoa bừa bãi tên cơ quan (viết hoa chữ Và, Của, Tại, Thuộc)
   if (
