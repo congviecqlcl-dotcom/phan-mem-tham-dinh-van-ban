@@ -105,5 +105,6 @@ Mọi báo cáo phải thể hiện phạm vi, số tiêu chí áp dụng, số 
 - `02_LEGAL_SCIENCE_KNOWLEDGE.md`: quản trị tri thức pháp lý và khoa học.
 - `03_TECHNICAL_ARCHITECTURE.md`: kiến trúc kỹ thuật.
 - `04_PROJECT_STATE_AND_HANDOVER.md`: trạng thái và bàn giao xuyên phiên.
+- `05_PRODUCT_ACTIVITY_ASSESSMENT_MATRIX.md`: ma trận sản phẩm × hoạt động × điều kiện thẩm định.
 
 Tài liệu này là chuẩn kiến trúc cấp cao. Khi có mâu thuẫn, phải ghi nhận và trình chủ dự án xem xét; không tự ý xóa hoặc thay đổi nguyên tắc đã được chốt.
