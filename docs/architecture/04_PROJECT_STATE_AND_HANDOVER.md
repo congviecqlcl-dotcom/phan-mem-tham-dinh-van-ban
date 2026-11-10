@@ -130,4 +130,4 @@ Năm tài liệu nền tảng đã được tạo và kiểm tra đọc lại th
 - `04_PROJECT_STATE_AND_HANDOVER.md`
 
 Commit cuối cùng tại thời điểm tạo bộ tài liệu: `c941f5e7feaf3ecb086c07a7b8de6f09ae9d1fbf`.
-Đây là mốc tài liệu, không phải xác nhận build, CI hoặc deployment đã thành công.
+Commit tiếp theo cập nhật sổ bàn giao: `b910dc2e65922604802dbc8e72457c8d06ce0ee0`. Đây là mốc tài liệu, không phải xác nhận build, CI hoặc deployment đã thành công.
