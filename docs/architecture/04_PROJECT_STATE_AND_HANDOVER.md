@@ -119,3 +119,15 @@ Cập nhật các mục:
 - `03_TECHNICAL_ARCHITECTURE.md`.
 
 Sau đó kiểm tra repo, branch, commit, CI và deployment thực tế. Không yêu cầu người dùng nhắc lại các nguyên tắc đã có trong tài liệu. Nếu thông tin mâu thuẫn, nêu rõ và xác minh, không tự chọn một phiên bản theo suy đoán.
+
+
+## 12. Mốc tài liệu kiến trúc đã ghi vào GitHub
+Năm tài liệu nền tảng đã được tạo và kiểm tra đọc lại thành công trên nhánh `feature/docuguard-v2-hardening`:
+- `00_DOCUGUARD_MASTER_SPEC.md`
+- `01_BUSINESS_DOMAIN_MAP.md`
+- `02_LEGAL_SCIENCE_KNOWLEDGE.md`
+- `03_TECHNICAL_ARCHITECTURE.md`
+- `04_PROJECT_STATE_AND_HANDOVER.md`
+
+Commit cuối cùng tại thời điểm tạo bộ tài liệu: `c941f5e7feaf3ecb086c07a7b8de6f09ae9d1fbf`.
+Đây là mốc tài liệu, không phải xác nhận build, CI hoặc deployment đã thành công.
