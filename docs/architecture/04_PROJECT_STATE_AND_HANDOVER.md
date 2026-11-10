@@ -159,3 +159,18 @@ Commit tạo ma trận: `f130390dbd4b6b6eca30624d95d38320ed5a0a96`.
 Commit tạo tài liệu: `293909dd7e14d7b0b38d084d8b3c9e7c6b034686`.
 Blob SHA đã kiểm tra đọc lại: `8eb9a29df377dd2bb55704e5476f17160680a5fb`.
 Tài liệu đã được kiểm tra đọc lại; đây là đặc tả dữ liệu dự thảo, chưa phải chức năng đã triển khai. Chưa có build/test/CI/Preview được thực hiện cho thay đổi tài liệu này.
+
+
+## 15. Bổ sung từ điển dữ liệu hoạt động
+Đã tạo `07_ACTIVITY_DATA_DICTIONARY.md` trên nhánh `feature/docuguard-v2-hardening`. Tài liệu chuẩn hóa:
+- Mô hình hoạt động cụ thể theo chủ thể, địa điểm, sản phẩm và thời kỳ;
+- Thuộc tính chung và dữ liệu riêng cho HD01–HD20;
+- Đầu vào, quy trình, đầu ra, phụ phẩm, hao hụt;
+- Hồ sơ nhân lực, mặt bằng, thiết bị, phương tiện;
+- Phân biệt công suất thiết kế, công suất kê khai, công suất thực tế và sản lượng giao dịch;
+- Phân tích nút thắt, chứng cứ, checklist động và cảnh báo bất thường;
+- Bộ kiểm tra ADQ01–ADQ15 và tình huống ADT01–ADT15.
+
+Commit tạo tài liệu: `2011e852a5d0b939e9b3b61c68b420715f20337a`.
+Blob SHA đã kiểm tra đọc lại: `4c985f85d009da64d34951a2d1d1d45a92a3a33f`.
+Tài liệu đã được kiểm tra đọc lại; đây là đặc tả nghiệp vụ dự thảo, chưa phải chức năng đã triển khai. Chưa có build/test/CI/Preview được thực hiện cho các thay đổi tài liệu này.
