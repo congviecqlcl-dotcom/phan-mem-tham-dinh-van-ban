@@ -105,6 +105,6 @@ Mọi báo cáo phải thể hiện phạm vi, số tiêu chí áp dụng, số 
 - `02_LEGAL_SCIENCE_KNOWLEDGE.md`: quản trị tri thức pháp lý và khoa học.
 - `03_TECHNICAL_ARCHITECTURE.md`: kiến trúc kỹ thuật.
 - `04_PROJECT_STATE_AND_HANDOVER.md`: trạng thái và bàn giao xuyên phiên.
-- `05_PRODUCT_ACTIVITY_ASSESSMENT_MATRIX.md`: ma trận sản phẩm × hoạt động × điều kiện thẩm định.\n- `06_PRODUCT_DATA_DICTIONARY.md`: từ điển dữ liệu sản phẩm, thuộc tính chuyên biệt SP01–SP16, trạng thái, nguồn gốc, đơn vị, bảo quản và kiểm soát chất lượng dữ liệu.\n- `07_ACTIVITY_DATA_DICTIONARY.md`: từ điển hoạt động HD01–HD20, đầu vào/đầu ra, quy trình, nguồn lực, công suất, chứng cứ và kiểm soát bất thường.
+- `05_PRODUCT_ACTIVITY_ASSESSMENT_MATRIX.md`: ma trận sản phẩm × hoạt động × điều kiện thẩm định.\n- `06_PRODUCT_DATA_DICTIONARY.md`: từ điển dữ liệu sản phẩm, thuộc tính chuyên biệt SP01–SP16, trạng thái, nguồn gốc, đơn vị, bảo quản và kiểm soát chất lượng dữ liệu.\n- `07_ACTIVITY_DATA_DICTIONARY.md`: từ điển hoạt động HD01–HD20, đầu vào/đầu ra, quy trình, nguồn lực, công suất, chứng cứ và kiểm soát bất thường.\n- `08_LEGAL_APPLICABILITY_MATRIX.md`: ma trận trạng thái văn bản, phạm vi điều khoản, thời điểm áp dụng, chuyển tiếp và phân định thẩm quyền; có danh mục văn bản hạt giống và các điểm cần rà soát tiếp.
 
 Tài liệu này là chuẩn kiến trúc cấp cao. Khi có mâu thuẫn, phải ghi nhận và trình chủ dự án xem xét; không tự ý xóa hoặc thay đổi nguyên tắc đã được chốt.
