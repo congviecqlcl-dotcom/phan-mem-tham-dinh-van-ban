@@ -174,3 +174,20 @@ Tài liệu đã được kiểm tra đọc lại; đây là đặc tả dữ li
 Commit tạo tài liệu: `2011e852a5d0b939e9b3b61c68b420715f20337a`.
 Blob SHA đã kiểm tra đọc lại: `4c985f85d009da64d34951a2d1d1d45a92a3a33f`.
 Tài liệu đã được kiểm tra đọc lại; đây là đặc tả nghiệp vụ dự thảo, chưa phải chức năng đã triển khai. Chưa có build/test/CI/Preview được thực hiện cho các thay đổi tài liệu này.
+
+
+## 16. Bổ sung ma trận áp dụng pháp luật ATTP
+Đã tạo `08_LEGAL_APPLICABILITY_MATRIX.md` trên nhánh `feature/docuguard-v2-hardening`. Tài liệu có:
+- Mô hình bản ghi văn bản, điều khoản và quy tắc pháp lý;
+- Trạng thái pháp lý theo thời điểm, gồm tạm ngưng, sửa đổi một phần, bãi bỏ, thay thế và chuyển tiếp;
+- Danh mục 14 văn bản/dự án luật hạt giống;
+- Ma trận trục quản lý y tế – nông nghiệp và môi trường – công thương – địa phương;
+- Quy trình xác định căn cứ áp dụng, thẩm quyền, hồ sơ và chứng cứ;
+- Cảnh báo đặc biệt về Nghị quyết 15/2026/NQ-CP: Nghị định 46/2026/NĐ-CP và Nghị quyết 66.13/2026/NQ-CP bị tạm ngưng cho đến khi Luật ATTP sửa đổi và nghị định hướng dẫn có hiệu lực; trong thời gian tạm ngưng, Nghị định 15/2018/NĐ-CP và văn bản hướng dẫn tiếp tục áp dụng theo Nghị quyết 15;
+- Dự án Luật ATTP sửa đổi vẫn là dự thảo tại ngày rà soát 10/11/2026;
+- Các khoảng trống cần hoàn thiện, đặc biệt ma trận phân cấp/ủy quyền riêng của tỉnh Phú Thọ.
+
+Commit tạo tài liệu: `4f6dfed159f668f3dc981fb272f0bf77919dfb52`.
+Blob SHA đã kiểm tra đọc lại: `a8dfa11fa79a3887b9a5ee1c0ffa125c54381918`.
+Nguồn pháp lý chính thức đã tra cứu: Cổng Thông tin điện tử Chính phủ, Công báo Chính phủ, CSDL quốc gia về VBPL và Cổng thông tin Quốc hội. Tài liệu đã kiểm tra đọc lại, nhưng là ma trận hạt giống/dự thảo; chưa bóc hết mọi điều khoản, chưa được chuyên viên pháp lý phê duyệt và chưa được dùng để chạy kết luận tự động.
+Chưa có build/test/CI/Preview được thực hiện cho thay đổi tài liệu này.
