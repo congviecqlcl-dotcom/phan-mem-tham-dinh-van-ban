@@ -500,3 +500,49 @@ QĐ602 bản Công báo mô tả chuỗi tiếp nhận → thẩm định hồ s
 **Kết luận:** VBHN 88 đã cung cấp nền tảng nghiệp vụ đủ để thiết kế khung phân loại, thẩm định, bằng chứng và biểu mẫu. Tuy nhiên, thành phần hồ sơ cụ thể, phí, thẩm quyền/tuyến xử lý và quy trình nội bộ áp dụng tại Phú Thọ vẫn cần hoàn tất đối chiếu Luật ATTP, quyết định địa phương và các bản gốc chưa thu thập. Không dùng riêng VBHN 88 để tuyên bố toàn bộ TTHC địa phương đã được xác minh.
 
 **Không thực hiện thay đổi mã nguồn, registry, Supabase, Vercel hoặc Production trong lần cập nhật này.** Đây là cập nhật tài liệu nghiên cứu/bàn giao; chưa chạy build/test/CI.
+
+
+### 17.15. Xác minh toàn văn QĐ1046 và QĐ1091: phân tuyến thẩm quyền và quy trình nội bộ Phú Thọ (10/11/2026)
+
+**Nguồn chính thức:** bản Công báo Phú Thọ:
+- QĐ1046/QĐ-UBND ngày 18/09/2025: https://congbao.phutho.gov.vn/tmp/Documents/Volumn2025/09/19/doc_219270.pdf
+- QĐ1091/QĐ-UBND ngày 22/09/2025: https://congbao.phutho.gov.vn/tmp/Documents/Volumn2025/09/23/doc_219287.pdf
+
+**1. Phân tuyến thẩm quyền theo QĐ1046**
+- QĐ1046 ủy quyền nhiệm vụ thuộc thẩm quyền Chủ tịch UBND tỉnh cho Giám đốc Sở NN&MT và Chủ tịch UBND xã/phường; hiệu lực từ ngày ký đến hết ngày 28/02/2027 (Điều 2).
+- Phụ lục, mục 1: Giám đốc Sở được ủy quyền cấp Giấy chứng nhận ATTP đối với cơ sở thuộc diện phải cấp giấy có Giấy chứng nhận đăng ký kinh doanh, Giấy chứng nhận đăng ký doanh nghiệp hoặc Giấy chứng nhận đầu tư do cấp tỉnh cấp.
+- Phụ lục, mục 9: Chủ tịch UBND xã/phường được ủy quyền cấp Giấy chứng nhận ATTP đối với cơ sở thuộc diện phải cấp giấy có giấy chứng nhận đăng ký kinh doanh, giấy chứng nhận kinh tế trang trại hoặc hợp tác xã do xã/phường cấp.
+- Hệ quả thiết kế: phân tuyến không được xác định chỉ bằng địa chỉ cơ sở hoặc tên loại hình. Phải thu thập loại giấy tờ pháp lý của cơ sở, cơ quan cấp giấy, chủ thể đứng tên và kiểm tra đúng điều kiện tại phụ lục QĐ1046. Nếu giấy tờ không khớp hai nhóm hoặc có tình huống đặc thù, chuyển trạng thái “cần xác minh thẩm quyền”, không tự chọn tuyến.
+- Mốc hết thời hạn ủy quyền 28/02/2027 là một điều kiện thời gian bắt buộc. Hệ thống phải quản lý hiệu lực theo ngày tiếp nhận/ngày giải quyết và cảnh báo rà soát trước khi hết thời hạn; không mặc định ủy quyền tiếp tục sau ngày này nếu chưa có văn bản mới.
+
+**2. QĐ1091 và hiệu lực thay thế một phần QĐ602**
+- QĐ1091 phê duyệt quy trình nội bộ giải quyết TTHC lĩnh vực Quản lý chất lượng nông lâm sản và thủy sản thuộc thẩm quyền các cấp chính quyền Phú Thọ.
+- Điều 3 QĐ1091 ghi rõ bãi bỏ 08 quy trình nội bộ giải quyết TTHC số 1–8, Mục I, Phần I kèm QĐ602/QĐ-UBND ngày 11/08/2025.
+- Vì vậy, đối với các quy trình cụ thể nằm trong phạm vi 08 quy trình bị bãi bỏ, QĐ1091 thay thế QĐ602. Không diễn đạt rộng rằng toàn bộ QĐ602 bị bãi bỏ nếu quyết định chỉ nêu rõ 08 quy trình nói trên. Việc trang danh mục của Sở cùng hiển thị QĐ602 “còn hiệu lực” và QĐ1091 “còn hiệu lực” có thể do QĐ602 còn các nội dung khác chưa bị bãi bỏ; trạng thái tổng thể trên danh mục không phủ nhận điều khoản bãi bỏ cụ thể của QĐ1091.
+- Mục I, Phần I QĐ1091 liệt kê TTHC mã 2.001827 theo tuyến ủy quyền Giám đốc Sở; Mục II liệt kê cùng mã TTHC theo tuyến ủy quyền Chủ tịch UBND xã/phường.
+
+**3. Quy trình nội bộ theo QĐ1091 – tuyến Giám đốc Sở**
+Tổng thời gian ghi tại quy trình: 15 ngày, chia thành:
+1. Tiếp nhận, kiểm tra, hướng dẫn, số hóa và chuyển xử lý; Trung tâm Phục vụ hành chính công tỉnh hoặc cấp xã nơi nhận: 0,5 ngày.
+2. Thẩm định hồ sơ; chuyên viên/lãnh đạo phòng chuyên môn, trạm; lãnh đạo Chi cục trực thuộc Sở; Đoàn đánh giá theo quyết định thành lập: 10 ngày.
+3. Lãnh đạo Chi cục xét duyệt, trình lãnh đạo Sở: 01 ngày.
+4. Lãnh đạo Sở xét duyệt kết quả TTHC: 02 ngày.
+5. Văn thư Sở và chuyên viên Chi cục phát hành/chuyển kết quả: 01 ngày.
+6. Trung tâm Phục vụ hành chính công nhận, cập nhật, lưu kho và trả kết quả: 0,5 ngày.
+
+**4. Quy trình nội bộ theo QĐ1091 – tuyến Chủ tịch UBND xã/phường**
+Tổng thời gian ghi tại quy trình: 15 ngày, chia thành:
+1. Tiếp nhận, kiểm tra, hướng dẫn, số hóa và chuyển xử lý; Trung tâm Phục vụ hành chính công tỉnh hoặc cấp xã nơi nhận: 0,5 ngày.
+2. Thẩm định hồ sơ; chuyên viên/lãnh đạo phòng chuyên môn, lãnh đạo UBND xã/phường; Đoàn đánh giá theo quyết định thành lập: 10 ngày.
+3. Lãnh đạo phòng chuyên môn xét duyệt, trình lãnh đạo UBND xã/phường: 01 ngày.
+4. Lãnh đạo UBND xã/phường xét duyệt kết quả: 02 ngày.
+5. Văn thư và chuyên viên phòng chuyên môn phát hành/chuyển kết quả: 01 ngày.
+6. Trung tâm Phục vụ hành chính công cấp xã nhận, cập nhật, lưu kho và trả kết quả: 0,5 ngày.
+
+**5. Kiểm soát khi chuyển thành quy trình phần mềm**
+- Hai tuyến có cùng tổng thời gian 15 ngày nhưng khác chủ thể xử lý, cấp phê duyệt, văn thư và Trung tâm Phục vụ hành chính công trả kết quả. Phải cấu hình thành hai luồng riêng, không dùng một quy trình chung chỉ thay tên cơ quan ở bước cuối.
+- QĐ1091 ghi thời gian thẩm định hồ sơ 10 ngày trong quy trình nội bộ; VBHN 88 Điều 14 quy định tổ chức thẩm định tại cơ sở trong vòng 15 ngày kể từ ngày nhận đủ hồ sơ hợp lệ. Đây là hai mô tả ở hai lớp quy định khác nhau; không tự cộng thành 25 ngày hoặc tự xem 10 ngày là thay thế Điều 14. Cần kiểm tra cách vận hành và đồng hồ thời hạn trên Hệ thống TTHC tỉnh; bảo đảm không làm sai tổng thời hạn TTHC 15 ngày đã công bố tại quy trình địa phương.
+- QĐ1091 là bản quy trình nội bộ năm 2025; QĐ2133/QĐ-UBND ngày 01/07/2026 được Sở liệt kê là quy trình nội bộ mới thuộc thẩm quyền Sở. Do đó tuyến Sở cần dùng QĐ2133 làm đầu mối cập nhật sau 01/07/2026; tuyến xã vẫn phải tiếp tục kiểm tra QĐ1091, QĐ1773 và các văn bản sửa đổi khác. Không mặc định QĐ2133 thay thế tuyến xã.
+- Không dùng bảng bước/định mức thời gian trên đây làm căn cứ hiện hành sau các quyết định năm 2026 cho đến khi đã đọc bản gốc QĐ2133 và QĐ1773, xác định điều khoản thay thế và đối chiếu dữ liệu TTHC điện tử đang công khai.
+
+**Kết luận cập nhật:** Đã xác minh được căn cứ phân tuyến theo loại giấy tờ đăng ký và cơ quan cấp giấy; đã xác minh QĐ1091 bãi bỏ đúng 08 quy trình thuộc QĐ602 và có hai tuyến xử lý riêng cho mã 2.001827. Đây là cơ sở nghiệp vụ quan trọng để mô hình hóa tuyến Sở/tuyến xã, nhưng cần cập nhật tiếp bằng QĐ2133, QĐ1773 và các quy định phân cấp hiện hành trước khi chốt quy trình phần mềm. Chưa sửa registry, mã nguồn, Supabase hoặc Vercel; chưa chạy build/test/CI.
