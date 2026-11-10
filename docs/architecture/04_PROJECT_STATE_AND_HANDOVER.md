@@ -191,3 +191,92 @@ Commit tạo tài liệu: `4f6dfed159f668f3dc981fb272f0bf77919dfb52`.
 Blob SHA đã kiểm tra đọc lại: `a8dfa11fa79a3887b9a5ee1c0ffa125c54381918`.
 Nguồn pháp lý chính thức đã tra cứu: Cổng Thông tin điện tử Chính phủ, Công báo Chính phủ, CSDL quốc gia về VBPL và Cổng thông tin Quốc hội. Tài liệu đã kiểm tra đọc lại, nhưng là ma trận hạt giống/dự thảo; chưa bóc hết mọi điều khoản, chưa được chuyên viên pháp lý phê duyệt và chưa được dùng để chạy kết luận tự động.
 Chưa có build/test/CI/Preview được thực hiện cho thay đổi tài liệu này.
+
+
+---
+
+## 17. ĐẦU MỐI TRI THỨC DUY NHẤT — BẮT BUỘC ĐỌC KHI MỞ PHIÊN MỚI
+
+Tài liệu này là sổ bàn giao và điểm điều hướng trung tâm của DocuGuard AI. Không tạo thêm bản mô tả tổng thể hoặc tài liệu kiến trúc trùng lặp nếu nội dung đã có ở đây hoặc trong các tài liệu được liên kết.
+
+### 17.1. Thứ tự đọc bắt buộc
+
+1. Tài liệu này — trạng thái, quyết định đã chốt, công việc dở dang và quy tắc tiếp tục.
+2. [00 — Master Specification](00_DOCUGUARD_MASTER_SPEC.md).
+3. [01 — Business Domain Map](01_BUSINESS_DOMAIN_MAP.md).
+4. [02 — Legal & Science Knowledge](02_LEGAL_SCIENCE_KNOWLEDGE.md).
+5. [03 — Technical Architecture](03_TECHNICAL_ARCHITECTURE.md).
+6. [05 — Product × Activity Assessment Matrix](05_PRODUCT_ACTIVITY_ASSESSMENT_MATRIX.md).
+7. [06 — Product Data Dictionary](06_PRODUCT_DATA_DICTIONARY.md).
+8. [07 — Activity Data Dictionary](07_ACTIVITY_DATA_DICTIONARY.md).
+9. [08 — Legal Applicability Matrix](08_LEGAL_APPLICABILITY_MATRIX.md).
+10. [Legal registry README](../legal-registry/README.md) và [registry.json](../../data/legal-registry/registry.json).
+
+Các tài liệu 00–08 là bộ thiết kế/đặc tả hiện có. Chúng không tự chứng minh chức năng đã lập trình, dữ liệu đã xác minh hoặc quy tắc đã được phê duyệt. Khi tài liệu và mã nguồn khác nhau, phải ghi nhận và xác minh, không tự suy đoán.
+
+### 17.2. Nghiên cứu và tài liệu gốc có trước bộ kiến trúc V2.1
+
+Không được bỏ qua hoặc viết lại từ đầu các nguồn sau:
+
+- “Bộ não AI hỗ trợ thẩm định cơ sở thực phẩm nông lâm thủy sản” (ghi nhận ngày 01/10/2026, 16 trang).
+- “Bảng hướng dẫn hồ sơ cấp Giấy chứng nhận cơ sở đủ điều kiện ATTP”.
+- “Bản mô tả hệ thống: Trang web thẩm định hồ sơ ATTP tích hợp AI”.
+- Các tài liệu pháp lý người dùng đã tải lên thư viện ChatGPT, trong đó có bản hợp nhất 88/2026/VBHN-TT-BNNMT, bản hợp nhất TT38/2018 – TT17/2024 – TT22/2026 và bản gốc TT38/2018/TT-BNNPTNT.
+- Bộ biểu mẫu BB1.1–BB2.8 và tiêu chí kiểm tra tương ứng.
+
+Các tài liệu trên được ghi nhận là tài liệu đã tải lên/thảo luận trong thư viện hoặc các cuộc trò chuyện ChatGPT trước đây; chưa xác nhận tất cả đã được đưa vào GitHub. Khi cần đọc, phải tìm và mở đúng tệp gốc. Không tự tạo lại nội dung từ trí nhớ và không coi tên tệp là bằng chứng về nội dung hoặc hiệu lực pháp lý.
+
+### 17.3. Phân loại nguồn và mức độ tin cậy
+
+| Nhóm | Nguồn | Cách sử dụng |
+|---|---|---|
+| Nguyên tắc sản phẩm | 00–04 | Chuẩn định hướng; thay đổi phải có lý do và ghi nhận quyết định |
+| Đặc tả nghiệp vụ/dữ liệu | 05–07 | Cơ sở thiết kế và kiểm thử; chưa đồng nghĩa đã triển khai |
+| Ma trận pháp lý | 08 | Khung xác định phạm vi; chưa phải danh mục điều khoản đã xác minh đầy đủ |
+| Danh mục văn bản | data/legal-registry/registry.json | Dữ liệu hạt giống; trạng thái CHUA_XAC_MINH không được dùng kết luận pháp lý |
+| Nghiên cứu/tài liệu gốc | Mục 17.2 | Phải truy xuất bản gốc và đối chiếu trước khi kế thừa |
+| Mã nguồn | src/, server/, tests/ và cấu hình | Bằng chứng mã đã viết; cần kiểm thử để xác nhận hành vi |
+| CI/Preview/Production | GitHub Actions và Vercel | Chỉ kết luận theo lần kiểm tra mới nhất |
+
+### 17.4. Kết quả rà soát mã nguồn tĩnh ngày 10/11/2026
+
+Đã rà soát tĩnh trên nhánh phát triển; chưa chạy build, test hoặc kiểm thử runtime trong vòng rà soát này.
+
+Đã tìm thấy: Supabase Auth và phân quyền vai trò; giao diện/quản trị người dùng; tải tài liệu, trích xuất và OCR PDF; xử lý tài liệu ghép; thẩm định đơn lẻ và hàng loạt; trợ lý Gemini; Legal Explorer dữ liệu tĩnh; quản lý hồ sơ ATTP, tài liệu và checklist; xuất Word; các kiểm thử auth, audit fallback và chat fallback.
+
+Các khoảng trống:
+1. Checklist ATTP hiện là bộ mặc định/cố định, chưa sinh động theo sản phẩm × hoạt động × cơ sở × phạm vi pháp lý.
+2. Chưa có mô hình dữ liệu đầy đủ cho sản phẩm, địa điểm, lô, nguồn cung, công suất và dòng vật chất toàn chuỗi.
+3. Tri thức pháp lý còn tĩnh; tuyến Gemini chưa truy xuất trực tiếp kho điều khoản đã xác minh.
+4. registry.json có 10 bản ghi hạt giống, tất cả CHUA_XAC_MINH; chưa đủ điều kiện làm nguồn kết luận pháp lý tự động.
+5. Chưa tìm thấy thư viện chuẩn khoa học/kỹ thuật đã tuyển chọn trong cây mã nguồn; cần tìm trong tài liệu nghiên cứu/thư viện trước khi tạo mới.
+6. SAFETY_REVIEW.md cần rà soát vì một số nhận định về xác thực API có thể không còn khớp middleware hiện tại.
+7. Workflow CI chưa bảo đảm kích hoạt phù hợp với nhánh phát triển và cấu hình PR được ghi nhận.
+8. PR #6 từng được ghi nhận có head/base không còn phản ánh nhánh phát triển mới nhất; phải kiểm tra trực tiếp, không hợp nhất theo trạng thái cũ.
+
+### 17.5. GitHub, Vercel và giới hạn thao tác
+
+- Kho mã nguồn: [congviecqlcl-dotcom/phan-mem-tham-dinh-van-ban](https://github.com/congviecqlcl-dotcom/phan-mem-tham-dinh-van-ban).
+- Nhánh phát triển được ghi nhận: feature/docuguard-v2-hardening.
+- PR #6 từng được ghi nhận là bản nháp; trạng thái hiện tại phải kiểm tra trực tiếp.
+- Vercel Preview có bảo vệ SSO; không tìm cách vượt qua.
+- Không triển khai Production, thay đổi Supabase, hợp nhất PR, xóa dữ liệu hoặc thực hiện thao tác không thể đảo ngược nếu chưa có chấp thuận rõ ràng.
+
+Trước mỗi phiên phải kiểm tra HEAD, nhánh, thay đổi chưa commit, PR, CI, Preview/Production và Supabase nếu có liên quan. Các commit, URL deployment và trạng thái cũ chỉ là lịch sử tham khảo.
+
+### 17.6. Điểm dừng và công việc tiếp theo
+
+- Người dùng yêu cầu kế thừa toàn bộ nghiên cứu, tài liệu và mã nguồn đã có; không tạo mới từ đầu hoặc tạo tài liệu trùng lặp.
+- Đã tạm dừng ý định tạo tài liệu ma trận tham chiếu khoa học/kỹ thuật mới (tệp 09); tệp 09 chưa được tạo.
+- Đã hoàn thành rà soát tĩnh bước đầu; chưa thay đổi mã nguồn, Supabase, Vercel hoặc PR trong vòng rà soát.
+- Bước tiếp theo: kiểm kê sâu tài liệu nghiên cứu và nguồn khoa học/kỹ thuật hiện có; đối chiếu với 00–08 và mã nguồn; chỉ bổ sung khi chứng minh được khoảng trống.
+
+### 17.7. Lệnh mở phiên mới
+
+Dán nội dung sau vào cuộc trò chuyện mới:
+
+> Chúng ta tiếp tục dự án DocuGuard AI – Pháp chế & ATTP. Hãy mở kho GitHub congviecqlcl-dotcom/phan-mem-tham-dinh-van-ban, kiểm tra nhánh và commit hiện tại, đọc docs/architecture/04_PROJECT_STATE_AND_HANDOVER.md trước, sau đó đọc các tài liệu được liệt kê tại mục 17.1 và tìm các tài liệu gốc tại mục 17.2. Không yêu cầu tôi nhắc lại thông tin đã có; không tạo tài liệu trùng lặp; không sửa mã nguồn, thay đổi Supabase, triển khai Production hoặc hợp nhất PR nếu chưa có căn cứ và phê duyệt. Trước tiên báo cáo trạng thái thực tế, những gì đã có, những gì còn thiếu, điểm mâu thuẫn và bước tiếp theo nhỏ nhất có giá trị.
+
+### 17.8. Kỷ luật cập nhật
+
+Mỗi phiên phải cập nhật tài liệu này khi có quyết định nghiệp vụ, thay đổi kiến trúc/mã nguồn, kết quả kiểm thử, thay đổi pháp lý, CI/deployment, rủi ro hoặc thay đổi ưu tiên. Ghi ngày giờ, bằng chứng, trạng thái xác minh và quyết định cần chủ dự án. Không ghi khóa API, mật khẩu, token, dữ liệu cá nhân hoặc hồ sơ nhạy cảm. Nội dung chưa kiểm chứng phải ghi CHUA_XAC_MINH.
