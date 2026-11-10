@@ -546,3 +546,46 @@ Tổng thời gian ghi tại quy trình: 15 ngày, chia thành:
 - Không dùng bảng bước/định mức thời gian trên đây làm căn cứ hiện hành sau các quyết định năm 2026 cho đến khi đã đọc bản gốc QĐ2133 và QĐ1773, xác định điều khoản thay thế và đối chiếu dữ liệu TTHC điện tử đang công khai.
 
 **Kết luận cập nhật:** Đã xác minh được căn cứ phân tuyến theo loại giấy tờ đăng ký và cơ quan cấp giấy; đã xác minh QĐ1091 bãi bỏ đúng 08 quy trình thuộc QĐ602 và có hai tuyến xử lý riêng cho mã 2.001827. Đây là cơ sở nghiệp vụ quan trọng để mô hình hóa tuyến Sở/tuyến xã, nhưng cần cập nhật tiếp bằng QĐ2133, QĐ1773 và các quy định phân cấp hiện hành trước khi chốt quy trình phần mềm. Chưa sửa registry, mã nguồn, Supabase hoặc Vercel; chưa chạy build/test/CI.
+
+
+### 17.16. Đối chiếu phân cấp quản lý theo QĐ108/2025 và cập nhật tình trạng QĐ2133/QĐ1773 (10/11/2026)
+
+**1. QĐ108/2025/QĐ-UBND**
+- Tra cứu được toàn văn nội dung QĐ108/2025/QĐ-UBND ngày 27/11/2025; văn bản có hiệu lực từ 15/12/2025. Nguồn hiện truy cập được là bản toàn văn trên Thư Viện Pháp Luật (nguồn thứ cấp), chưa thu thập được bản PDF ký số/Công báo từ nguồn chính thức của tỉnh. Vì vậy nội dung dưới đây là kết quả nghiên cứu sơ bộ, chưa đủ điều kiện nâng trạng thái pháp lý trong registry.
+- Điều 3 quy định nguyên tắc: phân cấp quản lý cơ sở giữa cấp tỉnh và cấp xã theo nguyên tắc cấp nào cấp giấy chứng nhận đăng ký kinh doanh/giấy chứng nhận đăng ký đầu tư thì cấp đó quản lý; bảo đảm một cơ sở sản xuất, kinh doanh, một loại sản phẩm chỉ chịu sự quản lý của một cơ quan quản lý nhà nước.
+- Điều 4: Sở NN&MT quản lý cơ sở sản xuất, kinh doanh nông lâm thủy sản có giấy chứng nhận đăng ký kinh doanh hoặc giấy chứng nhận đăng ký đầu tư do cấp tỉnh cấp; tiếp nhận và quản lý hồ sơ tự công bố sản phẩm thuộc lĩnh vực NN&MT.
+- Điều 5: UBND xã/phường quản lý cơ sở có giấy chứng nhận đăng ký liên hiệp hợp tác xã, giấy chứng nhận đăng ký hợp tác xã hoặc giấy chứng nhận đăng ký kinh doanh do cơ quan đăng ký kinh doanh có thẩm quyền cấp tại địa bàn; đồng thời quản lý cơ sở không thuộc diện cấp Giấy chứng nhận đủ điều kiện ATTP trên địa bàn theo TT17/2018/TT-BNNPTNT.
+- Điều 6: Sở có trách nhiệm tổ chức triển khai, kiểm tra/hậu kiểm, xử lý vi phạm, giám sát chất lượng/ATTP đối với cơ sở thuộc Điều 4; tập huấn, hướng dẫn nghiệp vụ cho UBND cấp xã; rà soát, trình Chủ tịch UBND tỉnh công bố TTHC được sửa đổi, bổ sung do phân cấp; kiểm tra việc thực hiện trách nhiệm của cấp xã.
+- Điều 9: UBND cấp xã chịu trách nhiệm quản lý, kiểm tra/hậu kiểm, xử lý vi phạm, giám sát đối với cơ sở thuộc Điều 5 và tập huấn/hướng dẫn cơ sở trong phạm vi quản lý.
+- Cần phân biệt QĐ108 (phân cấp quản lý nhà nước theo nhóm chủ thể/cơ sở) với QĐ1046 (ủy quyền thực hiện nhiệm vụ cấp Giấy chứng nhận). Không tự suy luận rằng mọi chủ thể thuộc phạm vi quản lý của một cấp thì cấp đó đương nhiên có toàn bộ thẩm quyền cấp giấy trong mọi tình huống; phải kiểm tra đồng thời điều khoản ủy quyền, TTHC công bố và quy trình nội bộ.
+- Do nguồn hiện tại là nguồn thứ cấp, toàn bộ nội dung QĐ108 trên chỉ được ghi nhận ở mức “đã tìm thấy nội dung, chờ đối chiếu bản gốc chính thức”. Chưa xác minh tình trạng hiệu lực đến ngày 10/11/2026 bằng dữ liệu chính thức.
+
+**2. QĐ2133/QĐ-UBND ngày 01/07/2026**
+- Trang Hệ thống văn bản của Sở NN&MT Phú Thọ hiện liệt kê QĐ2133 là “Còn hiệu lực”, trích yếu: phê duyệt quy trình nội bộ giải quyết TTHC lĩnh vực Quản lý chất lượng nông lâm sản và thủy sản thuộc thẩm quyền giải quyết của Sở NN&MT.
+- Nguồn: https://sonnmt.phutho.gov.vn/he-thong-van-ban
+- Đây là bằng chứng chính thức về việc văn bản được Sở liệt kê và phạm vi theo trích yếu; chưa thu thập/đọc được bản PDF quyết định và phụ lục quy trình trong lần này. Do đó chưa xác định được mã TTHC, thành phần các bước, vai trò, thời gian từng bước, điều khoản bãi bỏ/thay thế QĐ1091.
+- Tạm thời: QĐ2133 là đầu mối bắt buộc phải kiểm tra cho tuyến Sở; không dùng thời gian và các bước tuyến Sở theo QĐ1091 năm 2025 như cấu hình hiện hành trước khi đối chiếu bản QĐ2133.
+
+**3. QĐ1773/QĐ-UBND ngày 02/06/2026**
+- Chưa tìm được bản gốc chính thức hoặc bản PDF có thể kiểm chứng trong nguồn đã tra cứu.
+- Báo cáo sáng kiến trong Library có nhắc QĐ1773 là văn bản công bố danh mục TTHC sửa đổi, bổ sung thuộc thẩm quyền các cấp; nhưng báo cáo thứ cấp không thay thế quyết định và phụ lục gốc.
+- Chưa xác định được QĐ1773 có sửa TTHC 2.001827 hay không; không suy diễn về hồ sơ, thời hạn, phí, cơ quan giải quyết hoặc biểu mẫu.
+- Trạng thái: “chưa thu thập bản gốc – chưa xác minh phạm vi ảnh hưởng”.
+
+**4. Ma trận nguyên tắc hiện tại (chưa phải cấu hình pháp lý đã duyệt)**
+- Trục A — phân cấp quản lý cơ sở: kiểm tra loại giấy tờ đăng ký, cơ quan cấp, chủ thể đứng tên, địa bàn và loại hoạt động; đối chiếu QĐ108 sau khi có bản gốc.
+- Trục B — thẩm quyền thực hiện cấp giấy: kiểm tra văn bản ủy quyền QĐ1046, thời hạn ủy quyền, điều kiện tại phụ lục và quyết định thay thế/gia hạn nếu có.
+- Trục C — thủ tục hành chính: kiểm tra bản công bố TTHC mới nhất và mã thủ tục; đối chiếu QĐ548, QĐ1088, QĐ1773 và dữ liệu Cổng DVC.
+- Trục D — quy trình nội bộ: tuyến Sở kiểm tra QĐ2133; tuyến xã kiểm tra QĐ1091 và mọi văn bản sửa đổi sau đó.
+- Trục E — quản lý cơ sở không thuộc diện cấp giấy: áp dụng nhánh quản lý theo TT17/2018 và QĐ108 sau khi xác minh bản gốc, không đưa các cơ sở này vào quy trình cấp Giấy chứng nhận.
+- Trường hợp giấy tờ đăng ký không rõ cơ quan cấp, giấy tờ thuộc loại không được liệt kê, có nhiều địa điểm/hoạt động hoặc có khả năng chồng lấn quản lý: chuyển “CẦN XÁC MINH THẨM QUYỀN”, không tự định tuyến.
+- Phải kiểm tra nguyên tắc một cơ sở/một loại sản phẩm/một cơ quan quản lý, tránh tạo hai hồ sơ quản lý trùng ở tỉnh và xã; trường hợp cơ sở nhiều hoạt động/sản phẩm cần có quy tắc phân tách theo loại sản phẩm và thẩm quyền được văn bản cho phép, không tự áp dụng máy móc.
+
+**5. Việc cần làm tiếp**
+1. Thu thập PDF chính thức QĐ2133 và lập bảng đối chiếu từng bước với QĐ1091.
+2. Thu thập bản gốc QĐ1773, kiểm tra phụ lục và xác định thay đổi cụ thể của TTHC 2.001827.
+3. Thu thập bản ký số/Công báo QĐ108/2025, xác minh hiệu lực và đối chiếu với QĐ1046, TT17/2025, TT22/2026.
+4. Đối chiếu TTHC trên Cổng DVC tỉnh và CSDL quốc gia với các quyết định công bố gốc; giải quyết các điểm dữ liệu biểu mẫu/phí/thời hạn không thống nhất.
+5. Chỉ sau các bước trên mới hoàn thiện bảng quy trình thao tác công chức và đề xuất cấu hình phần mềm.
+
+**Giới hạn thay đổi:** Chỉ cập nhật sổ bàn giao nghiên cứu; không sửa mã nguồn, registry pháp lý, Supabase, Vercel hoặc Production; không chạy build/test/CI.
