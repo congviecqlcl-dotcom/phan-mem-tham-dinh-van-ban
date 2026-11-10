@@ -439,3 +439,64 @@ QĐ602 bản Công báo mô tả chuỗi tiếp nhận → thẩm định hồ s
 5. Chưa cập nhật `registry.json` hoặc bật quy tắc pháp lý. Tất cả thông tin trên là kết quả nghiên cứu nguồn và cần người rà soát pháp chế phê duyệt trước khi chuyển `DA_XAC_MINH`.
 
 **Nguồn đã đối chiếu:** Cổng văn bản Chính phủ (TT17/2024; VBHN88); Cổng thông tin Sở Nông nghiệp và Môi trường Phú Thọ (danh mục TTHC 2.001827; hệ thống văn bản liệt kê QĐ2133, QĐ1091, QĐ1046, QĐ1088, QĐ548); Công báo Phú Thọ (QĐ1088; QĐ602 bản lịch sử); Library người dùng (VBHN88 bản PDF; Báo cáo sáng kiến Lần 5 trích yếu QĐ548, QĐ602, QĐ1046, QĐ1088, QĐ1091, QĐ108/2025 và QĐ1773).
+
+### 17.14. Bóc tách VBHN 88/2026 và quy tắc hồ sơ/biểu mẫu cấp giấy ATTP (10/11/2026)
+
+**Nguồn trực tiếp:** tệp Library “0. vbhn hop nhat số 88-2026VBHN-TT-BNNMT hợp nhất tt38-2018 _tt17-2024 (3).pdf”, bản 28 trang, ngày văn bản hợp nhất 21/09/2026. Đã đọc toàn văn phần điều khoản và phụ lục (trang 1–28). Đây là nội dung trích xuất từ bản PDF do người dùng cung cấp; cần tiếp tục đối chiếu bản ký số/nguồn công bố chính thức và rà soát pháp chế trước khi kích hoạt quy tắc.
+
+**1. Phạm vi và trường hợp không thuộc diện cấp giấy**
+- Khoản 1 Điều 2 quy định đối tượng chứng nhận là cơ sở sản xuất, kinh doanh thực phẩm thuộc phạm vi quản lý của Bộ NN&PTNT (tên cơ quan trong văn bản gốc; cần đọc cùng các quy định phân cấp/tổ chức hiện hành).
+- Các trường hợp loại trừ được liệt kê gồm: sản xuất ban đầu nhỏ lẻ; sản xuất, kinh doanh không có địa điểm cố định và tàu cá dưới 15 m; sơ chế nhỏ lẻ; kinh doanh thực phẩm nhỏ lẻ; kinh doanh thực phẩm bao gói sẵn; cơ sở có một trong các chứng nhận hệ thống được liệt kê còn hiệu lực (GMP, HACCP, ISO 22000, IFS, BRC, FSSC 22000 hoặc tương đương).
+- Phải phân biệt “không thuộc diện cấp Giấy chứng nhận” với “không thuộc diện kiểm tra”: khoản 2 Điều 2 vẫn quy định đối tượng kiểm tra, bao gồm cả cơ sở có chứng nhận hệ thống còn hiệu lực.
+- Không tự suy rộng ngoại lệ. Khi phân loại phải thu thập đủ dữ liệu về quy mô/loại hình, địa điểm, hoạt động, loại sản phẩm và chứng nhận hệ thống, sau đó đối chiếu đúng điều kiện pháp lý.
+
+**2. Nội dung và phương pháp thẩm định**
+- Điều 7: xem xét cơ sở vật chất, trang thiết bị; nguồn nhân lực tham gia sản xuất, kinh doanh và quản lý ATTP; việc thực hiện quy định, tiêu chuẩn, quy chuẩn kỹ thuật quốc gia về chương trình quản lý ATTP và ghi nhãn hàng hóa.
+- Lấy mẫu kiểm nghiệm do Đoàn thẩm định xem xét, quyết định trên cơ sở đánh giá nguy cơ khi có nghi ngờ sản phẩm không bảo đảm ATTP hoặc hoạt động kiểm soát của cơ sở không bảo đảm; việc lấy mẫu/phân tích theo quy định hiện hành.
+- Phương pháp thẩm định gồm xem xét hồ sơ, tài liệu lưu; đánh giá thực tế nhà xưởng, thiết bị, nguồn lực quản lý, chương trình quản lý ATTP, truy xuất nguồn gốc, thu hồi và xử lý sản phẩm không bảo đảm; đánh giá kết quả thực hiện, phỏng vấn và lấy mẫu khi cần.
+- Điều 8: “Đạt” khi đáp ứng đầy đủ yêu cầu điều kiện ATTP theo pháp luật; “Không đạt” khi chưa đáp ứng hoặc còn điểm không phù hợp không thể khắc phục trong thời hạn yêu cầu. Việc thẩm định/phân loại theo mẫu tương ứng tại Phụ lục II, III.
+
+**3. Trình tự và thời hạn ở cấp quy định chuyên ngành**
+- Điều 12: hồ sơ xin cấp Giấy chứng nhận gồm các thành phần theo khoản 1 Điều 36 Luật ATTP; nộp trực tuyến, qua bưu điện hoặc trực tiếp đến cơ quan có thẩm quyền theo Điều 5.
+- Sau khi nhận hồ sơ, cơ quan có thẩm quyền thẩm tra tính đầy đủ, hợp lệ; thông báo kết quả và ngày dự kiến thẩm định nếu hợp lệ, hoặc thông báo hồ sơ không đạt và nêu rõ lý do.
+- Điều 13: cơ quan có thẩm quyền ban hành quyết định thành lập Đoàn thẩm định ngay sau khi thông báo hồ sơ hợp lệ; quyết định cần xác định căn cứ, phạm vi/nội dung, cơ sở, thành viên và trách nhiệm.
+- Điều 14: tổ chức thẩm định tại cơ sở trong vòng 15 ngày kể từ ngày nhận đủ hồ sơ hợp lệ; Đoàn công bố quyết định, đánh giá hồ sơ và thực tế, lập biên bản, thông báo kết quả; nếu phát hiện vi phạm thì lập biên bản/chuyển cơ quan có thẩm quyền xử lý.
+- Điều 15: biên bản phải lập tại cơ sở ngay sau khi kết thúc thẩm định, phản ánh chính xác kết quả, nêu rõ hạng mục không bảo đảm và thời hạn khắc phục, kết luận chung, ý kiến cơ sở và chữ ký theo quy định.
+- Điều 16: cơ quan có thẩm quyền thẩm tra biên bản; kết quả đạt thì cấp giấy theo mẫu, hiệu lực 3 năm; nếu có lấy mẫu thì phải chờ kết quả đạt. Trường hợp không đạt và không khắc phục đúng hạn thì thông báo không cấp giấy; có cơ chế thẩm tra khắc phục trong thời hạn luật định. Cơ quan có thẩm quyền phải thống kê/công khai danh sách cơ sở được cấp và chưa đáp ứng.
+- Lưu ý: mốc 15 ngày trong VBHN là thời hạn tổ chức thẩm định tại cơ sở theo Điều 14; không tự đồng nhất với tổng thời hạn TTHC tại địa phương nếu quyết định công bố TTHC quy định/diễn giải tổng thời gian khác.
+
+**4. Phân biệt hồ sơ người nộp và biểu mẫu cơ quan**
+- Điều 12 dẫn chiếu thành phần hồ sơ theo khoản 1 Điều 36 Luật ATTP. Không được tự thay thế bằng checklist tự thiết kế hoặc coi toàn bộ nội dung bản thuyết minh là giấy tờ độc lập phải nộp nếu điều luật không quy định như vậy.
+- Phụ lục III của VBHN: Đơn đề nghị cấp Giấy chứng nhận.
+- Phụ lục IV: Bản thuyết minh điều kiện bảo đảm ATTP; có dữ liệu về cơ sở, loại hình, công suất/diện tích, sản lượng, thị trường, sản phẩm, nguyên liệu/nguồn gốc, sơ đồ mặt bằng, thiết bị, nguồn nước/đá, xử lý chất thải, nhân lực, sức khỏe/kiến thức ATTP, vệ sinh, hóa chất/phụ gia, hệ thống quản lý chất lượng và phòng kiểm nghiệm.
+- Phụ lục V: Mẫu Giấy chứng nhận.
+- Phụ lục II: danh mục 14 mẫu biên bản thẩm định theo loại hình: BB1.1–BB1.6 và BB2.1–BB2.8. Đây là công cụ nghiệp vụ của đoàn thẩm định, không phải 14 thành phần hồ sơ người nộp.
+- Phụ lục I: mẫu thống kê/lập danh sách cơ sở; Phụ lục I.A: mẫu biên bản kiểm tra ATTP (hoạt động kiểm tra, không phải đơn đề nghị cấp giấy).
+- Cảnh báo kỹ thuật/pháp lý: Điều 12 trong phần thân VBHN còn câu dẫn mẫu đơn tại Phụ lục V và bản thuyết minh tại Phụ lục VI theo cấu trúc cũ của TT38/2018; nhưng chú thích sửa đổi tại chính VBHN và phần phụ lục hiện hành cho thấy mẫu đơn cũ đã được thay bằng Phụ lục III, mẫu thuyết minh cũ bằng Phụ lục IV, mẫu giấy chứng nhận cũ bằng Phụ lục V. Vì vậy không lấy số phụ lục cũ trong câu Điều 12 làm mã biểu mẫu hiện hành. Cần ghi nhận đây là điểm biên tập/dẫn chiếu cần rà soát, không tự sửa văn bản gốc.
+- Tệp VBHN được đọc thể hiện rõ mẫu đơn và bản thuyết minh; tuy nhiên thành phần hồ sơ pháp lý bắt buộc vẫn phải đối chiếu khoản 1 Điều 36 Luật ATTP và TTHC địa phương hiện hành. Không suy diễn rằng mọi trường dữ liệu trong bản thuyết minh đều là giấy tờ đính kèm riêng.
+
+**5. Điều kiện nhân sự thẩm định và trách nhiệm**
+- Thành viên đoàn: trung thực, khách quan, không xung đột lợi ích; chuyên môn phù hợp; đã được đào tạo/tập huấn nghiệp vụ.
+- Trưởng đoàn: đáp ứng điều kiện thành viên, có ít nhất 02 năm kinh nghiệm và đã tham gia thẩm định ít nhất 05 cơ sở trong lĩnh vực.
+- Người lấy mẫu: chuyên môn phù hợp và có chứng chỉ/giấy chứng nhận đào tạo hoặc tập huấn về lấy mẫu.
+- Trưởng đoàn điều hành, bảo đảm khách quan, ký biên bản/báo cáo và chịu trách nhiệm; thành viên đánh giá theo phân công, tuân thủ phương pháp, chịu trách nhiệm về phần việc.
+- Phần mềm phải có bước kiểm tra điều kiện nhân sự và xung đột lợi ích trước khi phát hành quyết định thành lập đoàn; không tự động chỉ định người nếu chưa có dữ liệu chứng minh năng lực/điều kiện.
+
+**6. Điểm cần khóa trong thiết kế DocuGuard**
+1. Tách ít nhất ba loại đối tượng: (i) tài liệu cơ sở nộp; (ii) biểu mẫu/biên bản do cơ quan hoặc đoàn thẩm định lập; (iii) kết quả/giấy chứng nhận do người có thẩm quyền ban hành.
+2. Sinh biểu mẫu BB theo loại hình và phạm vi hoạt động đã xác minh, không gán đồng loạt cả 14 mẫu.
+3. Không suy ra “đạt” từ việc tải lên hoặc gắn tài liệu. Mỗi tiêu chí phải có trạng thái đánh giá nội dung, bằng chứng, người đánh giá, căn cứ và lý do không áp dụng.
+4. Luồng nghiệp vụ phải có: phân loại đối tượng/ngoại lệ → kiểm tra thành phần hồ sơ theo Điều 36 Luật ATTP và TTHC địa phương → xác nhận hợp lệ → thành lập đoàn đủ điều kiện → thẩm định hồ sơ và thực tế → biên bản → khắc phục/thẩm tra nếu phát sinh → cơ quan thẩm quyền quyết định cấp/không cấp → công khai/lưu trữ.
+5. Tách đồng hồ thời hạn: tiếp nhận/kiểm tra tính hợp lệ; thời hạn tổ chức thẩm định tại cơ sở; thời gian khắc phục; thời gian xử lý kết quả; tổng thời hạn TTHC địa phương. Không cộng/trừ hoặc tự suy diễn khi chưa có quy định địa phương đã xác minh.
+6. Chưa chuyển quy tắc sang trạng thái DA_XAC_MINH; chưa sửa registry, mã nguồn, Supabase hoặc Vercel.
+
+**7. Tình trạng rà soát địa phương**
+- Tra cứu mới xác nhận trang hệ thống văn bản chính thức của Sở tiếp tục liệt kê QĐ2133/QĐ-UBND ngày 01/07/2026 là còn hiệu lực và mô tả đây là quy trình nội bộ thuộc thẩm quyền giải quyết của Sở NN&MT. Điều này xác nhận phạm vi của QĐ2133 không mặc nhiên bao gồm tuyến cấp xã.
+- Công báo Phú Thọ có bản QĐ1046/QĐ-UBND ngày 18/09/2025 về ủy quyền cho Giám đốc Sở và Chủ tịch UBND xã/phường; cần bóc toàn văn điều khoản và phụ lục để lập ma trận thẩm quyền.
+- Trang danh mục của Sở đồng thời liệt kê QĐ1091 và QĐ602 ở trạng thái “còn hiệu lực”; do đó ghi nhận trước đây rằng QĐ602 đã bị thay thế bởi QĐ1091 chưa đủ căn cứ chỉ từ trạng thái trên trang danh mục. Phải đọc điều khoản thay thế/bãi bỏ của bản gốc QĐ1091 và kiểm tra bản QĐ602. Cho đến khi xác minh được, đánh dấu QĐ602/QĐ1091 là “mâu thuẫn trạng thái – cần đối chiếu bản gốc”, không kết luận QĐ602 đã hết hiệu lực chỉ từ báo cáo nghiên cứu.
+- Chưa có bản gốc QĐ1773/QĐ-UBND ngày 02/06/2026 và QĐ108/2025/QĐ-UBND được bóc tách trong lần này. Chưa xác định được chúng làm thay đổi trực tiếp thành phần hồ sơ, phí, thời hạn hoặc tuyến giải quyết TTHC 2.001827 như thế nào.
+- Mức phí 700.000 đồng/cơ sở xuất hiện trong QĐ1088 năm 2025 là dữ liệu của quyết định công bố tại thời điểm đó; chưa đủ căn cứ khẳng định là mức phí hiện hành ngày 10/11/2026. Phải đối chiếu quy định phí trung ương và quyết định TTHC địa phương mới nhất trước khi cấu hình.
+
+**Kết luận:** VBHN 88 đã cung cấp nền tảng nghiệp vụ đủ để thiết kế khung phân loại, thẩm định, bằng chứng và biểu mẫu. Tuy nhiên, thành phần hồ sơ cụ thể, phí, thẩm quyền/tuyến xử lý và quy trình nội bộ áp dụng tại Phú Thọ vẫn cần hoàn tất đối chiếu Luật ATTP, quyết định địa phương và các bản gốc chưa thu thập. Không dùng riêng VBHN 88 để tuyên bố toàn bộ TTHC địa phương đã được xác minh.
+
+**Không thực hiện thay đổi mã nguồn, registry, Supabase, Vercel hoặc Production trong lần cập nhật này.** Đây là cập nhật tài liệu nghiên cứu/bàn giao; chưa chạy build/test/CI.
