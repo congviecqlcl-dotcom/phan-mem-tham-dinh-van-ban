@@ -280,3 +280,25 @@ Dán nội dung sau vào cuộc trò chuyện mới:
 ### 17.8. Kỷ luật cập nhật
 
 Mỗi phiên phải cập nhật tài liệu này khi có quyết định nghiệp vụ, thay đổi kiến trúc/mã nguồn, kết quả kiểm thử, thay đổi pháp lý, CI/deployment, rủi ro hoặc thay đổi ưu tiên. Ghi ngày giờ, bằng chứng, trạng thái xác minh và quyết định cần chủ dự án. Không ghi khóa API, mật khẩu, token, dữ liệu cá nhân hoặc hồ sơ nhạy cảm. Nội dung chưa kiểm chứng phải ghi CHUA_XAC_MINH.
+
+
+### 17.9. Kết quả kiểm kê thư viện tài liệu ChatGPT — đợt 1 (10/11/2026)
+
+Đã tìm và đọc các nguồn sau trong thư viện ChatGPT:
+
+| Tài liệu | Ngày lưu trong thư viện | Giá trị kế thừa | Trạng thái/giới hạn |
+|---|---:|---|---|
+| `Bo-nao-AI-tham-dinh-ATTP.docx` | 01/10/2026 | Nghiên cứu nghiệp vụ và kiến trúc suy luận 16 trang; mô hình yêu cầu–bằng chứng–lập luận–trạng thái; phân nhánh nghiệp vụ; luồng hồ sơ/thực địa; vai trò; các điều kiện chặn L1–L8; biểu mẫu BB1.1–BB2.8 | Nguồn nghiên cứu nền cần đối chiếu với 00–08; chính tài liệu nêu chưa phải kiểm toán pháp lý toàn bộ điều khoản |
+| `Bang_ho_so_ATTP_tach_tung_y.docx` | 03/07/2026 | Tách bản thuyết minh thành các nhóm dữ liệu và từng yêu cầu kiểm tra: thông tin cơ sở, sản phẩm, nhà xưởng, thiết bị, nguồn nước/đá, chất thải, nhân lực, vệ sinh, hóa chất/phụ gia, quản lý chất lượng, kiểm nghiệm | Tài liệu nghiệp vụ lịch sử; căn cứ và biểu mẫu phải đối chiếu phiên bản hiện hành |
+| `Bang_ho_so_ATTP.docx` và bản `(1)` | 03/07/2026 | Bảng thành phần hồ sơ và yêu cầu chất lượng nội dung | Có nhiều bản gần giống; chưa kết luận bản nào là bản chuẩn cuối |
+| `CSDL_san_pham_nong_nghiep_Viet_Nam_Phan_1_Ngu_coc.docx` | 07/07/2026 | Cấu trúc dữ liệu sản phẩm: mã nhóm/mã sản phẩm, phân nhóm, giống/loài, tên khoa học, đơn vị kê khai, đơn vị năng suất, năng suất trung bình/thấp/cao, chu kỳ, mùa vụ, trạng thái | Mới là phần 1 – ngũ cốc; số liệu mẫu trong tài liệu chưa được xác minh theo địa phương, mùa vụ, giống và nguồn thống kê; không dùng trực tiếp làm ngưỡng kết luận |
+| `V1.0_Phan01_Luot01_NguCoc_Mau.docx` | 07/07/2026 | Bản mẫu/biến thể của cơ sở dữ liệu ngũ cốc | Có nội dung gần với tài liệu CSDL; cần so sánh phiên bản và chọn nguồn chuẩn, không nhập trùng |
+| `11. 38_2018_TT-BNNPTNT_406512.pdf` và bản trùng | 01–02/10/2026 | Văn bản gốc TT 38/2018 để đối chiếu lịch sử sửa đổi | Không sử dụng độc lập như bản hiện hành sau khi có văn bản sửa đổi/hợp nhất |
+| `12. 17_2024_TT-BNNPTNT_634992.pdf` và bản trùng | 01–02/10/2026 | Văn bản sửa đổi TT 38/2018 và TT 48/2013; có thay thế phụ lục, biểu mẫu | Phải đọc cùng TT 17/2025, TT 22/2026 và VBHN 88/2026 |
+| `0. vbhn hop nhat số 88-2026VBHN-TT-BNNMT...` (có các bản gần trùng) | 02/10/2026 | Bản hợp nhất để tra cứu TT 38/2018 và các sửa đổi | Phải truy ngược văn bản sửa đổi khi xác định căn cứ; cần đối chiếu các bản trùng để chọn bản toàn vẹn |
+
+**Phát hiện quan trọng:** Tài liệu nghiên cứu và dữ liệu sản phẩm đã có trước bộ tài liệu kiến trúc V2.1. Do đó, không tạo mới một bộ khung tri thức khoa học/sản phẩm từ đầu. Cần lập quan hệ giữa tài liệu gốc này với các đặc tả 05–07; ưu tiên kiểm tra dữ liệu, nguồn và mức độ xác minh trước khi nhập vào ứng dụng.
+
+**Nguồn thư viện đã tra cứu:** `turn335file0`, `turn336file1`, `turn336file3`, `turn336file5`, `turn336file7`, `turn339file0`, `turn339file1`, `turn339file2`, `turn339file4`. Đây là tham chiếu truy xuất trong ChatGPT, không phải đường dẫn tệp GitHub.
+
+**Việc còn lại của kiểm kê:** tiếp tục duyệt thư viện theo các nhóm hồ sơ ATTP, biểu mẫu, dữ liệu chuyên ngành và quy chuẩn kỹ thuật; xác định bản gốc/bản trùng; lập bảng ánh xạ tài liệu → nội dung → tài liệu 00–08 → phân hệ phần mềm → tình trạng xác minh. Chưa có tệp gốc nào trong danh sách trên được sao chép vào GitHub ở đợt này.
