@@ -302,3 +302,30 @@ Mỗi phiên phải cập nhật tài liệu này khi có quyết định nghi�
 **Nguồn thư viện đã tra cứu:** `turn335file0`, `turn336file1`, `turn336file3`, `turn336file5`, `turn336file7`, `turn339file0`, `turn339file1`, `turn339file2`, `turn339file4`. Đây là tham chiếu truy xuất trong ChatGPT, không phải đường dẫn tệp GitHub.
 
 **Việc còn lại của kiểm kê:** tiếp tục duyệt thư viện theo các nhóm hồ sơ ATTP, biểu mẫu, dữ liệu chuyên ngành và quy chuẩn kỹ thuật; xác định bản gốc/bản trùng; lập bảng ánh xạ tài liệu → nội dung → tài liệu 00–08 → phân hệ phần mềm → tình trạng xác minh. Chưa có tệp gốc nào trong danh sách trên được sao chép vào GitHub ở đợt này.
+
+
+### 17.10. Kiểm kê thư viện tài liệu — đợt 2 (10/11/2026)
+
+**Nhóm biểu mẫu và căn cứ nghiệp vụ đã tìm thấy**
+- Có bản VBHN 88/2026/VBHN-TT-BNNMT lưu ngày 02/10/2026 và một bản hợp nhất lưu ngày 22/09/2026, tên tệp thể hiện chuỗi TT38–TT17–TT22.
+- Có các bản TT17/2024 và TT38/2018 gốc; một số bản sao trùng tên có hậu tố (1), (2), (3).
+- VBHN có danh mục 14 mẫu biên bản thẩm định BB1.1–BB1.6 và BB2.1–BB2.8, cùng nội dung quy trình thẩm định/kiểm tra và mẫu bản thuyết minh cơ sở.
+- Bảng hồ sơ ATTP tách từng ý đã có các nhóm thông tin: cơ sở, sản phẩm, khu vực sản xuất, thiết bị, nguồn nước/nước đá, xử lý chất thải, nhân lực, vệ sinh, hóa chất/phụ gia, hệ thống quản lý chất lượng và kiểm nghiệm.
+
+Không nhập các bản sao thành nhiều nguồn quy tắc. Cần kiểm tra checksum, số trang, chữ ký/nguồn phát hành và khác biệt nội dung để chọn bản chuẩn. Bản gốc và bản hợp nhất có vai trò khác nhau, không xóa lẫn nhau.
+
+**Dữ liệu sản phẩm và kỹ thuật**
+Qua các truy vấn theo cơ sở dữ liệu sản phẩm, năng suất, giống, chu kỳ, quy chuẩn kỹ thuật, nước và biểu mẫu BB1/BB2, chỉ xác nhận rõ bộ dữ liệu sản phẩm nông nghiệp Phần 1 – Ngũ cốc cùng bản mẫu V1.0 đã ghi tại mục 17.9. Chưa tìm thấy bằng chứng đủ rõ về thư viện QCVN/TCVN được lập chỉ mục có hệ thống hoặc bộ dữ liệu định mức đã thẩm định cho chăn nuôi, thủy sản, sơ chế, chế biến, bảo quản. Đây chỉ là “chưa tìm thấy trong các truy vấn đã thực hiện”, không khẳng định các tài liệu đó không tồn tại trong toàn bộ thư viện.
+
+**Ánh xạ kế thừa**
+| Nguồn hiện có | Đặc tả liên quan | Cách xử lý |
+|---|---|---|
+| Bộ não AI thẩm định ATTP | 00, 01, 02, 03, 08 | Nguồn nghiệp vụ/kiến trúc gốc; đối chiếu nội dung trùng và điều kiện L1–L8 |
+| Bảng hồ sơ tách từng ý và mẫu thuyết minh | 05, 07, 08 | Tái sử dụng cấu trúc trường; phân biệt hồ sơ phải nộp với bằng chứng thẩm định |
+| Danh mục BB1.1–BB2.8 | 05, 07, 08 | Ánh xạ loại hình và mẫu kiểm tra; không biến toàn bộ tiêu chí thành checklist chung |
+| CSDL ngũ cốc V1.0 | 05, 06 | Đối chiếu mã và trường dữ liệu; bổ sung nguồn, địa bàn, thời gian, phương pháp, trạng thái xác minh |
+| VBHN và văn bản gốc TT38/TT17/TT22 | 02, 08 | Quản lý theo văn bản gốc, sửa đổi, hợp nhất và thời điểm áp dụng |
+
+**Kết luận:** Chưa có lý do tạo thêm tài liệu kiến trúc. Bước tiếp theo là chọn bản chuẩn, kiểm tra phụ lục/mẫu, ánh xạ chi tiết tới 05–08 và đánh dấu dữ liệu thiếu nguồn kiểm chứng. Đợt này không thay đổi mã nguồn, Supabase, Vercel hay hồ sơ nghiệp vụ.
+
+Nguồn truy xuất thư viện: turn344file0–turn344file9, turn345file0–turn345file9 (tham chiếu tìm kiếm thư viện ChatGPT, không phải đường dẫn GitHub).
