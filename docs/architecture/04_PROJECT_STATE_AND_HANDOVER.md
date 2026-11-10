@@ -131,3 +131,17 @@ Năm tài liệu nền tảng đã được tạo và kiểm tra đọc lại th
 
 Commit cuối cùng tại thời điểm tạo bộ tài liệu: `c941f5e7feaf3ecb086c07a7b8de6f09ae9d1fbf`.
 Commit tiếp theo cập nhật sổ bàn giao: `b910dc2e65922604802dbc8e72457c8d06ce0ee0`. Đây là mốc tài liệu, không phải xác nhận build, CI hoặc deployment đã thành công.
+
+
+## 13. Bổ sung ma trận sản phẩm × hoạt động
+Đã tạo tài liệu `05_PRODUCT_ACTIVITY_ASSESSMENT_MATRIX.md` trên nhánh phát triển. Nội dung gồm:
+- Danh mục nhóm sản phẩm và hoạt động;
+- Mô hình nhiều-nhiều chủ thể – địa điểm – sản phẩm – hoạt động;
+- Bộ tiêu chí chung và chuyên ngành;
+- Cơ chế sinh checklist động;
+- Trạng thái áp dụng và trạng thái kết quả;
+- Cân đối dòng vật chất, đánh giá năng lực và kiểm soát dấu hiệu bất thường;
+- Bộ 12 ca kiểm thử nghiệm thu ma trận.
+
+Commit tạo ma trận: `f130390dbd4b6b6eca30624d95d38320ed5a0a96`.
+Đây là khung nghiệp vụ dự thảo, chưa phải danh mục quy phạm đã được xác minh/duyệt. Chưa triển khai thành chức năng chạy trong ứng dụng.
