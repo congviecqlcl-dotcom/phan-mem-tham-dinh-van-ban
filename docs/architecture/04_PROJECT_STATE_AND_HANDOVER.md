@@ -145,3 +145,17 @@ Commit tiếp theo cập nhật sổ bàn giao: `b910dc2e65922604802dbc8e72457c8
 
 Commit tạo ma trận: `f130390dbd4b6b6eca30624d95d38320ed5a0a96`.
 Đây là khung nghiệp vụ dự thảo, chưa phải danh mục quy phạm đã được xác minh/duyệt. Chưa triển khai thành chức năng chạy trong ứng dụng.
+
+
+## 14. Bổ sung từ điển dữ liệu sản phẩm
+Đã tạo `06_PRODUCT_DATA_DICTIONARY.md` trên nhánh `feature/docuguard-v2-hardening`. Tài liệu chuẩn hóa:
+- Mô hình nhóm sản phẩm – định nghĩa – biến thể – trạng thái qua công đoạn – lô;
+- Từ điển thuộc tính lõi và thuộc tính chuyên biệt theo 16 nhóm SP01–SP16;
+- Nguồn gốc tự sản xuất/thu mua/nhập khẩu/gia công/hỗn hợp;
+- Thành phần, đơn vị, điều kiện bảo quản, hồ sơ nguy cơ;
+- Liên kết sản phẩm – hoạt động – cơ sở – lô;
+- Kiểm tra chất lượng dữ liệu PDQ01–PDQ15 và tình huống kiểm thử PDT01–PDT12.
+
+Commit tạo tài liệu: `293909dd7e14d7b0b38d084d8b3c9e7c6b034686`.
+Blob SHA đã kiểm tra đọc lại: `8eb9a29df377dd2bb55704e5476f17160680a5fb`.
+Tài liệu đã được kiểm tra đọc lại; đây là đặc tả dữ liệu dự thảo, chưa phải chức năng đã triển khai. Chưa có build/test/CI/Preview được thực hiện cho thay đổi tài liệu này.
