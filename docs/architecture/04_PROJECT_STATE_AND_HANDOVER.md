@@ -364,3 +364,40 @@ Kiến trúc 00–08 đã kế thừa phần lớn định hướng cốt lõi c
 **Bước tiếp theo nhỏ nhất có giá trị:** lập bảng đối chiếu chi tiết từ tài liệu gốc sang cấu hình phần mềm và mã nguồn hiện có, bắt đầu với luồng cấp Giấy chứng nhận ATTP và bộ biểu mẫu BB1.1–BB2.8. Không tạo tài liệu kiến trúc mới; có thể ghi bảng kiểm kê/ánh xạ vào sổ bàn giao hoặc tệp dữ liệu kiểm thử hiện có sau khi kiểm tra cấu trúc kho.
 
 Tham chiếu thư viện: `turn335file0`, `turn339file0`, `turn339file2`, `turn344file0`–`turn344file9`, `turn345file0`–`turn345file9`.
+
+### 17.12. Đối chiếu tĩnh luồng hồ sơ ATTP hiện có với nghiệp vụ cấp Giấy chứng nhận (10/11/2026)
+
+**Phạm vi kiểm tra:** đọc mã nguồn `src/components/AttpDossierReview.tsx`, `src/data/presets.ts`, `src/types.ts`, `src/App.tsx`, ma trận 05 và từ điển 07 trên nhánh `feature/docuguard-v2-hardening`. Đây là rà soát tĩnh mã nguồn; chưa chạy ứng dụng, chưa kiểm tra dữ liệu Supabase thực tế, chưa xác minh RLS/Storage policy hoặc triển khai.
+
+**Những gì mã nguồn hiện có thể làm**
+- Tạo hồ sơ làm việc theo cơ sở với mã hồ sơ, tên cơ sở, người đại diện, địa chỉ, loại hình và thủ tục được chọn.
+- Tải tệp PDF, DOCX, TXT, MD, CSV lên vùng lưu trữ riêng `attp-dossiers-private`; giới hạn 25 MB/tệp trong giao diện.
+- Gọi `/api/parse-document` để trích xuất PDF/DOCX; nhận diện PDF cần OCR khi máy chủ trả HTTP 422; lưu trạng thái trích xuất.
+- Lưu tài liệu và văn bản trích xuất vào các bảng `attp_dossiers`, `attp_dossier_documents`, `attp_dossier_checklist_items`, `attp_dossier_document_links`.
+- Gắn một hoặc nhiều tài liệu vào một đầu mục kiểm soát; cho phép thêm đầu mục bổ sung; gỡ tài liệu khỏi danh sách bằng cờ `is_removed` và giữ tệp gốc trong kho.
+- Có cảnh báo giao diện rằng danh mục hiện tại là khung tổ chức công việc, không mặc nhiên là thành phần hồ sơ pháp lý.
+
+**Những gì chưa được chứng minh hoặc chưa có trong mã nguồn đã đọc**
+1. Checklist sinh theo thủ tục, nhóm sản phẩm, hoạt động, địa điểm, loại hình và căn cứ pháp luật: hiện `DEFAULT_CHECKLIST` gồm 7 đầu mục chung, được tạo giống nhau cho mọi hồ sơ, bất kể lựa chọn thủ tục/loại hình.
+2. Mô hình dữ liệu cấu trúc cho chủ thể pháp lý, nhiều cơ sở/địa điểm, nhiều sản phẩm, nhiều hoạt động, công đoạn, nhà cung cấp, lô hàng, công suất và dòng vật chất: không thấy trong component hồ sơ; thông tin tạo mới hiện chỉ có tên cơ sở, đại diện, địa chỉ, loại hình, thủ tục.
+3. Ánh xạ 14 biểu mẫu BB1.1–BB2.8 tới từng tiêu chí, yêu cầu, phương pháp, bằng chứng và phiên bản biểu mẫu: chưa thấy trong component hoặc `presets.ts` được kiểm tra.
+4. Kiểm tra tính đầy đủ/hợp lệ của hồ sơ theo thời hạn và quy trình thủ tục; lập kế hoạch/đoàn thẩm định; ghi nhận kết quả từng tiêu chí; ý kiến giải trình/khắc phục; thẩm tra; trình và phê duyệt: chưa thấy trong luồng component này.
+5. Trạng thái checklist hiện chủ yếu suy ra từ việc có tài liệu được gắn hay không. Có tài liệu gắn vào đầu mục không chứng minh tài liệu hợp lệ, nội dung đáp ứng, hoặc tiêu chí đã được thẩm định.
+6. Hàm cập nhật liên kết xóa các liên kết cũ rồi tạo lại liên kết mới bằng hai yêu cầu riêng; cần đánh giá tính nguyên tử và xử lý lỗi giữa chừng để tránh trạng thái liên kết bị mất một phần.
+7. Khi tạo hồ sơ, thao tác ghi hồ sơ và ghi checklist là hai yêu cầu riêng; nếu bước hai lỗi, có thể tồn tại hồ sơ chưa có checklist. Cần cơ chế giao dịch/khôi phục hoặc thao tác phía máy chủ có tính nguyên tử.
+8. Mã nguồn gọi trực tiếp Supabase REST từ trình duyệt với access token người dùng; chưa kiểm chứng được chính sách RLS, quyền Storage, ràng buộc khóa ngoại, giới hạn truy cập chéo hồ sơ và quy trình dọn tệp mồ côi.
+9. Không tìm thấy thư mục migration Supabase trong danh sách thư mục gốc đã kiểm tra; vì vậy chưa thể xác nhận định nghĩa bảng, ràng buộc, trigger, RLS hay lịch sử thay đổi schema chỉ từ repository này.
+
+**Nhận định nghiệp vụ**
+Phân hệ hiện tại phù hợp với vai trò “tiếp nhận và tập hợp tài liệu theo hồ sơ làm việc”, chưa đủ căn cứ gọi là phân hệ thẩm định hồ sơ cấp Giấy chứng nhận theo quy trình nghiệp vụ hoàn chỉnh. Không được lấy số lượng đầu mục đã gắn tệp làm tỷ lệ hồ sơ đạt. Cần giữ cảnh báo hiện có và mở rộng trạng thái theo hướng tách: đã tiếp nhận, đã đọc/trích xuất, cần OCR, chưa kiểm tra nội dung, đã kiểm tra, có yêu cầu bổ sung, chưa đủ căn cứ, không áp dụng có lý do.
+
+**Ưu tiên xử lý theo thứ tự, chưa triển khai trong đợt rà soát này**
+- P0 — Xác minh schema/RLS/Storage policy và tính nhất quán khi ghi nhiều bảng; đây là kiểm soát dữ liệu và bảo mật.
+- P1 — Chốt một thủ tục cụ thể (cấp mới Giấy chứng nhận cho cơ sở thuộc phạm vi nông, lâm, thủy sản) và xác minh đúng cơ quan, hồ sơ, biểu mẫu, thời hạn theo văn bản trung ương và quyết định công bố TTHC/ủy quyền của Phú Thọ tại thời điểm áp dụng.
+- P1 — Lập bảng ánh xạ biểu mẫu BB1.1–BB2.8 và từng trường hồ sơ: trường dữ liệu, nguồn, bắt buộc/có điều kiện, đối tượng áp dụng, bằng chứng, người kiểm tra, trạng thái và căn cứ điều khoản.
+- P2 — Từ bảng ánh xạ đã duyệt mới cấu hình checklist theo điều kiện; không biến danh sách 7 đầu mục chung thành checklist pháp lý.
+- P2 — Bổ sung luồng thẩm định nội dung, xác minh thực địa, giải trình/khắc phục, thẩm tra và phê duyệt; giữ người có thẩm quyền là chủ thể quyết định.
+
+**Kết luận:** Không sửa mã nguồn trong lần này. Có cơ sở xác định khoảng cách giữa chức năng đang chạy theo thiết kế tĩnh và đích nghiệp vụ: phân hệ hiện có là kho hồ sơ/tập hợp chứng cứ ở mức cơ bản, chưa phải quy trình thẩm định pháp lý–chuyên môn đầy đủ. Bước kế tiếp phải kiểm chứng nguồn pháp lý và schema/kiểm soát dữ liệu trước khi thiết kế thay đổi.
+
+Tham chiếu mã nguồn đã đọc: `src/components/AttpDossierReview.tsx`, `src/data/presets.ts`, `src/types.ts`, `src/App.tsx`, `docs/architecture/05_PRODUCT_ACTIVITY_ASSESSMENT_MATRIX.md`, `docs/architecture/07_ACTIVITY_DATA_DICTIONARY.md`.
