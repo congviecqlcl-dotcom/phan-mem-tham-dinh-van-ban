@@ -329,3 +329,38 @@ Qua các truy vấn theo cơ sở dữ liệu sản phẩm, năng suất, giốn
 **Kết luận:** Chưa có lý do tạo thêm tài liệu kiến trúc. Bước tiếp theo là chọn bản chuẩn, kiểm tra phụ lục/mẫu, ánh xạ chi tiết tới 05–08 và đánh dấu dữ liệu thiếu nguồn kiểm chứng. Đợt này không thay đổi mã nguồn, Supabase, Vercel hay hồ sơ nghiệp vụ.
 
 Nguồn truy xuất thư viện: turn344file0–turn344file9, turn345file0–turn345file9 (tham chiếu tìm kiếm thư viện ChatGPT, không phải đường dẫn GitHub).
+
+### 17.11. Đối chiếu nghiên cứu nghiệp vụ cũ với kiến trúc 00–08 (10/11/2026)
+
+**Nguồn gốc dùng để đối chiếu**
+- `Bo-nao-AI-tham-dinh-ATTP.docx` (nghiên cứu 1, mốc 01/10/2026, 16 trang).
+- `Bang_ho_so_ATTP_tach_tung_y.docx` (bảng thành phần hồ sơ và yêu cầu chất lượng, 3 trang).
+- `CSDL_san_pham_nong_nghiep_Viet_Nam_Phan_1_Ngu_coc.docx` (dữ liệu mẫu ngũ cốc).
+- Các bản VBHN 88/2026, TT38/2018 và TT17/2024 trong thư viện.
+
+**Kết quả đối chiếu**
+| Nội dung nghiên cứu cũ | Nội dung tương ứng trong 00–08 | Nhận định kế thừa |
+|---|---|---|
+| Phải xác định phiên bản pháp luật; lưu sửa đổi, bãi bỏ, tạm ngưng, chuyển tiếp | 02 và 08 | Đã được nâng thành mô hình quản trị văn bản/điều khoản/quy tắc; cần tiếp tục đối chiếu danh mục điều khoản thực tế và nguồn chính thức |
+| Tách nghiệp vụ cấp giấy, kiểm tra ATTP, quản lý theo cam kết, thủy sản xuất khẩu, xử phạt | 00, 01, 03, 05, 07, 08 | Nguyên tắc phân nhánh đã có; phải giữ các luồng nghiệp vụ độc lập, không gộp chung thành một checklist |
+| Mỗi yêu cầu có căn cứ, phạm vi, bằng chứng, người xác minh, thông tin thiếu | 00, 02, 03, 08 | Đã được thể hiện ở chuẩn kết quả và quản trị tri thức; cần kiểm tra schema/mã nguồn có lưu đủ từng trường không |
+| Không dùng điểm rủi ro thay điều kiện pháp luật; giữ quyền giải trình, lịch sử sửa kết luận | 00, 01, 03 | Đã có nguyên tắc; cần kiểm chứng việc triển khai nhật ký, ý kiến cơ sở và luồng sửa/duyệt trong ứng dụng |
+| Đọc từng yêu cầu, tách chủ thể, hành vi, điều kiện, ngoại lệ, thời hạn, hậu quả | 02, 08 | Đã có mô hình pháp lý; cần đối chiếu với bộ phân tích điều khoản và kho dữ liệu pháp lý thực tế |
+| Định danh cơ sở, sản phẩm, hoạt động, địa điểm, chuỗi cung ứng | 01, 05, 06, 07 | Đã được mở rộng thành mô hình sản phẩm × hoạt động × cơ sở và dòng vật chất |
+| Kế hoạch thẩm định, đoàn thẩm định, kiểm chứng thực địa, phỏng vấn, lấy mẫu, biên bản, thẩm tra, cấp giấy/theo dõi | 00, 01, 03, 05, 07 | Kiến trúc hiện tại mới mô tả ở mức khung; cần kiểm tra xem các trạng thái và biểu mẫu đã có đầy đủ trong phần mềm chưa |
+| Điều kiện chặn L1–L8 trước triển khai | 00–08 có các nguyên tắc và điều kiện quản trị liên quan | Chưa có bằng chứng rằng toàn bộ L1–L8 đã được chuyển thành cổng kiểm soát có thể kiểm thử; cần trích nguyên văn từ tài liệu gốc và lập ánh xạ riêng, không tự diễn giải thay thế |
+| Bảng hồ sơ tách từng ý: pháp lý, thông tin chung, sản phẩm, nhà xưởng, thiết bị, nước/đá, chất thải, nhân lực, vệ sinh, hóa chất/phụ gia, quản lý chất lượng, kiểm nghiệm | 05, 06, 07 | Phần lớn trường đã có chỗ trong từ điển/matrix; phải xác định trường nào là hồ sơ bắt buộc, trường nào là thông tin khai báo/bằng chứng hỗ trợ, trường nào chỉ áp dụng có điều kiện |
+| CSDL ngũ cốc với mã nhóm/mã sản phẩm, giống, tên khoa học, đơn vị, năng suất, chu kỳ, mùa vụ | 05, 06 | Đặc tả dữ liệu đã có khung rộng hơn; dữ liệu số trong tệp mẫu chưa có nguồn thống kê/địa bàn/giống đủ rõ để dùng làm chuẩn kết luận |
+
+**Sai khác/điểm cần cảnh báo khi kế thừa**
+1. Bảng hồ sơ ATTP cũ còn dẫn mẫu bản thuyết minh theo Phụ lục VI của TT38/2018 và gọi là tham chiếu TT17/2024. Bản VBHN trong thư viện thể hiện mẫu bản thuyết minh ở Phụ lục IV ban hành kèm TT17/2024. Không lấy nguyên nhãn phụ lục từ bảng cũ để cấu hình biểu mẫu hiện hành; phải kiểm tra bản VBHN toàn văn, các sửa đổi TT22/2026 và thủ tục địa phương trước khi chốt.
+2. Nghiên cứu Bộ não AI tự cảnh báo rằng việc nghiên cứu chưa phải kiểm toán pháp lý từng câu/từng phụ lục hoàn tất. Vì vậy không nâng các trích dẫn hoặc kết luận trong tài liệu nghiên cứu thành quy tắc đã duyệt.
+3. Tài liệu nghiên cứu phân biệt rõ rủi ro để chuẩn bị và ưu tiên kiểm chứng với điều kiện pháp luật để kết luận. Quy tắc này phải được giữ nguyên trong sản phẩm và kiểm thử, không để điểm rủi ro tự chuyển thành kết quả đạt/không đạt.
+4. CSDL ngũ cốc có các con số năng suất minh họa nhưng chưa kèm nguồn, địa bàn, vụ, điều kiện canh tác và phương pháp thống kê. Chỉ được dùng để thử cấu trúc/kiểm thử dữ liệu, không dùng làm ngưỡng tự động.
+
+**Kết luận đối chiếu**
+Kiến trúc 00–08 đã kế thừa phần lớn định hướng cốt lõi của nghiên cứu cũ và mở rộng tốt hơn mô hình sản phẩm–hoạt động–cơ sở–dòng vật chất. Không cần viết lại nghiên cứu Bộ não AI hoặc tạo thêm tài liệu kiến trúc tổng thể. Khoảng trống thực sự là chuyển nội dung đã nghiên cứu thành cấu hình và quy trình có thể kiểm thử trong phần mềm: (a) ánh xạ đầy đủ L1–L8; (b) ánh xạ từng biểu mẫu BB1.1–BB2.8 và từng trường hồ sơ; (c) quản lý phiên bản pháp lý/địa phương; (d) mô hình kế hoạch và bằng chứng thực địa; (e) xác minh dữ liệu khoa học trước khi bật quy tắc.
+
+**Bước tiếp theo nhỏ nhất có giá trị:** lập bảng đối chiếu chi tiết từ tài liệu gốc sang cấu hình phần mềm và mã nguồn hiện có, bắt đầu với luồng cấp Giấy chứng nhận ATTP và bộ biểu mẫu BB1.1–BB2.8. Không tạo tài liệu kiến trúc mới; có thể ghi bảng kiểm kê/ánh xạ vào sổ bàn giao hoặc tệp dữ liệu kiểm thử hiện có sau khi kiểm tra cấu trúc kho.
+
+Tham chiếu thư viện: `turn335file0`, `turn339file0`, `turn339file2`, `turn344file0`–`turn344file9`, `turn345file0`–`turn345file9`.
