@@ -401,3 +401,41 @@ Phân hệ hiện tại phù hợp với vai trò “tiếp nhận và tập h�
 **Kết luận:** Không sửa mã nguồn trong lần này. Có cơ sở xác định khoảng cách giữa chức năng đang chạy theo thiết kế tĩnh và đích nghiệp vụ: phân hệ hiện có là kho hồ sơ/tập hợp chứng cứ ở mức cơ bản, chưa phải quy trình thẩm định pháp lý–chuyên môn đầy đủ. Bước kế tiếp phải kiểm chứng nguồn pháp lý và schema/kiểm soát dữ liệu trước khi thiết kế thay đổi.
 
 Tham chiếu mã nguồn đã đọc: `src/components/AttpDossierReview.tsx`, `src/data/presets.ts`, `src/types.ts`, `src/App.tsx`, `docs/architecture/05_PRODUCT_ACTIVITY_ASSESSMENT_MATRIX.md`, `docs/architecture/07_ACTIVITY_DATA_DICTIONARY.md`.
+
+### 17.13. Rà soát căn cứ và quy trình TTHC cấp Giấy chứng nhận ATTP tại Phú Thọ (10/11/2026)
+
+**Lưu ý đính chính:** Quyết định 602/QĐ-UBND ngày 11/08/2025 không còn là quy trình nội bộ hiện hành theo hồ sơ nghiên cứu đã lưu trong Library. Tài liệu sáng kiến rà soát pháp lý (bản Lần 5, tạo 19/10/2026) ghi rõ Quyết định 602 đã được thay thế bởi Quyết định 1091/QĐ-UBND ngày 22/09/2025. Không tiếp tục lấy quy trình 602 làm căn cứ hiện hành. Cần kiểm tra thêm các cập nhật sau tháng 9/2025.
+
+**Nguồn chính thức đã kiểm tra trực tuyến**
+- Trang TTHC của Sở Nông nghiệp và Môi trường Phú Thọ hiện công khai mã TTHC `2.001.827` — cấp Giấy chứng nhận cơ sở đủ điều kiện ATTP đối với cơ sở sản xuất, kinh doanh thực phẩm nông, lâm, thủy sản; trang này chưa hiển thị đầy đủ thành phần hồ sơ trong phần nội dung trích xuất.
+- Quyết định 1088/QĐ-UBND ngày 22/09/2025: công bố danh mục TTHC thuộc thẩm quyền giải quyết của Chủ tịch UBND cấp xã, phường. Bản Công báo xác định TTHC 2.001827, thời hạn 15 ngày từ khi nhận đủ hồ sơ hợp lệ, phí hiển thị 700.000 đồng/cơ sở; căn cứ có Luật ATTP, TT38/2018, TT17/2024, Điều 3 TT17/2025 và QĐ1046/2025.
+- Quyết định 1091/QĐ-UBND ngày 22/09/2025: quy trình nội bộ các cấp chính quyền; Sở đang liệt kê văn bản này là còn hiệu lực tại trang hệ thống văn bản.
+- Quyết định 1046/QĐ-UBND ngày 18/09/2025: ủy quyền cho Giám đốc Sở và Chủ tịch UBND xã, phường thực hiện nhiệm vụ thuộc thẩm quyền Chủ tịch UBND tỉnh; Sở đang liệt kê văn bản là còn hiệu lực.
+- Quyết định 548/QĐ-UBND ngày 06/08/2025: công bố danh mục TTHC được sửa đổi, bổ sung lĩnh vực quản lý chất lượng nông lâm sản và thủy sản; trang hệ thống văn bản của Sở đang liệt kê còn hiệu lực.
+- Trang hệ thống văn bản của Sở hiện liệt kê thêm Quyết định 2133/QĐ-UBND ngày 01/07/2026 — quy trình nội bộ TTHC lĩnh vực Quản lý chất lượng Nông lâm sản và Thủy sản thuộc thẩm quyền giải quyết của Sở Nông nghiệp và Môi trường — tình trạng hiển thị còn hiệu lực. Đây là cập nhật sau QĐ1091, phải đọc bản gốc để xác định chính xác phạm vi thủ tục nào được thay thế/điều chỉnh; không suy diễn rằng nó thay thế toàn bộ QĐ1091.
+- Cùng danh mục văn bản Sở có QĐ1773/QĐ-UBND ngày 02/06/2026 về công bố danh mục TTHC được sửa đổi, bổ sung thuộc thẩm quyền các cấp chính quyền. Phải lấy bản gốc và phụ lục để xác định chính xác các trường thay đổi đối với TTHC 2.001827.
+- QĐ108/2025/QĐ-UBND ngày 27/11/2025 (hiệu lực từ 15/12/2025 theo bản tra cứu) ban hành quy định phân cấp quản lý nhà nước về ATTP thuộc lĩnh vực Nông nghiệp và Môi trường trên địa bàn Phú Thọ. Cần đối chiếu toàn văn quy định phân cấp với QĐ1046, TT17/2025 và các quy trình TTHC; không chỉ dùng phần căn cứ.
+
+**Căn cứ trung ương và điểm cần phân biệt**
+- VBHN 88/2026/VBHN-TT-BNNMT ngày 21/09/2026 là bản hợp nhất hướng dẫn chứng nhận cơ sở đủ điều kiện ATTP; nội dung hồ sơ trong tệp Library được trích xuất cho thấy văn bản hợp nhất TT38/2018, TT17/2024, TT17/2025 và TT22/2026. Phải dùng chính bản hợp nhất đã đối chiếu, không đọc riêng TT38/2018 như văn bản nguyên trạng.
+- TT17/2024/TT-BNNPTNT sửa đổi quy định về thẩm định/chứng nhận; hiệu lực 15/01/2025 theo Cổng văn bản Chính phủ.
+- TT17/2025/TT-BNNMT là văn bản phân cấp quản lý nhà nước trong lĩnh vực quản lý chất lượng nông lâm sản và thủy sản, hiệu lực 01/07/2025; không nhầm với TT17/2024 và không mô tả TT17/2025 là văn bản ban hành mẫu đơn.
+- Kết quả tra cứu Cổng Dịch vụ công quốc gia hiện hiển thị thành phần hồ sơ viện dẫn Phụ lục I và II của TT17/2025. Đây là điểm không thống nhất với bản chất/văn bản TT17/2025 đã tra cứu (văn bản phân cấp) và với bản hợp nhất 88; không được tự động nhập nội dung hiển thị đó thành checklist pháp lý. Cần xác minh bản ghi TTHC gốc trong CSDL quốc gia và phụ lục hiện hành của VBHN 88, sau đó kiến nghị cập nhật nếu dữ liệu công khai bị sai.
+- Nguồn không chính thức 33/VBHN-BNNPTNT/77/VBHN-BNNMT cũ có mẫu đơn, mẫu thuyết minh và mẫu biên bản, nhưng không dùng thay VBHN 88/2026. Dùng bản cũ chỉ để đối chiếu lịch sử.
+
+**Danh mục biểu mẫu đã xác định được từ nguồn trước đó**
+- 14 mẫu BB1.1–BB1.6 và BB2.1–BB2.8 là mẫu biên bản thẩm định theo loại hình cơ sở, không phải 14 thành phần hồ sơ mà mọi cơ sở đều phải nộp.
+- Phải lựa chọn biểu mẫu theo loại hình/hoạt động thực tế và phạm vi thủ tục; không áp dụng tất cả biểu mẫu cho một hồ sơ.
+- Hồ sơ xin cấp giấy, biểu mẫu thuyết minh và mẫu biên bản thẩm định là các loại tài liệu khác nhau. Phân hệ phải tách: tài liệu do cơ sở nộp; biểu mẫu công chức/đoàn thẩm định lập; kết quả/quyết định do cơ quan có thẩm quyền ban hành.
+
+**Quy trình nội bộ QĐ602 cũ — chỉ dùng làm tài liệu lịch sử**
+QĐ602 bản Công báo mô tả chuỗi tiếp nhận → thẩm định hồ sơ tại Chi cục → lãnh đạo Chi cục xét duyệt/trình → lãnh đạo Sở xét duyệt → văn thư phát hành → chuyển Văn phòng UBND tỉnh → thẩm tra/trình lãnh đạo UBND tỉnh ký → trả kết quả. Tuy nhiên, đây là quy trình đã bị thay thế bởi QĐ1091 theo hồ sơ Library; tuyệt đối không sao chép nguyên chuỗi người xử lý và thời gian của QĐ602 vào phần mềm hiện hành. QĐ1091 và các cập nhật QĐ2133/1773 phải được bóc tách trước.
+
+**Kết luận kiểm soát cho DocuGuard**
+1. Căn cứ trung ương cần dùng làm điểm xuất phát hiện nay là VBHN 88/2026, nhưng trạng thái từng điều khoản vẫn phải được duyệt; VBHN không thay thế quyết định TTHC địa phương.
+2. Lớp địa phương phải tối thiểu xét QĐ548, QĐ1046, QĐ1088, QĐ1091, QĐ108/2025/QĐ-UBND, QĐ1773/2026 và QĐ2133/2026; QĐ602 đánh dấu lịch sử/đã bị thay thế.
+3. Tách cấu hình thủ tục do UBND tỉnh/Chủ tịch UBND tỉnh ủy quyền và thủ tục thuộc Chủ tịch UBND cấp xã; không hard-code tất cả hồ sơ vào một tuyến thẩm quyền.
+4. Không xác nhận mức phí, biểu mẫu nộp, thời hạn, đơn vị xử lý hiện tại chỉ từ một cổng tra cứu có dữ liệu không thống nhất; cần bản gốc quyết định công bố mới nhất và quy trình nội bộ tương ứng.
+5. Chưa cập nhật `registry.json` hoặc bật quy tắc pháp lý. Tất cả thông tin trên là kết quả nghiên cứu nguồn và cần người rà soát pháp chế phê duyệt trước khi chuyển `DA_XAC_MINH`.
+
+**Nguồn đã đối chiếu:** Cổng văn bản Chính phủ (TT17/2024; VBHN88); Cổng thông tin Sở Nông nghiệp và Môi trường Phú Thọ (danh mục TTHC 2.001827; hệ thống văn bản liệt kê QĐ2133, QĐ1091, QĐ1046, QĐ1088, QĐ548); Công báo Phú Thọ (QĐ1088; QĐ602 bản lịch sử); Library người dùng (VBHN88 bản PDF; Báo cáo sáng kiến Lần 5 trích yếu QĐ548, QĐ602, QĐ1046, QĐ1088, QĐ1091, QĐ108/2025 và QĐ1773).
