@@ -1,6 +1,7 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { authenticatedFetch, getAccessToken, getAuthConfig } from '../utils/auth';
 import { FilePlus2, FolderOpen, ClipboardCheck, AlertTriangle, Trash2, Plus, Search, FileText } from 'lucide-react';
+import { recognizeImageText, recognizeScannedPdf } from '../utils/browserPdfOcr';
 
 type DossierDocument = { id: string; name: string; size: number; type: string; storagePath?: string; text: string; parseStatus: 'extracted' | 'needs_ocr' | 'unsupported' | 'error'; parseMessage: string; addedAt: string };
 type ChecklistItem = { id: string; label: string; group: string; required: boolean; documentIds: string[] };
@@ -158,7 +159,8 @@ export const AttpDossierReview: React.FC = () => {
         const isPdf = lower.endsWith('.pdf') || file.type === 'application/pdf';
         const isDocx = lower.endsWith('.docx') || file.type === 'application/vnd.openxmlformats-officedocument.wordprocessingml.document';
         const isPlain = ['.txt', '.md', '.csv'].some(extension => lower.endsWith(extension));
-        if (!isPdf && !isDocx && !isPlain) {
+        const isImage = /\\.(png|jpe?g|webp|bmp|tif|tiff)$/i.test(lower) || ['image/png', 'image/jpeg', 'image/webp', 'image/bmp', 'image/tiff'].includes(file.type);
+        if (!isPdf && !isDocx && !isPlain && !isImage) {
           parseStatus = 'unsupported';
           parseMessage = 'Định dạng chưa được hỗ trợ trong phân hệ hồ sơ.';
         } else {
@@ -181,20 +183,62 @@ export const AttpDossierReview: React.FC = () => {
             text = await file.text();
             parseStatus = text.trim() ? 'extracted' : 'error';
             parseMessage = text.trim() ? 'Đã lưu tệp riêng tư và đọc văn bản thuần.' : 'Đã lưu tệp nhưng không có nội dung văn bản.';
+          } else if (isImage) {
+            const ocr = await recognizeImageText(file);
+            if (ocr.text.length < 20) {
+              parseStatus = 'needs_ocr';
+              parseMessage = 'Đã lưu ảnh nhưng OCR không nhận dạng đủ chữ. Cần kiểm tra ảnh gốc hoặc chụp lại rõ hơn.';
+            } else {
+              const accepted = window.confirm('Đã OCR ảnh tại trình duyệt (độ tin cậy ' + Math.round(ocr.confidence) + '%).\\n\\n' + ocr.text.slice(0, 1800) + (ocr.text.length > 1800 ? '\\n… (còn nội dung)' : '') + '\\n\\nBạn đã đối chiếu với ảnh gốc và xác nhận đưa nội dung nhận dạng vào hồ sơ chưa?');
+              if (accepted) {
+                text = ocr.text;
+                parseStatus = 'extracted';
+                parseMessage = 'Đã OCR ảnh tại trình duyệt (' + Math.round(ocr.confidence) + '%). Công chức phải đối chiếu toàn bộ nội dung với ảnh gốc.';
+              } else {
+                parseStatus = 'needs_ocr';
+                parseMessage = 'Đã OCR nhưng chưa được công chức xác nhận; nội dung chưa được ghi vào hồ sơ.';
+              }
+            }
           } else {
-            const response = await authenticatedFetch('/api/parse-document', {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ fileName: file.name, mimeType: file.type, storagePath }),
-            });
-            const payload = await response.json().catch(() => ({}));
-            if (response.ok && payload.success && typeof payload.text === 'string' && payload.text.trim()) {
+            let response: Response | undefined;
+            let payload: any = {};
+            if (!isPdf) {
+              response = await authenticatedFetch('/api/parse-document', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ fileName: file.name, mimeType: file.type, storagePath }),
+              });
+              payload = await response.json().catch(() => ({}));
+            } else {
+              response = await authenticatedFetch('/api/parse-document', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ fileName: file.name, mimeType: file.type, storagePath }),
+              });
+              payload = await response.json().catch(() => ({}));
+            }
+            if (response.ok && payload.success && typeof payload.text === 'string' && payload.text.trim().length >= 200) {
               text = payload.text;
               parseStatus = 'extracted';
               parseMessage = 'Đã lưu tệp riêng tư và trích xuất ' + Number(payload.charCount || text.length).toLocaleString('vi-VN') + ' ký tự.';
-            } else if (response.status === 422 && isPdf) {
-              parseStatus = 'needs_ocr';
-              parseMessage = 'Đã lưu tệp riêng tư. PDF không có lớp văn bản; có thể là bản quét ảnh, cần OCR.';
+            } else if (isPdf) {
+              const ocr = await recognizeScannedPdf(file);
+              const failedPages = ocr.pages.filter(page => page.status !== 'dat');
+              if (ocr.text.length < 20) {
+                parseStatus = 'needs_ocr';
+                parseMessage = 'PDF đã lưu nhưng OCR không nhận dạng đủ nội dung. Cần kiểm tra bản quét.';
+              } else {
+                const pageSummary = ocr.pages.map(page => 'Trang ' + page.page + ': ' + (page.status === 'dat' ? 'nhận dạng được' : page.status === 'can_kiem_tra' ? 'cần kiểm tra' : 'không đọc được') + ' (' + Math.round(page.confidence) + '%)').join('\\n');
+                const accepted = window.confirm('Đã OCR ' + ocr.pages.length + ' trang ngay trên trình duyệt. Tệp không được gửi đến dịch vụ OCR bên ngoài.\\n\\n' + pageSummary + '\\n\\n' + ocr.text.slice(0, 1800) + (ocr.text.length > 1800 ? '\\n… (còn nội dung)' : '') + '\\n\\nBạn đã đối chiếu với bản quét gốc và xác nhận đưa nội dung OCR vào hồ sơ chưa?');
+                if (accepted) {
+                  text = ocr.text;
+                  parseStatus = failedPages.length ? 'needs_ocr' : 'extracted';
+                  parseMessage = 'Đã OCR ' + ocr.pages.length + ' trang. ' + (failedPages.length ? failedPages.length + ' trang cần kiểm tra thủ công: ' + failedPages.map(page => page.page).join(', ') + '. ' : '') + 'Phải đối chiếu với ảnh gốc.';
+                } else {
+                  parseStatus = 'needs_ocr';
+                  parseMessage = 'Đã OCR nhưng chưa được công chức xác nhận; nội dung chưa được ghi vào hồ sơ.';
+                }
+              }
             } else {
               parseStatus = 'error';
               parseMessage = typeof payload.error === 'string' ? payload.error : 'Đã lưu tệp nhưng chưa trích xuất được nội dung (HTTP ' + response.status + ').';
@@ -300,7 +344,7 @@ export const AttpDossierReview: React.FC = () => {
         <div className="rounded-xl border border-neutral-200 bg-white p-4">
           <div className="flex flex-wrap items-start justify-between gap-3"><div><div className="text-xs font-semibold text-emerald-800">{selected.code}</div><h3 className="text-lg font-bold">{selected.facilityName}</h3><p className="text-sm text-neutral-600">{selected.address}</p><p className="text-xs text-neutral-500">{selected.procedure} · {selected.facilityType}</p></div>
             <button onClick={()=>inputRef.current?.click()} className="rounded-lg bg-neutral-900 px-3 py-2 text-sm font-semibold text-white"><FilePlus2 className="mr-1 inline h-4 w-4"/> Thêm tài liệu</button>
-            <input ref={inputRef} type="file" multiple accept=".pdf,.docx,.txt,.md,.csv" className="hidden" onChange={e=>void addFiles(e.target.files)}/>
+            <input ref={inputRef} type="file" multiple accept=".pdf,.docx,.txt,.md,.csv,.jpg,.jpeg,.png,.webp,.bmp,.tif,.tiff,application/pdf,image/jpeg,image/png,image/webp" className="hidden" onChange={e=>void addFiles(e.target.files)}/>
           </div>
           <div className="mt-4 grid grid-cols-3 gap-2 text-center">
             <div className="rounded-lg bg-neutral-50 p-3"><div className="text-xl font-bold">{stats.total}</div><div className="text-xs text-neutral-500">Đầu mục</div></div>
