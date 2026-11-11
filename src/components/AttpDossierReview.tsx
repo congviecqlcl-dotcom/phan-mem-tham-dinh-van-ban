@@ -158,7 +158,7 @@ export const AttpDossierReview: React.FC = () => {
         const isPdf = lower.endsWith('.pdf') || file.type === 'application/pdf';
         const isDocx = lower.endsWith('.docx') || file.type === 'application/vnd.openxmlformats-officedocument.wordprocessingml.document';
         const isPlain = ['.txt', '.md', '.csv'].some(extension => lower.endsWith(extension));
-        const isImage = /\\.(png|jpe?g|webp|bmp|tif|tiff)$/i.test(lower) || ['image/png', 'image/jpeg', 'image/webp', 'image/bmp', 'image/tiff'].includes(file.type);
+        const isImage = /\.(png|jpe?g|webp|bmp|tif|tiff)$/i.test(lower) || ['image/png', 'image/jpeg', 'image/webp', 'image/bmp', 'image/tiff'].includes(file.type);
         if (!isPdf && !isDocx && !isPlain && !isImage) {
           parseStatus = 'unsupported';
           parseMessage = 'Định dạng chưa được hỗ trợ trong phân hệ hồ sơ.';
@@ -171,7 +171,7 @@ export const AttpDossierReview: React.FC = () => {
           const uploadUrl = storageBaseUrl + '/storage/v1/object/attp-dossiers-private/' + storagePath.split('/').map(encodeURIComponent).join('/');
           const uploadResponse = await fetch(uploadUrl, {
             method: 'POST',
-            headers: { apikey: anonKey, Authorization: 'Bearer ' + token, 'Content-Type': file.type || (isPdf ? 'application/pdf' : isDocx ? 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' : isImage ? ( /\\.(jpe?g)$/i.test(lower) ? 'image/jpeg' : /\\.webp$/i.test(lower) ? 'image/webp' : /\\.bmp$/i.test(lower) ? 'image/bmp' : /\\.tiff?$/i.test(lower) ? 'image/tiff' : 'image/png') : 'text/plain'), 'x-upsert': 'false' },
+            headers: { apikey: anonKey, Authorization: 'Bearer ' + token, 'Content-Type': file.type || (isPdf ? 'application/pdf' : isDocx ? 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' : isImage ? ( /\.(jpe?g)$/i.test(lower) ? 'image/jpeg' : /\.webp$/i.test(lower) ? 'image/webp' : /\.bmp$/i.test(lower) ? 'image/bmp' : /\.tiff?$/i.test(lower) ? 'image/tiff' : 'image/png') : 'text/plain'), 'x-upsert': 'false' },
             body: file,
           });
           if (!uploadResponse.ok) {
@@ -189,7 +189,7 @@ export const AttpDossierReview: React.FC = () => {
               parseStatus = 'needs_ocr';
               parseMessage = 'Đã lưu ảnh nhưng OCR không nhận dạng đủ chữ. Cần kiểm tra ảnh gốc hoặc chụp lại rõ hơn.';
             } else {
-              const accepted = window.confirm('Đã OCR ảnh tại trình duyệt (độ tin cậy ' + Math.round(ocr.confidence) + '%).\\n\\n' + ocr.text.slice(0, 1800) + (ocr.text.length > 1800 ? '\\n… (còn nội dung)' : '') + '\\n\\nBạn đã đối chiếu với ảnh gốc và xác nhận đưa nội dung nhận dạng vào hồ sơ chưa?');
+              const accepted = window.confirm('Đã OCR ảnh tại trình duyệt (độ tin cậy ' + Math.round(ocr.confidence) + '%).\n\n' + ocr.text.slice(0, 1800) + (ocr.text.length > 1800 ? '\n… (còn nội dung)' : '') + '\n\nBạn đã đối chiếu với ảnh gốc và xác nhận đưa nội dung nhận dạng vào hồ sơ chưa?');
               if (accepted) {
                 text = ocr.text;
                 parseStatus = 'extracted';
@@ -229,8 +229,8 @@ export const AttpDossierReview: React.FC = () => {
                 parseStatus = 'needs_ocr';
                 parseMessage = 'PDF đã lưu nhưng OCR không nhận dạng đủ nội dung. Cần kiểm tra bản quét.';
               } else {
-                const pageSummary = ocr.pages.map(page => 'Trang ' + page.page + ': ' + (page.status === 'dat' ? 'nhận dạng được' : page.status === 'can_kiem_tra' ? 'cần kiểm tra' : 'không đọc được') + ' (' + Math.round(page.confidence) + '%)').join('\\n');
-                const accepted = window.confirm('Đã OCR ' + ocr.pages.length + ' trang ngay trên trình duyệt. Tệp không được gửi đến dịch vụ OCR bên ngoài.\\n\\n' + pageSummary + '\\n\\n' + ocr.text.slice(0, 1800) + (ocr.text.length > 1800 ? '\\n… (còn nội dung)' : '') + '\\n\\nBạn đã đối chiếu với bản quét gốc và xác nhận đưa nội dung OCR vào hồ sơ chưa?');
+                const pageSummary = ocr.pages.map(page => 'Trang ' + page.page + ': ' + (page.status === 'dat' ? 'nhận dạng được' : page.status === 'can_kiem_tra' ? 'cần kiểm tra' : 'không đọc được') + ' (' + Math.round(page.confidence) + '%)').join('\n');
+                const accepted = window.confirm('Đã OCR ' + ocr.pages.length + ' trang ngay trên trình duyệt. Tệp không được gửi đến dịch vụ OCR bên ngoài.\n\n' + pageSummary + '\n\n' + ocr.text.slice(0, 1800) + (ocr.text.length > 1800 ? '\n… (còn nội dung)' : '') + '\n\nBạn đã đối chiếu với bản quét gốc và xác nhận đưa nội dung OCR vào hồ sơ chưa?');
                 if (accepted) {
                   text = ocr.text;
                   parseStatus = failedPages.length ? 'needs_ocr' : 'extracted';
@@ -254,7 +254,7 @@ export const AttpDossierReview: React.FC = () => {
       if (storagePath) {
         try {
           await dossierApi('attp_dossier_documents', 'POST', {
-            id: documentId, dossier_id: selected.id, file_name: file.name, mime_type: file.type || (isPdf ? 'application/pdf' : isDocx ? 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' : isImage ? (/\\.(jpe?g)$/i.test(lower) ? 'image/jpeg' : /\\.webp$/i.test(lower) ? 'image/webp' : /\\.bmp$/i.test(lower) ? 'image/bmp' : /\\.tiff?$/i.test(lower) ? 'image/tiff' : 'image/png') : 'text/plain'),
+            id: documentId, dossier_id: selected.id, file_name: file.name, mime_type: file.type || (isPdf ? 'application/pdf' : isDocx ? 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' : isImage ? (/\.(jpe?g)$/i.test(lower) ? 'image/jpeg' : /\.webp$/i.test(lower) ? 'image/webp' : /\.bmp$/i.test(lower) ? 'image/bmp' : /\.tiff?$/i.test(lower) ? 'image/tiff' : 'image/png') : 'text/plain'),
             size_bytes: file.size, storage_path: storagePath,
             parse_status: parseStatus === 'extracted' ? 'EXTRACTED' : parseStatus === 'needs_ocr' ? 'NEEDS_OCR' : parseStatus === 'unsupported' ? 'UNSUPPORTED' : 'ERROR',
             parse_message: parseMessage, extracted_text: text || null, created_by: getCurrentUserId(),
