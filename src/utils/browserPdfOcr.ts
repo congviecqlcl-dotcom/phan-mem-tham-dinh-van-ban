@@ -67,6 +67,10 @@ export async function recognizeScannedPdf(file: File): Promise<PdfOcrResult> {
 
   const bytes = new Uint8Array(await file.arrayBuffer());
   const pdf = await pdfjs.getDocument({ data: bytes }).promise;
+  if (pdf.numPages > 100) {
+    await pdf.destroy();
+    throw new Error('PDF có ' + pdf.numPages + ' trang, vượt giới hạn OCR trực tiếp 100 trang. Hãy chia nhỏ tệp hoặc xử lý theo quy trình phù hợp.');
+  }
   let worker: any;
   const pages: OcrPageResult[] = [];
 
