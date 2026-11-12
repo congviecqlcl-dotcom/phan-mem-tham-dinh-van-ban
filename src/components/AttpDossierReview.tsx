@@ -1,6 +1,7 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { authenticatedFetch, getAccessToken, getAuthConfig } from '../utils/auth';
 import { FilePlus2, FolderOpen, ClipboardCheck, AlertTriangle, Trash2, Plus, Search, FileText } from 'lucide-react';
+import { recognizeScannedPdf } from '../utils/browserPdfOcr';
 
 type DossierDocument = { id: string; name: string; size: number; type: string; storagePath?: string; text: string; parseStatus: 'extracted' | 'needs_ocr' | 'unsupported' | 'error'; parseMessage: string; addedAt: string };
 type ChecklistItem = { id: string; label: string; group: string; required: boolean; documentIds: string[] };
@@ -194,7 +195,35 @@ export const AttpDossierReview: React.FC = () => {
               parseMessage = 'Đã lưu tệp riêng tư và trích xuất ' + Number(payload.charCount || text.length).toLocaleString('vi-VN') + ' ký tự.';
             } else if (response.status === 422 && isPdf) {
               parseStatus = 'needs_ocr';
-              parseMessage = 'Đã lưu tệp riêng tư. PDF không có lớp văn bản; có thể là bản quét ảnh, cần OCR.';
+              parseMessage = 'Đã lưu tệp riêng tư. PDF không có lớp văn bản; đang chờ OCR và xác nhận nội dung.';
+              try {
+                const ocr = await recognizeScannedPdf(file);
+                if (!ocr.text.trim()) {
+                  parseMessage = 'OCR không nhận dạng được nội dung. Cần kiểm tra bản quét hoặc nhập lại tài liệu.';
+                } else {
+                  const pageWarnings = ocr.pages.filter(page => page.status !== 'dat').length;
+                  const preview = ocr.text.slice(0, 2600);
+                  const accepted = window.confirm(
+                    'Đã OCR PDF ngay trên trình duyệt.\nSố trang: ' + ocr.pages.length +
+                    '\nTrang cần kiểm tra thêm: ' + pageWarnings +
+                    '\n\n--- NỘI DUNG OCR (trích xem) ---\n' + preview +
+                    (ocr.text.length > 2600 ? '\n… (còn nội dung)' : '') +
+                    '\n\nBạn đã đối chiếu với bản PDF gốc và xác nhận đưa nội dung nhận dạng vào hồ sơ làm việc chưa?'
+                  );
+                  if (accepted) {
+                    text = ocr.text;
+                    parseStatus = 'extracted';
+                    parseMessage = 'Đã OCR ' + ocr.pages.length + ' trang tại trình duyệt; ' + pageWarnings +
+                      ' trang có cảnh báo chất lượng. Người dùng đã xác nhận đưa văn bản OCR vào hồ sơ; vẫn phải đối chiếu từng trang với bản gốc trước khi thẩm định.';
+                  } else {
+                    parseMessage = 'Đã OCR nhưng chưa được người dùng xác nhận; nội dung OCR không được đưa vào hồ sơ thẩm định.';
+                  }
+                }
+              } catch (ocrError) {
+                parseMessage = 'PDF đã lưu riêng tư nhưng OCR chưa thực hiện được: ' +
+                  (ocrError instanceof Error ? ocrError.message : 'lỗi không xác định') +
+                  ' Có thể thử lại bằng bản PDF rõ nét hơn.';
+              }
             } else {
               parseStatus = 'error';
               parseMessage = typeof payload.error === 'string' ? payload.error : 'Đã lưu tệp nhưng chưa trích xuất được nội dung (HTTP ' + response.status + ').';
