@@ -78,25 +78,28 @@ export async function recognizeScannedPdf(file: File): Promise<PdfOcrResult> {
     worker = await createVietnameseWorker();
     for (let pageNo = 1; pageNo <= pdf.numPages; pageNo++) {
       const page = await pdf.getPage(pageNo);
-      const viewport = page.getViewport({ scale: 2 });
       const canvas = document.createElement("canvas");
-      const context = canvas.getContext("2d");
-      if (!context) throw new Error("Trình duyệt không tạo được vùng xử lý ảnh.");
-      canvas.width = Math.ceil(viewport.width);
-      canvas.height = Math.ceil(viewport.height);
-      await page.render({ canvasContext: context, viewport }).promise;
-      const result = await worker.recognize(canvas);
-      const text = String(result?.data?.text || "").trim();
-      const confidence = Number(result?.data?.confidence || 0);
-      pages.push({
-        page: pageNo,
-        text,
-        confidence,
-        status: text.length < 20 ? "khong_doc_duoc" : confidence < 65 ? "can_kiem_tra" : "dat",
-      });
-      canvas.width = 0;
-      canvas.height = 0;
-      page.cleanup();
+      try {
+        const viewport = page.getViewport({ scale: 2 });
+        const context = canvas.getContext("2d");
+        if (!context) throw new Error("Trình duyệt không tạo được vùng xử lý ảnh.");
+        canvas.width = Math.ceil(viewport.width);
+        canvas.height = Math.ceil(viewport.height);
+        await page.render({ canvasContext: context, viewport }).promise;
+        const result = await worker.recognize(canvas);
+        const text = String(result?.data?.text || "").trim();
+        const confidence = Number(result?.data?.confidence || 0);
+        pages.push({
+          page: pageNo,
+          text,
+          confidence,
+          status: text.length < 20 ? "khong_doc_duoc" : confidence < 65 ? "can_kiem_tra" : "dat",
+        });
+      } finally {
+        canvas.width = 0;
+        canvas.height = 0;
+        page.cleanup();
+      }
     }
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error);
