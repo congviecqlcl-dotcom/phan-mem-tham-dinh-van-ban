@@ -31,15 +31,15 @@ export const Navbar: React.FC<NavbarProps> = ({ activeTab, setActiveTab, canMana
                   <Sparkles className="w-3 h-3" /> Pháp chế &amp; ATTP
                 </span>
               </div>
-              <p className="text-xs text-neutral-500 hidden sm:block">Hệ thống thẩm định văn bản hành chính &amp; quy chuẩn an toàn thực phẩm</p>
+              <p className="text-xs text-neutral-500 hidden sm:block">Hệ thống thẩm định hồ sơ ATTP của doanh nghiệp đề nghị cấp Giấy chứng nhận cơ sở đủ điều kiện an toàn thực phẩm</p>
             </div>
           </div>
           <div className="flex flex-wrap items-center justify-end gap-2">
             <nav className="flex flex-wrap items-center gap-1">
               <button id="nav-tab-auditor" onClick={() => setActiveTab('auditor')} className={`flex items-center gap-2 rounded-xl px-3 py-2 text-xs sm:text-sm font-medium ${tabClass('auditor')}`}>
-                <FileSearch className="w-4 h-4" /><span>Thẩm định</span>
+                <FileSearch className="w-4 h-4" /><span>Kiểm tra văn bản</span>
               </button>
-              <button id="nav-tab-dossier" onClick={() => setActiveTab("dossier")} className={`flex items-center gap-2 rounded-xl px-3 py-2 text-xs sm:text-sm font-medium ${tabClass("dossier")}`}><ClipboardList className="w-4 h-4" /><span>Hồ sơ ATTP</span></button>
+              <button id="nav-tab-dossier" onClick={() => setActiveTab("dossier")} className={`flex items-center gap-2 rounded-xl px-3 py-2 text-xs sm:text-sm font-medium ${tabClass("dossier")}`}><ClipboardList className="w-4 h-4" /><span>Thẩm định hồ sơ ATTP</span></button>
               <button id="nav-tab-chat" onClick={() => setActiveTab('chat')} className={`flex items-center gap-2 rounded-xl px-3 py-2 text-xs sm:text-sm font-medium ${tabClass('chat')}`}>
                 <MessageSquareText className="w-4 h-4" /><span>Trợ lý</span>
               </button>
