@@ -275,7 +275,9 @@ export const DocumentAuditor: React.FC = () => {
           content: hasText ? text : '',
           docType: detectedType,
           status: hasText ? 'ready' : 'error',
-          errorMessage: hasText ? undefined : (errorMessage || 'Không trích xuất được văn bản; tệp này sẽ không được đưa vào thẩm định.'),
+          // Keep OCR review warnings even when text was extracted; successful extraction
+          // must not erase low-confidence or unconfirmed-source warnings.
+          errorMessage: hasText ? errorMessage : (errorMessage || 'Không trích xuất được văn bản; tệp này sẽ không được đưa vào thẩm định.'),
           charCount: hasText ? text.length : 0,
         });
       } catch (extractErr) {
@@ -306,13 +308,19 @@ export const DocumentAuditor: React.FC = () => {
     setIsExtracting(false);
     const readyCount = newItems.filter((item) => item.status === 'ready').length;
     const failedCount = newItems.length - readyCount;
+    const reviewItems = newItems.filter((item) => item.status === 'ready' && Boolean(item.errorMessage));
+    const failedDetails = newItems.filter((item) => item.status === 'error')
+      .map((item) => `${item.name}: ${item.errorMessage || 'Không rõ nguyên nhân'}`).join(' | ');
+    const reviewDetails = reviewItems
+      .map((item) => `${item.name}: ${item.errorMessage}`).join(' | ');
     setExtractStatus({
-      type: failedCount === 0 ? 'success' : readyCount === 0 ? 'error' : 'info',
-      message: failedCount === 0
-        ? `Đã trích xuất thành công ${readyCount}/${newItems.length} tệp. Nhấn "Thẩm định tất cả" để xử lý hàng loạt!`
-        : readyCount === 0
-          ? `Không trích xuất được nội dung của ${failedCount} tệp. Chi tiết: ${newItems.filter((item) => item.status === 'error').map((item) => `${item.name}: ${item.errorMessage || 'Không rõ nguyên nhân'}`).join(' | ')}`
-          : `Đã trích xuất ${readyCount}/${newItems.length} tệp; ${failedCount} tệp lỗi. Chi tiết: ${newItems.filter((item) => item.status === 'error').map((item) => `${item.name}: ${item.errorMessage || 'Không rõ nguyên nhân'}`).join(' | ')}`,
+      type: failedCount === 0 && reviewItems.length === 0 ? 'success' : readyCount === 0 ? 'error' : 'info',
+      message: [
+        `Đã trích xuất nội dung ${readyCount}/${newItems.length} tệp; ${failedCount} tệp không đọc được.`,
+        reviewItems.length ? `${reviewItems.length} tệp có cảnh báo cần đối chiếu: ${reviewDetails}` : '',
+        failedDetails ? `Tệp lỗi: ${failedDetails}` : '',
+        readyCount > 0 ? 'Chỉ sử dụng nội dung sau khi đối chiếu với tài liệu gốc; trích xuất không đồng nghĩa với thẩm định.' : '',
+      ].filter(Boolean).join(' '),
     });
 
     if (fileInputRef.current) {
