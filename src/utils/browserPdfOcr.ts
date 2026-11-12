@@ -102,7 +102,7 @@ export async function recognizeScannedPdf(file: File): Promise<PdfOcrResult> {
     await pdf.destroy();
   }
 
-  const text = pages.map((page) => `[Trang ${page.page}]\\n${page.text}`).join("\\n\\n").trim();
+  const text = pages.map((page) => `[Trang ${page.page}]\n${page.text}`).join("\n\n").trim();
   return { text, pages, needsReview: pages.some((page) => page.status !== "dat") };
 }
 
