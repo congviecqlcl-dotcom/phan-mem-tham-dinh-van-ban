@@ -11,12 +11,12 @@ type Dossier = {
 };
 
 const DEFAULT_CHECKLIST: Omit<ChecklistItem, 'id' | 'documentIds'>[] = [
-  { group: 'Thông tin và pháp lý cơ sở', label: 'Tài liệu xác định thông tin, tư cách pháp lý của cơ sở', required: true },
-  { group: 'Địa điểm và mặt bằng', label: 'Tài liệu về địa điểm, mặt bằng và bố trí khu vực hoạt động', required: true },
-  { group: 'Nhân sự', label: 'Tài liệu về người trực tiếp sản xuất, kinh doanh và phân công trách nhiệm', required: true },
-  { group: 'Trang thiết bị', label: 'Tài liệu về máy móc, thiết bị, dụng cụ phục vụ hoạt động', required: true },
-  { group: 'Quy trình hoạt động', label: 'Mô tả quy trình sản xuất, sơ chế, chế biến, bảo quản hoặc kinh doanh', required: true },
-  { group: 'Kiểm soát an toàn thực phẩm', label: 'Tài liệu về kiểm soát nguyên liệu, vệ sinh, nước và phòng ngừa nguy cơ', required: true },
+  { group: 'Thông tin và pháp lý cơ sở', label: 'Tài liệu xác định thông tin, tư cách pháp lý của cơ sở', required: false },
+  { group: 'Địa điểm và mặt bằng', label: 'Tài liệu về địa điểm, mặt bằng và bố trí khu vực hoạt động', required: false },
+  { group: 'Nhân sự', label: 'Tài liệu về người trực tiếp sản xuất, kinh doanh và phân công trách nhiệm', required: false },
+  { group: 'Trang thiết bị', label: 'Tài liệu về máy móc, thiết bị, dụng cụ phục vụ hoạt động', required: false },
+  { group: 'Quy trình hoạt động', label: 'Mô tả quy trình sản xuất, sơ chế, chế biến, bảo quản hoặc kinh doanh', required: false },
+  { group: 'Kiểm soát an toàn thực phẩm', label: 'Tài liệu về kiểm soát nguyên liệu, vệ sinh, nước và phòng ngừa nguy cơ', required: false },
   { group: 'Tài liệu khác', label: 'Tài liệu khác theo yêu cầu của thủ tục và loại hình cơ sở', required: false },
 ];
 
@@ -334,15 +334,15 @@ export const AttpDossierReview: React.FC = () => {
           <div className="mt-4 grid grid-cols-3 gap-2 text-center">
             <div className="rounded-lg bg-neutral-50 p-3"><div className="text-xl font-bold">{stats.total}</div><div className="text-xs text-neutral-500">Đầu mục</div></div>
             <div className="rounded-lg bg-neutral-50 p-3"><div className="text-xl font-bold">{stats.matched}</div><div className="text-xs text-neutral-500">Đã gắn tài liệu</div></div>
-            <div className="rounded-lg bg-amber-50 p-3"><div className="text-xl font-bold text-amber-800">{stats.missing}</div><div className="text-xs text-amber-800">Đầu mục bắt buộc chưa có</div></div>
+            <div className="rounded-lg bg-amber-50 p-3"><div className="text-xl font-bold text-amber-800">{stats.missing}</div><div className="text-xs text-amber-800">Đầu mục chưa gắn tài liệu</div></div>
           </div>
         </div>
 
         <div className="rounded-xl border border-neutral-200 bg-white p-4 space-y-3">
           <div className="flex items-center gap-2"><ClipboardCheck className="h-5 w-5 text-emerald-700"/><h3 className="font-semibold">Danh mục kiểm soát tài liệu</h3></div>
-          <div className="rounded-lg border border-amber-200 bg-amber-50 p-3 text-xs text-amber-900"><AlertTriangle className="mr-1 inline h-4 w-4"/> Đây là danh mục khung để tổ chức công việc, không phải danh mục thành phần hồ sơ pháp lý áp dụng mặc định. Công chức phải xác định yêu cầu theo thủ tục, loại hình và văn bản hiện hành trước khi kết luận thiếu hồ sơ.</div>
+          <div className="rounded-lg border border-amber-200 bg-amber-50 p-3 text-xs text-amber-900"><AlertTriangle className="mr-1 inline h-4 w-4"/> Đây chỉ là danh mục theo dõi nội bộ, không phải danh mục thành phần hồ sơ pháp lý. Hệ thống hiện chưa tự xác định thành phần bắt buộc theo từng ngành hàng, công đoạn, loại hình cơ sở, thủ tục và thẩm quyền quản lý. Không được dùng số liệu thiếu tài liệu ở đây để kết luận hồ sơ không hợp lệ hoặc yêu cầu doanh nghiệp bổ sung.</div>
           {selected.checklist.map(item=><div key={item.id} className="grid gap-2 border-b border-neutral-100 py-2 md:grid-cols-12 md:items-center">
-            <div className="md:col-span-7"><div className="text-xs text-neutral-500">{item.group} · {item.required?'Bắt buộc trong khung rà soát':'Bổ sung'}</div><div className="text-sm font-medium">{item.label}</div></div>
+            <div className="md:col-span-7"><div className="text-xs text-neutral-500">{item.group} · {item.required?'Được xác định bắt buộc theo cấu hình đã kiểm chứng':'Đầu mục theo dõi nội bộ – chưa xác định là thành phần hồ sơ bắt buộc'}</div><div className="text-sm font-medium">{item.label}</div></div>
             <div className="md:col-span-5"><select multiple value={item.documentIds} onChange={e=>updateChecklist(item.id, Array.from(e.target.selectedOptions).map(option=>option.value))} className="w-full min-h-20 rounded-lg border border-neutral-200 p-2 text-xs">{selected.documents.map(doc=><option key={doc.id} value={doc.id}>{doc.name}</option>)}</select></div>
           </div>)}
           <div className="grid gap-2 md:grid-cols-12"><input value={newChecklistGroup} onChange={e=>setNewChecklistGroup(e.target.value)} placeholder="Nhóm tài liệu" className="rounded-lg border p-2 text-sm md:col-span-3"/><input value={newChecklistLabel} onChange={e=>setNewChecklistLabel(e.target.value)} placeholder="Thêm đầu mục cần kiểm soát" className="rounded-lg border p-2 text-sm md:col-span-7"/><button onClick={addChecklistItem} className="rounded-lg border px-3 py-2 text-sm md:col-span-2"><Plus className="mr-1 inline h-4 w-4"/> Thêm</button></div>
