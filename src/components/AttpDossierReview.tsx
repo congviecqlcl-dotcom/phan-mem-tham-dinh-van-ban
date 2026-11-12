@@ -270,8 +270,8 @@ export const AttpDossierReview: React.FC = () => {
 
   return <div className="space-y-5">
     <div className="flex flex-wrap items-start justify-between gap-3">
-      <div><h2 className="text-xl font-bold text-neutral-900">Thẩm định hồ sơ ATTP</h2>
-        <p className="mt-1 text-sm text-neutral-600">Quản lý hồ sơ theo từng cơ sở; tập hợp tài liệu và kiểm soát thành phần trước khi thẩm định nội dung.</p></div>
+      <div><h2 className="text-xl font-bold text-neutral-900">Thẩm định hồ sơ ATTP của doanh nghiệp đề nghị cấp Giấy chứng nhận cơ sở đủ điều kiện an toàn thực phẩm</h2>
+        <p className="mt-1 text-sm text-neutral-600">Tiếp nhận, quản lý và thẩm định hồ sơ của từng doanh nghiệp/cơ sở đề nghị cấp Giấy chứng nhận; kiểm soát tài liệu, đối chiếu điều kiện và căn cứ pháp lý trước khi công chức xem xét, kết luận.</p></div>
       <button onClick={() => setShowCreate(v => !v)} className="rounded-lg bg-emerald-700 px-4 py-2 text-sm font-semibold text-white"><Plus className="mr-1 inline h-4 w-4"/> Tạo hồ sơ</button>
     </div>
 
