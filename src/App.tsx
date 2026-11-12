@@ -10,7 +10,7 @@ import { LoginScreen } from './components/LoginScreen';
 import { getAccessToken, signOut, validateCurrentSession, changeCurrentPassword, authenticatedFetch } from './utils/auth';
 
 export default function App() {
-  const [activeTab, setActiveTab] = useState<ActiveTab>('auditor');
+  const [activeTab, setActiveTab] = useState<ActiveTab>('dossier');
   const [isAdmin, setIsAdmin] = useState(false);
   const [roleLoadError, setRoleLoadError] = useState('');
   const [loadingRoles, setLoadingRoles] = useState(false);
@@ -86,7 +86,7 @@ export default function App() {
     signOut();
     setAuthenticated(false);
     setIsAdmin(false);
-    setActiveTab('auditor');
+    setActiveTab('dossier');
   };
 
   if (checkingSession) {
@@ -125,7 +125,7 @@ export default function App() {
         <div className="max-w-7xl mx-auto px-4 flex flex-col md:flex-row items-center justify-between gap-4">
           <div>
             <div className="font-semibold text-neutral-800 text-sm">DocuGuard AI</div>
-            <div>Hệ thống chuyên gia kiểm tra & thẩm định văn bản ATTP và Thể thức hành chính</div>
+            <div>Hệ thống hỗ trợ thẩm định hồ sơ ATTP của doanh nghiệp đề nghị cấp Giấy chứng nhận cơ sở đủ điều kiện an toàn thực phẩm</div>
           </div>
           <div className="flex flex-wrap items-center justify-center gap-3 text-neutral-600">
             <span>Cập nhật Thông tư 17/2024/TT-BNNPTNT</span><span>•</span><span>Nghị định 30/2020/NĐ-CP</span><span>•</span><span>NQ 202/2025 & NQ 1676/2025</span>
