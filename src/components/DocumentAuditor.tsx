@@ -39,7 +39,6 @@ import {
   downloadConsolidatedBatchReport
 } from '../utils/docxExport';
 import { runClientAuditEngine } from '../utils/auditEngine';
-import { recognizeScannedPdf, recognizeImageText } from '../utils/browserPdfOcr';
 
 export const DocumentAuditor: React.FC = () => {
   // Initial list with preset
@@ -107,12 +106,13 @@ export const DocumentAuditor: React.FC = () => {
       ['image/png', 'image/jpeg', 'image/webp', 'image/bmp', 'image/tiff'].includes(file.type);
     if (isImage) {
       try {
+        const { recognizeImageText } = await import('../utils/browserPdfOcr');
         const result = await recognizeImageText(file);
         if (result.text.length < 20) {
           extractionError = 'Ảnh không có đủ nội dung chữ để nhận dạng. Hãy chụp lại rõ nét, đủ sáng và không mất mép giấy.';
         } else {
           const accepted = window.confirm(
-            `Đã nhận dạng ảnh ngay trên trình duyệt (độ tin cậy ${Math.round(result.confidence)}%).\\n\\n--- NỘI DUNG NHẬN DẠNG ---\\n${result.text.slice(0, 1800)}${result.text.length > 1800 ? '\\n… (còn nội dung)' : ''}\\n\\nBạn đã đối chiếu với ảnh gốc và xác nhận đưa nội dung này vào thẩm định chưa?`
+            `Đã nhận dạng ảnh ngay trên trình duyệt (độ tin cậy ${Math.round(result.confidence)}%).\n\n--- NỘI DUNG NHẬN DẠNG ---\n${result.text.slice(0, 1800)}${result.text.length > 1800 ? '\n… (còn nội dung)' : ''}\n\nBạn đã đối chiếu với ảnh gốc và xác nhận đưa nội dung này vào thẩm định chưa?`
           );
           if (accepted) {
             text = result.text;
@@ -192,6 +192,7 @@ export const DocumentAuditor: React.FC = () => {
     // render and recognize every page locally in the browser.
     if (lowerName.endsWith('.pdf') && text.trim().length < 200) {
       try {
+        const { recognizeScannedPdf } = await import('../utils/browserPdfOcr');
         const ocr = await recognizeScannedPdf(file);
         const failedPages = ocr.pages.filter((page) => page.status !== 'dat');
         if (!ocr.text || ocr.text.length < 20) {
