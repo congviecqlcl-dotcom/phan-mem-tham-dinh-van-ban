@@ -1,5 +1,17 @@
 import { createWorker } from "tesseract.js";
 
+// Technical safeguards for browser-side OCR. These are processing limits, not legal requirements.
+const MAX_OCR_FILE_BYTES = 25 * 1024 * 1024;
+const MAX_OCR_IMAGE_PIXELS = 20_000_000;
+const MAX_PDF_PAGE_PIXELS = 20_000_000;
+const MAX_CANVAS_DIMENSION = 10_000;
+
+function assertFileSize(file: File): void {
+  if (file.size > MAX_OCR_FILE_BYTES) {
+    throw new Error('Tệp vượt giới hạn xử lý OCR 25 MB. Hãy nén hoặc chia nhỏ tệp trước khi tải lên.');
+  }
+}
+
 type OcrPageResult = {
   page: number;
   text: string;
@@ -60,6 +72,7 @@ async function createVietnameseWorker() {
 // Uploaded document bytes, rendered page images, OCR worker, WASM core and Vietnamese
 // traineddata are served from the application's own origin. No document is sent to a CDN.
 export async function recognizeScannedPdf(file: File): Promise<PdfOcrResult> {
+  assertFileSize(file);
   await loadLocalScript("/ocr/pdf.min.js", "pdfjs");
   const pdfjs = window.pdfjsLib;
   if (!pdfjs?.getDocument) throw new Error("Bộ đọc PDF nội bộ không khởi tạo được.");
@@ -81,6 +94,16 @@ export async function recognizeScannedPdf(file: File): Promise<PdfOcrResult> {
       const canvas = document.createElement("canvas");
       try {
         const viewport = page.getViewport({ scale: 2 });
+        const pixelWidth = Math.ceil(viewport.width);
+        const pixelHeight = Math.ceil(viewport.height);
+        if (
+          !Number.isFinite(pixelWidth) || !Number.isFinite(pixelHeight) ||
+          pixelWidth < 1 || pixelHeight < 1 ||
+          pixelWidth > MAX_CANVAS_DIMENSION || pixelHeight > MAX_CANVAS_DIMENSION ||
+          pixelWidth * pixelHeight > MAX_PDF_PAGE_PIXELS
+        ) {
+          throw new Error(`Trang ${pageNo} vượt giới hạn kết xuất OCR an toàn (tối đa 20 triệu điểm ảnh/trang và 10.000 điểm ảnh mỗi chiều). Hãy giảm độ phân giải hoặc tách trang để xử lý.`);
+        }
         const context = canvas.getContext("2d");
         if (!context) throw new Error("Trình duyệt không tạo được vùng xử lý ảnh.");
         canvas.width = Math.ceil(viewport.width);
@@ -114,8 +137,22 @@ export async function recognizeScannedPdf(file: File): Promise<PdfOcrResult> {
 }
 
 export async function recognizeImageText(file: File): Promise<{ text: string; confidence: number }> {
+  assertFileSize(file);
   let worker: any;
   try {
+    const bitmap = await createImageBitmap(file);
+    try {
+      const pixels = bitmap.width * bitmap.height;
+      if (
+        !Number.isFinite(pixels) || bitmap.width < 1 || bitmap.height < 1 ||
+        bitmap.width > MAX_CANVAS_DIMENSION || bitmap.height > MAX_CANVAS_DIMENSION ||
+        pixels > MAX_OCR_IMAGE_PIXELS
+      ) {
+        throw new Error('Ảnh vượt giới hạn xử lý OCR (tối đa 20 triệu điểm ảnh và 10.000 điểm ảnh mỗi chiều). Hãy giảm kích thước ảnh trước khi tải lên.');
+      }
+    } finally {
+      bitmap.close();
+    }
     worker = await createVietnameseWorker();
     const result = await worker.recognize(file);
     return {
