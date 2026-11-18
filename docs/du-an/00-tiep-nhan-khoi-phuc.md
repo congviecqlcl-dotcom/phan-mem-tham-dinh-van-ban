@@ -22,6 +22,7 @@ Sao chép nguyên văn đoạn sau và gửi ở cuộc trò chuyện mới:
 > - `03-hien-trang-va-ket-qua.md`
 > - `04-danh-muc-nhiem-vu.md`
 > - `05-rui-ro-va-diem-chua-xac-minh.md`
+> - `06-nhat-ky-tien-do-va-quy-tac-cap-nhat.md`
 >
 > Sau đó kiểm tra trạng thái hiện tại của GitHub, Supabase và Vercel; không coi ảnh chụp trạng thái cũ là hiện trạng mới. Khôi phục các quyết định nghiệp vụ, pháp lý, kiến trúc, dữ liệu, mã nguồn, nhánh, deployment, lỗi, kiểm thử, việc đã làm và việc còn dang dở.
 >
@@ -92,13 +93,15 @@ Các nhánh từng được ghi nhận gồm:
 
 Tại lần kiểm tra ngày 18/11/2026, nhánh tài liệu có các tệp:
 - `docs/du-an/README.md`
+- `docs/du-an/00-tiep-nhan-khoi-phuc.md`
 - `docs/du-an/01-tong-quan-du-an.md`
 - `docs/du-an/02-kien-truc-va-pham-vi-v1.md`
 - `docs/du-an/03-hien-trang-va-ket-qua.md`
 - `docs/du-an/04-danh-muc-nhiem-vu.md`
 - `docs/du-an/05-rui-ro-va-diem-chua-xac-minh.md`
+- `docs/du-an/06-nhat-ky-tien-do-va-quy-tac-cap-nhat.md`
 
-Commit được quan sát gần nhất khi kiểm tra danh mục nhánh: `a90c0ff377643f1d01d356f5b6f014a12a494ca7` (commit ghi nhận tài liệu rủi ro). Đây là nhánh tài liệu riêng, không phải `main`; chưa được coi là đã hợp nhất hoặc phát hành.
+Commit `a90c0ff377643f1d01d356f5b6f014a12a494ca7` là mốc lịch sử được ghi nhận khi lập hồ sơ ban đầu, không phải cam kết rằng đó là HEAD hiện tại. Luôn kiểm tra HEAD mới nhất của nhánh trước khi hành động. Đây là nhánh tài liệu riêng, không phải `main`; chưa được coi là đã hợp nhất hoặc phát hành.
 
 ### Vercel
 
