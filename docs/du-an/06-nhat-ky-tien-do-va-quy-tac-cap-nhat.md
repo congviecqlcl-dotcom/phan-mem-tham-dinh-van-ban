@@ -90,11 +90,13 @@ Sao chép mẫu dưới đây cho mỗi giai đoạn:
 
 | Mã | Công việc | Ưu tiên | Trạng thái | Bằng chứng/đầu mối | Điều kiện tiếp tục |
 |---|---|---|---|---|---|
-| DG-001 | Kiểm tra lại luồng đăng nhập và khôi phục mật khẩu trên Preview | P0 | Chưa xác minh tại thời điểm lập mẫu | Theo dõi tự động hiện có và deployment thực tế | Kiểm tra đúng nhánh, commit, log và luồng người dùng |
-| DG-002 | Rà soát đồng bộ quyền truy cập hồ sơ, tài liệu và Storage | P0 | Chưa xác minh tại thời điểm lập mẫu | Chính sách RLS/Storage và kiểm thử phân quyền | Có ma trận vai trò, chủ hồ sơ và ca kiểm thử chéo người dùng |
-| DG-003 | Xử lý tính toàn vẹn OCR theo từng trang và lịch sử xác nhận | P0 | Chưa xác minh tại thời điểm lập mẫu | Mã OCR, cấu trúc dữ liệu và kiểm thử PDF nhiều trang | Không dùng văn bản OCR chưa đầy đủ/chưa xác nhận làm căn cứ đánh giá |
-| DG-004 | Kiểm tra RPC ghi nhận rà soát liên kết chứng cứ | P0 | Chưa xác minh tại thời điểm lập mẫu | Định nghĩa hàm, schema thực tế, quyền thực thi và kiểm thử | Xác minh đúng cột, khóa, phạm vi hồ sơ và tính nguyên tử trước mọi sửa đổi |
-| DG-005 | Hoàn thiện bộ kiểm thử nghiệp vụ ATTP V1 | P1 | Chưa xác minh tại thời điểm lập mẫu | Bộ dữ liệu thử và tiêu chí nghiệm thu | Tách dữ liệu thử khỏi hồ sơ thật; có expected result được duyệt |
+| DG-11 | Kiểm tra lại luồng đăng nhập và khôi phục mật khẩu trên Preview (tiểu việc xác thực) | P0 | Chưa xác minh tại thời điểm lập mẫu | Theo dõi tự động hiện có và deployment thực tế | Kiểm tra đúng nhánh, commit, log và luồng người dùng |
+| DG-11 | Rà soát đồng bộ quyền truy cập hồ sơ, tài liệu và Storage (tiểu việc RLS/Storage) | P0 | Chưa xác minh tại thời điểm lập mẫu | Chính sách RLS/Storage và kiểm thử phân quyền | Có ma trận vai trò, chủ hồ sơ và ca kiểm thử chéo người dùng |
+| DG-05 | Xử lý tính toàn vẹn OCR theo từng trang và lịch sử xác nhận | P0 | Chưa xác minh tại thời điểm lập mẫu | Mã OCR, cấu trúc dữ liệu và kiểm thử PDF nhiều trang | Không dùng văn bản OCR chưa đầy đủ/chưa xác nhận làm căn cứ đánh giá |
+| DG-06 / DG-11 | Kiểm tra RPC ghi nhận rà soát liên kết chứng cứ (liên kết dữ liệu và kiểm soát bảo mật) | P0 | Chưa xác minh tại thời điểm lập mẫu | Định nghĩa hàm, schema thực tế, quyền thực thi và kiểm thử | Xác minh đúng cột, khóa, phạm vi hồ sơ và tính nguyên tử trước mọi sửa đổi |
+| DG-12 | Hoàn thiện bộ kiểm thử nghiệp vụ ATTP V1 | P0 | Chưa xác minh tại thời điểm lập mẫu | Bộ dữ liệu thử và tiêu chí nghiệm thu | Tách dữ liệu thử khỏi hồ sơ thật; có kết quả mong đợi được duyệt |
+
+**Quy tắc mã:** sử dụng mã nhiệm vụ chuẩn DG-01 đến DG-14 tại `04-danh-muc-nhiem-vu.md`. Một mã có thể xuất hiện ở nhiều tiểu việc; `DG-06 / DG-11` thể hiện công việc đồng thời thuộc liên kết dữ liệu và rà soát bảo mật. Không tạo mã DG-001, DG-002... song song.
 
 **Lưu ý:** Các dòng trên là danh sách việc cần kiểm tra tiếp theo được kế thừa từ hồ sơ bàn giao tại thời điểm 18/11/2026; trạng thái phải được kiểm tra lại trước khi coi là hiện trạng mới. Không được hiểu các mục này là đã được thực hiện hoặc đã xác nhận lỗi hiện tại.
 
