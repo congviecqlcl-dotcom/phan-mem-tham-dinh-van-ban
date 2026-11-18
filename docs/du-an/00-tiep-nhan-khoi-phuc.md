@@ -17,6 +17,7 @@ Sao chép nguyên văn đoạn sau và gửi ở cuộc trò chuyện mới:
 >
 > Trước tiên, đọc bộ tài liệu trong `docs/du-an/` của repository `congviecqlcl-dotcom/phan-mem-tham-dinh-van-ban`, đặc biệt:
 > - `README.md`
+> - `00-tiep-nhan-khoi-phuc.md` (tài liệu hiện tại)
 > - `01-tong-quan-du-an.md`
 > - `02-kien-truc-va-pham-vi-v1.md`
 > - `03-hien-trang-va-ket-qua.md`
